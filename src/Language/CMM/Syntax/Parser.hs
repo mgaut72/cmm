@@ -39,6 +39,7 @@ commaSep   = Token.commaSep   lexer
 
 expressionP :: Parser Expression
 expressionP = operationP
+          <|> functionCallP
           <|> litIntP
           <|> litCharP
           <|> litStringP
@@ -90,3 +91,9 @@ operators = [ [ Prefix (reservedOp "-" >> return Negative)
 
 terms = litStringP <|> litCharP <|> litIntP
     <|> parens expressionP
+
+functionCallP :: Parser Expression
+functionCallP = do
+  fname <- identifier
+  params <- parens $ commaSep expressionP
+  return $ FunctionCall fname params

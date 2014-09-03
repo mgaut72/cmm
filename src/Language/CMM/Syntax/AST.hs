@@ -8,8 +8,8 @@ data Expression = Negative      Expression
                 | Binary        BinaryOp Expression Expression
                 | Relative      RelativeOp Expression Expression
                 | Logical       LogicalOp Expression Expression
+                | FunctionCall  Identifier [Expression]
                 deriving (Show, Eq)
---                 | FunctionCall  Identifier [Expression]
 --                 | ArrayIndex    Identifier Expression
 --                 | Grouped       Expression
 --                 | Var           Variable
@@ -36,7 +36,7 @@ data Expression = Negative      Expression
 -- data Assignment = Assignment Variable Expression
 --                 deriving (Show) -- Maybe for array index
 
--- type Identifier = String
+type Identifier = String
 
 data LogicalOp  = And | Or deriving (Show, Eq)
 data RelativeOp = Eq | Neq | Leq | Less | Geq | Greater deriving (Show, Eq)
