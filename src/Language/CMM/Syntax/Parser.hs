@@ -38,7 +38,7 @@ brackets   = Token.brackets   lexer
 commaSep   = Token.commaSep   lexer
 
 expressionP :: Parser Expression
-expressionP = unaryOperationP
+expressionP = operationP
           <|> litIntP
           <|> litCharP
           <|> litStringP
@@ -63,12 +63,30 @@ litStringP = do
   return $ LitString s
  where f c = (isPrint c && c /= '"') || c == '\n'
 
-unaryOperationP :: Parser Expression
-unaryOperationP = buildExpressionParser unaryOperators unaryTerms
+operationP :: Parser Expression
+operationP = buildExpressionParser operators terms
 
-unaryOperators = [ [Prefix (reservedOp "-" >> return Negative)]
-                 , [Prefix (reservedOp "!" >> return Not)]
-                 ]
+operators = [ [ Prefix (reservedOp "-" >> return Negative)
+              , Prefix (reservedOp "!" >> return Not)
+              ]
+            , [ Infix (reservedOp "*" >> return (Binary Times)) AssocLeft
+              , Infix (reservedOp "/" >> return (Binary Divide)) AssocLeft
+              ]
+            , [ Infix (reservedOp "+" >> return (Binary Plus)) AssocLeft
+              , Infix (reservedOp "-" >> return (Binary Minus)) AssocLeft
+              ]
+            , [ Infix (reservedOp ">" >> return (Relative Greater)) AssocLeft
+              , Infix (reservedOp "<" >> return (Relative Less)) AssocLeft
+              , Infix (reservedOp ">=" >> return (Relative Geq)) AssocLeft
+              , Infix (reservedOp "<=" >> return (Relative Leq)) AssocLeft
+              ]
+            , [ Infix (reservedOp "==" >> return (Relative Eq)) AssocLeft
+              , Infix (reservedOp "!=" >> return (Relative Neq)) AssocLeft
+              ]
+            , [ Infix (reservedOp "&&" >> return (Logical And)) AssocLeft
+              , Infix (reservedOp "||" >> return (Logical Or)) AssocLeft
+              ]
+            ]
 
-unaryTerms = litStringP <|> litCharP <|> litIntP
-         <|> parens expressionP
+terms = litStringP <|> litCharP <|> litIntP
+    <|> parens expressionP

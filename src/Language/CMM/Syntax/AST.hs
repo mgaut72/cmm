@@ -5,10 +5,10 @@ data Expression = Negative      Expression
                 | LitInt        Integer
                 | LitChar       Char
                 | LitString     String
+                | Binary        BinaryOp Expression Expression
+                | Relative      RelativeOp Expression Expression
+                | Logical       LogicalOp Expression Expression
                 deriving (Show, Eq)
---                 | Relative      RelativeOp Expression Expression
---                 | Binary        BinaryOp Expression Expression
---                 | Logical       LogicalOp Expression Expression
 --                 | FunctionCall  Identifier [Expression]
 --                 | ArrayIndex    Identifier Expression
 --                 | Grouped       Expression
@@ -38,8 +38,8 @@ data Expression = Negative      Expression
 
 -- type Identifier = String
 
--- data LogicalOp  = And | Or deriving (Show)
--- data RelativeOp = Eq | Neq | Leq | Less | Geq | Greater deriving (Show)
--- data BinaryOp   = Plus | Minus | Times | Divide  deriving (Show)
+data LogicalOp  = And | Or deriving (Show, Eq)
+data RelativeOp = Eq | Neq | Leq | Less | Geq | Greater deriving (Show, Eq)
+data BinaryOp   = Plus | Minus | Times | Divide  deriving (Show, Eq)
 
 
