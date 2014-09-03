@@ -49,19 +49,19 @@ litIntP = liftM LitInt integer
 litCharP :: Parser Expression
 litCharP = do
   char '\''
-  c <- satisfy f
+  c <- (satisfy f <|> try (string "\\0" >> return '\0') <|> (string "\\n" >> return '\n'))
   char '\''
   return $ LitChar c
- where f c = (isPrint c && c /= '\'' && c /= '\\') || c == '\0' || c == '\n'
+ where f c = (isPrint c && c /= '\'' && c /= '\\')
 
 
 litStringP :: Parser Expression
 litStringP = do
   char '"'
-  s <- many $ satisfy f
+  s <- many $ (string "\\n" >> return '\n') <|> satisfy f
   char '"'
   return $ LitString s
- where f c = (isPrint c && c /= '"') || c == '\n'
+ where f c = (isPrint c && c /= '"')
 
 operationP :: Parser Expression
 operationP = buildExpressionParser operators terms
