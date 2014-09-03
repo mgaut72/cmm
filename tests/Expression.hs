@@ -8,7 +8,7 @@ import Language.CMM.Syntax.Parser
 
 main = do
   cs <- runTestTT tests
-  if (failures cs) /= 0 || (errors cs) /= 0
+  if failures cs /= 0 || errors cs /= 0
      then exitFailure
      else exitSuccess
 
