@@ -41,7 +41,6 @@ expressionP :: Parser Expression
 expressionP = operationP
           <|> try functionCallP
           <|> try arrayIndexP
-          <|> varP
           <|> litIntP
           <|> litCharP
           <|> litStringP
@@ -91,8 +90,14 @@ operators = [ [ Prefix (reservedOp "-" >> return Negative)
               ]
             ]
 
-terms = litStringP <|> litCharP <|> litIntP
-    <|> parens expressionP
+terms = parens expressionP
+    <|> try functionCallP
+    <|> try arrayIndexP
+    <|> varP
+    <|> litIntP
+    <|> litCharP
+    <|> litStringP
+
 
 functionCallP :: Parser Expression
 functionCallP = liftM2 FunctionCall identifier (parens $ commaSep expressionP)
