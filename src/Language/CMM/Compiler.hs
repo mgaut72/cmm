@@ -1,5 +1,5 @@
 module Language.CMM.Compiler (
-  parseCMM
+  compileCMM
 )
 where
 
