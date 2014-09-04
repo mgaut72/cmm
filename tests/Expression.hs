@@ -13,7 +13,13 @@ main = do
      then exitFailure
      else exitSuccess
 
-readExpr s = parse (whiteSpace >> expressionP) "testParse" s
+readExpr s = parse (ep) "testParse" s
+ where ep = do
+         whiteSpace
+         e <- expressionP
+         whiteSpace
+         eof
+         return e
 
 a |~?= b = readExpr a ~?= Right b
 bad a = TestCase (unless (isLeft res) (assertFailure ("expected bad parse\ngot: " ++ show res)))
@@ -29,8 +35,7 @@ tests = test
   , "tChar2" ~: "'\\n'" |~?= LitChar '\n'
   , "tChar3" ~: "'\\0'" |~?= LitChar '\0'
   , "tChar4" ~: bad "'a"
-  , "tChar5" ~: bad "a"
-  , "tChar6" ~: bad "'ab'"
+  , "tChar5" ~: bad "'ab'"
   , "tStr1" ~: "\"abc\"" |~?= LitString "abc"
   , "tStr2" ~: bad "\"abc"
   , "tStr3" ~: "\"a\\nbc\"" |~?= LitString "a\nbc"
@@ -63,4 +68,9 @@ tests = test
   , "tFun5" ~: bad "f('a', \"bcd\" 1)"
   , "tFun6" ~: bad "f('a', \"bcd\",, 1)"
   , "tFun7" ~: bad "f('a', \"bcd\"1"
+  , "tArr1" ~: "f[1]" |~?= ArrayIndex "f" (LitInt 1)
+  , "tArr2" ~: "f[1+2]" |~?= ArrayIndex "f" (Binary Plus (LitInt 1) (LitInt 2))
+  , "tArr3" ~: bad "f[]"
+  , "tVar1" ~: "ident" |~?= Var "ident"
+  , "tVar2" ~: bad "1dent"
   ]

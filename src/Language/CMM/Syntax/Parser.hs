@@ -39,7 +39,9 @@ commaSep   = Token.commaSep   lexer
 
 expressionP :: Parser Expression
 expressionP = operationP
-          <|> functionCallP
+          <|> try functionCallP
+          <|> try arrayIndexP
+          <|> varP
           <|> litIntP
           <|> litCharP
           <|> litStringP
@@ -93,7 +95,10 @@ terms = litStringP <|> litCharP <|> litIntP
     <|> parens expressionP
 
 functionCallP :: Parser Expression
-functionCallP = do
-  fname <- identifier
-  params <- parens $ commaSep expressionP
-  return $ FunctionCall fname params
+functionCallP = liftM2 FunctionCall identifier (parens $ commaSep expressionP)
+
+arrayIndexP :: Parser Expression
+arrayIndexP = liftM2 ArrayIndex identifier (brackets expressionP)
+
+varP :: Parser Expression
+varP = liftM Var identifier

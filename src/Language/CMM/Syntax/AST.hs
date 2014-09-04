@@ -9,10 +9,9 @@ data Expression = Negative      Expression
                 | Relative      RelativeOp Expression Expression
                 | Logical       LogicalOp Expression Expression
                 | FunctionCall  Identifier [Expression]
+                | ArrayIndex    Identifier Expression
+                | Var           Identifier
                 deriving (Show, Eq)
---                 | ArrayIndex    Identifier Expression
---                 | Grouped       Expression
---                 | Var           Variable
 
 
 -- data Function = Function Type Identifier Parameters Body
