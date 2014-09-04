@@ -39,8 +39,9 @@ commaSep   = Token.commaSep   lexer
 
 expressionP :: Parser Expression
 expressionP = operationP
-          <|> try functionCallP
-          <|> try arrayIndexP
+          <|> functionCallP
+          <|> arrayIndexP
+          <|> varP
           <|> litIntP
           <|> litCharP
           <|> litStringP
@@ -91,8 +92,8 @@ operators = [ [ Prefix (reservedOp "-" >> return Negative)
             ]
 
 terms = parens expressionP
-    <|> try functionCallP
-    <|> try arrayIndexP
+    <|> functionCallP
+    <|> arrayIndexP
     <|> varP
     <|> litIntP
     <|> litCharP
@@ -100,10 +101,30 @@ terms = parens expressionP
 
 
 functionCallP :: Parser Expression
-functionCallP = liftM2 FunctionCall identifier (parens $ commaSep expressionP)
+-- didnt use:
+--     functionCallP = liftM2 FunctionCall identifier (parens $ commaSep expressionP)
+-- so that I can avoid having "try" at the expressionP level
+functionCallP = do
+  ident <- try (do {i <- identifier; whiteSpace; char '('; return i})
+  whiteSpace
+  params <- commaSep expressionP
+  whiteSpace
+  char ')'
+  whiteSpace
+  return $ FunctionCall ident params
 
 arrayIndexP :: Parser Expression
-arrayIndexP = liftM2 ArrayIndex identifier (brackets expressionP)
+-- arrayIndexP = liftM2 ArrayIndex identifier (brackets expressionP)
+-- again, avoiding "try" at the expressionP level
+arrayIndexP = do
+  ident <- try (do {i <- identifier; whiteSpace; char '['; return i})
+  whiteSpace
+  idx <- expressionP
+  whiteSpace
+  char ']'
+  whiteSpace
+  return $ ArrayIndex ident idx
+
 
 varP :: Parser Expression
 varP = liftM Var identifier

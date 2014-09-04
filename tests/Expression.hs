@@ -73,4 +73,12 @@ tests = test
   , "tArr3" ~: bad "f[]"
   , "tVar1" ~: "ident" |~?= Var "ident"
   , "tVar2" ~: bad "1dent"
+  , "tComplex1" ~: "f(x,y) + 1" |~?= Binary Plus (FunctionCall "f" [Var "x", Var "y"]) (LitInt 1)
+  , "tComplex1" ~: "f ( x , y  )+   1" |~?= Binary Plus (FunctionCall "f" [Var "x", Var "y"]) (LitInt 1)
+  , "tComplex2" ~: "f(x,y + 1)" |~?= (FunctionCall "f" [Var "x", Binary Plus (Var "y") (LitInt 1)])
+  , "tComplex3" ~: "f(x,(y + 1) * 3)" |~?= (FunctionCall "f" [Var "x", Binary Times (Binary Plus (Var "y") (LitInt 1)) (LitInt 3)])
+  , "tComplex4" ~: "a[f(x,(y + 1) * 3)]" |~?= (ArrayIndex "a" (FunctionCall "f" [Var "x", Binary Times (Binary Plus (Var "y") (LitInt 1)) (LitInt 3)]))
+  , "tComplex4" ~: "a   [ f(x   ,  (y + 1) * 3 ) ]" |~?= (ArrayIndex "a" (FunctionCall "f" [Var "x", Binary Times (Binary Plus (Var "y") (LitInt 1)) (LitInt 3)]))
+  , "tComplex5" ~: bad "af(x,(y + 1) * 3)]"
+  , "tComplex6" ~: bad "a[f(x,y + 1) * 3)]"
   ]
