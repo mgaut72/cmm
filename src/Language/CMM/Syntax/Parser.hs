@@ -18,6 +18,7 @@ languageDef = emptyDef { Token.commentStart    = "/*"
                                                  , "else"
                                                  , "while"
                                                  , "for"
+                                                 , "return"
                                                  ]
                        , Token.reservedOpNames = [ "+", "-", "*", "/", "<", ">"
                                                  , "<=", ">=", "==", "!=", "||"
@@ -37,6 +38,9 @@ whiteSpace = Token.whiteSpace lexer
 brackets   = Token.brackets   lexer
 commaSep   = Token.commaSep   lexer
 
+--
+-- Expression Parsing
+--
 expressionP :: Parser Expression
 expressionP = operationP
           <|> functionCallP
@@ -128,3 +132,25 @@ arrayIndexP = do
 
 varP :: Parser Expression
 varP = liftM (Var . Scalar) identifier
+
+--
+-- Statement Parser
+--
+
+statementP :: Parser Statement
+statementP = returnP
+         <|> ifP
+
+ifP :: Parser Statement
+ifP = do
+  reserved "if"
+  e <- parens expressionP
+  s <- statementP
+  return $ If e s
+
+returnP :: Parser Statement
+returnP = do
+  reserved "return"
+  e <- optionMaybe expressionP
+  char ';'
+  return $ Return e

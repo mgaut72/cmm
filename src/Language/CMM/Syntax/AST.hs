@@ -18,15 +18,16 @@ data Expression = Negative      Expression
 -- data Parameters = Void
 --                 | Parameters [(Type, Variable)]
 
--- data Statement = If Expression Statement (Maybe Statement) -- Maybe for 'else'
---                | While Expression Statement
---                | For Assignment Expression Assignment Statement
---                | Return Expression
---                | Assign Assignment
---                | ProcedureCall Identifier [Expression] -- arguments
---                | Bracketed Statement
---                | None
---                deriving (Show)
+data Statement = If Expression Statement
+               | IfElse Expression Statement Statement
+               | While Expression Statement
+               | For Assignment Expression Assignment Statement
+               | Return (Maybe Expression)
+               | Assign Assignment
+               | ProcedureCall Expression -- will speficially be a FunctionCall
+               | Bracketed Statement
+               | None
+               deriving (Show, Eq)
 
 data Variable = Scalar Identifier
               | Array Identifier Expression
