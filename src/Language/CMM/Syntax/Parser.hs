@@ -139,6 +139,7 @@ varP = liftM (Var . Scalar) identifier
 
 statementP :: Parser Statement
 statementP = returnP
+         <|> try ifElseP
          <|> ifP
 
 ifP :: Parser Statement
@@ -154,3 +155,13 @@ returnP = do
   e <- optionMaybe expressionP
   char ';'
   return $ Return e
+
+ifElseP :: Parser Statement
+ifElseP = do
+  reserved "if"
+  e <- parens expressionP
+  ifS <- statementP
+  whiteSpace
+  reserved "else"
+  elseS <- statementP
+  return $ IfElse e ifS elseS

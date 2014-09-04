@@ -50,4 +50,14 @@ tests = test
   , "if4" ~: bad "if ( 1 + 1  ))   return 1; "
   , "if4" ~: bad "if (( 1 + 1  )   return 1; "
   , "if5" ~: bad "if  1 + 1    return 1; "
+  , "ifelse1" ~: "if (1) return 1; else return;" |~?= IfElse (LitInt 1) (Return (Just (LitInt 1))) (Return (Nothing))
+  , "ifelse1" ~: "if (1) return 1;else return;" |~?= IfElse (LitInt 1) (Return (Just (LitInt 1))) (Return (Nothing))
+  , "ifelse1" ~: "if (1)\n\treturn 1;\nelse\n\treturn;" |~?= IfElse (LitInt 1) (Return (Just (LitInt 1))) (Return (Nothing))
+  , "ifelse2" ~: "if (1) if(2) return 1;\nelse\n\treturn;" |~?= If (LitInt 1) (IfElse (LitInt 2) (Return (Just (LitInt 1))) (Return Nothing))
+  , "ifelse2" ~: "if (1) if(2) return 1;\nelse\n\treturn; else return 3;" |~?=
+                  IfElse (LitInt 1)
+                         (IfElse (LitInt 2)
+                                 (Return (Just (LitInt 1)))
+                                 (Return Nothing))
+                         (Return (Just (LitInt 3)))
   ]
