@@ -9,8 +9,7 @@ data Expression = Negative      Expression
                 | Relative      RelativeOp Expression Expression
                 | Logical       LogicalOp Expression Expression
                 | FunctionCall  Identifier [Expression]
-                | ArrayIndex    Identifier Expression
-                | Var           Identifier
+                | Var           Variable
                 deriving (Show, Eq)
 
 
@@ -29,11 +28,12 @@ data Expression = Negative      Expression
 --                | None
 --                deriving (Show)
 
--- data Variable = Scalar Identifier
---               | Array Identifier Expression
+data Variable = Scalar Identifier
+              | Array Identifier Expression
+              deriving (Show, Eq)
 
--- data Assignment = Assignment Variable Expression
---                 deriving (Show) -- Maybe for array index
+data Assignment = Assignment Variable Expression
+                deriving (Show, Eq)
 
 type Identifier = String
 

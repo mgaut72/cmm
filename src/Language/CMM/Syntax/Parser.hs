@@ -123,8 +123,8 @@ arrayIndexP = do
   whiteSpace
   char ']'
   whiteSpace
-  return $ ArrayIndex ident idx
+  return $ Var (Array ident idx)
 
 
 varP :: Parser Expression
-varP = liftM Var identifier
+varP = liftM (Var . Scalar) identifier
