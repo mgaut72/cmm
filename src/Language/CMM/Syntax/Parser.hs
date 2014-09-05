@@ -141,6 +141,7 @@ statementP :: Parser Statement
 statementP = returnP
          <|> try ifElseP
          <|> ifP
+         <|> assignP
 
 ifP :: Parser Statement
 ifP = do
@@ -165,3 +166,26 @@ ifElseP = do
   reserved "else"
   elseS <- statementP
   return $ IfElse e ifS elseS
+
+whileP :: Parser Statement
+whileP = do
+  reserved "while"
+  e <- parens expressionP
+  s <- statementP
+  return $ While e s
+
+assignP :: Parser Statement
+assignP = do
+  a <- assignmentP
+  whiteSpace
+  char ';'
+  return $ Assign a
+
+assignmentP :: Parser Assignment
+assignmentP = do
+  Var var <- arrayIndexP <|> varP
+  whiteSpace
+  char '='
+  whiteSpace
+  e <- expressionP
+  return $ Assignment var e

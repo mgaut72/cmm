@@ -60,4 +60,6 @@ tests = test
                                  (Return (Just (LitInt 1)))
                                  (Return Nothing))
                          (Return (Just (LitInt 3)))
+  , "assign1" ~: "a = 1;" |~?= Assign (Assignment (Scalar "a") (LitInt 1))
+  , "assign2" ~: "a[1+2] = f(x\t)\n;" |~?= Assign (Assignment (Array "a" (Binary Plus (LitInt 1) (LitInt 2))) (FunctionCall "f" [Var (Scalar "x")]))
   ]
