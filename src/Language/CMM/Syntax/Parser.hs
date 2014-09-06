@@ -112,7 +112,7 @@ functionCallP :: Parser Expression
 -- so that I can avoid having "try" at the expressionP level
 functionCallP = do
   ident <- try (do {i <- identifier; lexeme $ char '('; return i})
-  params <- lexeme $ commaSep expressionP
+  params <- commaSep $ lexeme expressionP
   lexeme $ char ')'
   return $ FunctionCall ident params
 
@@ -120,9 +120,8 @@ arrayIndexP :: Parser Expression
 -- arrayIndexP = liftM2 ArrayIndex identifier (brackets expressionP)
 -- again, avoiding "try" at the expressionP level
 arrayIndexP = do
-  ident <- try (do {i <- identifier; whiteSpace; char '['; return i})
-  whiteSpace
-  idx <- lexeme $ expressionP
+  ident <- try (do {i <- identifier; lexeme $ char '['; return i})
+  idx <- expressionP
   lexeme $ char ']'
   return $ Var (Array ident idx)
 
@@ -160,7 +159,7 @@ ifElseP :: Parser Statement
 ifElseP = do
   reserved "if"
   e <- parens expressionP
-  ifS <- lexeme statementP
+  ifS <- statementP
   reserved "else"
   elseS <- statementP
   return $ IfElse e ifS elseS
@@ -169,33 +168,33 @@ whileP :: Parser Statement
 whileP = do
   reserved "while"
   e <- parens expressionP
-  s <- lexeme statementP
+  s <- statementP
   return $ While e s
 
 assignP :: Parser Statement
 assignP = do
-  a <- lexeme assignmentP
+  a <- assignmentP
   semi
   return $ Assign a
 
 assignmentP :: Parser Assignment
 assignmentP = do
-  Var var <- lexeme $ arrayIndexP <|> varP
+  Var var <- arrayIndexP <|> varP
   lexeme $ char '='
-  e <- lexeme expressionP
+  e <- expressionP
   return $ Assignment var e
 
 forP :: Parser Statement
 forP = do
-  lexeme $ reserved "for"
+  reserved "for"
   lexeme $ char '('
-  a1 <- lexeme $ optionMaybe assignmentP
+  a1 <- optionMaybe assignmentP
   semi
-  e <- lexeme $ optionMaybe expressionP
+  e <- optionMaybe expressionP
   semi
-  a2 <- lexeme $ optionMaybe assignmentP
+  a2 <- optionMaybe assignmentP
   lexeme $ char ')'
-  s <- lexeme statementP
+  s <- statementP
   return $ For a1 e a2 s
 
 bracketedP :: Parser Statement
