@@ -21,11 +21,11 @@ data Expression = Negative      Expression
 data Statement = If Expression Statement
                | IfElse Expression Statement Statement
                | While Expression Statement
-               | For Assignment Expression Assignment Statement
+               | For (Maybe Assignment) (Maybe Expression) (Maybe Assignment) Statement
                | Return (Maybe Expression)
                | Assign Assignment
                | ProcedureCall Expression -- will speficially be a FunctionCall
-               | Bracketed Statement
+               | Bracketed [Statement]
                | None
                deriving (Show, Eq)
 

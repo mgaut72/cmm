@@ -37,6 +37,8 @@ semi       = Token.semi       lexer
 whiteSpace = Token.whiteSpace lexer
 brackets   = Token.brackets   lexer
 commaSep   = Token.commaSep   lexer
+braces     = Token.braces     lexer
+lexeme     = Token.lexeme     lexer
 
 --
 -- Expression Parsing
@@ -109,12 +111,9 @@ functionCallP :: Parser Expression
 --     functionCallP = liftM2 FunctionCall identifier (parens $ commaSep expressionP)
 -- so that I can avoid having "try" at the expressionP level
 functionCallP = do
-  ident <- try (do {i <- identifier; whiteSpace; char '('; return i})
-  whiteSpace
-  params <- commaSep expressionP
-  whiteSpace
-  char ')'
-  whiteSpace
+  ident <- try (do {i <- identifier; lexeme $ char '('; return i})
+  params <- lexeme $ commaSep expressionP
+  lexeme $ char ')'
   return $ FunctionCall ident params
 
 arrayIndexP :: Parser Expression
@@ -123,10 +122,8 @@ arrayIndexP :: Parser Expression
 arrayIndexP = do
   ident <- try (do {i <- identifier; whiteSpace; char '['; return i})
   whiteSpace
-  idx <- expressionP
-  whiteSpace
-  char ']'
-  whiteSpace
+  idx <- lexeme $ expressionP
+  lexeme $ char ']'
   return $ Var (Array ident idx)
 
 
@@ -142,6 +139,8 @@ statementP = returnP
          <|> try ifElseP
          <|> ifP
          <|> assignP
+         <|> forP
+         <|> bracketedP
 
 ifP :: Parser Statement
 ifP = do
@@ -154,15 +153,14 @@ returnP :: Parser Statement
 returnP = do
   reserved "return"
   e <- optionMaybe expressionP
-  char ';'
+  semi
   return $ Return e
 
 ifElseP :: Parser Statement
 ifElseP = do
   reserved "if"
   e <- parens expressionP
-  ifS <- statementP
-  whiteSpace
+  ifS <- lexeme statementP
   reserved "else"
   elseS <- statementP
   return $ IfElse e ifS elseS
@@ -171,21 +169,36 @@ whileP :: Parser Statement
 whileP = do
   reserved "while"
   e <- parens expressionP
-  s <- statementP
+  s <- lexeme statementP
   return $ While e s
 
 assignP :: Parser Statement
 assignP = do
-  a <- assignmentP
-  whiteSpace
-  char ';'
+  a <- lexeme assignmentP
+  semi
   return $ Assign a
 
 assignmentP :: Parser Assignment
 assignmentP = do
-  Var var <- arrayIndexP <|> varP
-  whiteSpace
-  char '='
-  whiteSpace
-  e <- expressionP
+  Var var <- lexeme $ arrayIndexP <|> varP
+  lexeme $ char '='
+  e <- lexeme expressionP
   return $ Assignment var e
+
+forP :: Parser Statement
+forP = do
+  lexeme $ reserved "for"
+  lexeme $ char '('
+  a1 <- lexeme $ optionMaybe assignmentP
+  semi
+  e <- lexeme $ optionMaybe expressionP
+  semi
+  a2 <- lexeme $ optionMaybe assignmentP
+  lexeme $ char ')'
+  s <- lexeme statementP
+  return $ For a1 e a2 s
+
+bracketedP :: Parser Statement
+bracketedP = do
+  statements <- braces $ many statementP
+  return $ Bracketed statements
