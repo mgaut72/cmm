@@ -30,6 +30,9 @@ instance (Eq ParseError) where
   a == b = errorMessages a == errorMessages b
 
 tests = TestList [ TestLabel "function" f1
+                 , TestLabel "noVarDecs" f2
+                 , TestLabel "noStatements" f3
+                 , TestLabel "empty body" f4
                  ]
 
 f1 = unlines [ "int main(int argc, char argv[]) {"
@@ -40,6 +43,7 @@ f1 = unlines [ "int main(int argc, char argv[]) {"
              , "\t\tresults[i] = i;"
              , "\t}"
              , "\treturn 0;"
+             -- end statements
              , "}"
              ]
     |~?= FunctionDef Int "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
@@ -52,3 +56,40 @@ f1 = unlines [ "int main(int argc, char argv[]) {"
                            (Bracketed [Assign (Assignment (Array "results" (Var (Scalar "i"))) (Var (Scalar "i")))])
                      , Return (Just (LitInt 0))
                      ]
+
+f2 = unlines [ "int main(int argc, char argv[]) {"
+             , "\tfor(i = 0; i < 10; i = i + 1){"
+             , "\t\tresults[i] = i;"
+             , "\t}"
+             , "\treturn 0;"
+             -- end statements
+             , "}"
+             ]
+    |~?= FunctionDef Int "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
+                     []
+                     [ For (Just (Assignment (Scalar "i") (LitInt 0)))
+                               (Just (Relative Less (Var (Scalar "i")) (LitInt 10)))
+                               (Just (Assignment (Scalar "i") (Binary Plus (Var (Scalar "i")) (LitInt 1))))
+                           (Bracketed [Assign (Assignment (Array "results" (Var (Scalar "i"))) (Var (Scalar "i")))])
+                     , Return (Just (LitInt 0))
+                     ]
+
+f3 = unlines [ "int main(int argc, char argv[]) {"
+             , "\tint i, j  , k;  "
+             , "\tint results[10 ]     ; " 
+             -- end statements
+             , "}"
+             ]
+    |~?= FunctionDef Int "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
+                     [ VarDecl Int [Scalar "i", Scalar "j", Scalar "k"]
+                     , VarDecl Int [Array "results" (LitInt 10)]
+                     ]
+                     []
+
+
+f4 = unlines [ "int main(int argc, char argv[]) {"
+             , "}"
+             ]
+    |~?= FunctionDef Int "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
+                     [] []
+
