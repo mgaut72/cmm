@@ -114,7 +114,7 @@ functionCallP = do
   ident <- try (do {i <- identifier; lexeme $ char '('; return i})
   params <- commaSep $ lexeme expressionP
   lexeme $ char ')'
-  return $ FunctionCall ident params
+  return $ FunctionCall $ Function ident params
 
 arrayIndexP :: Parser Expression
 -- arrayIndexP = liftM2 ArrayIndex identifier (brackets expressionP)
@@ -195,3 +195,10 @@ bracketedP :: Parser Statement
 bracketedP = do
   statements <- braces $ many statementP
   return $ Bracketed statements
+
+procedureCallP :: Parser Statement
+procedureCallP = do
+  FunctionCall f <- functionCallP
+  semi
+  return $ ProcedureCall f
+

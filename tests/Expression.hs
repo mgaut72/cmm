@@ -69,10 +69,10 @@ tests = test
   , "tMath5" ~: "2 * 1 / 2" |~?= Binary Divide (Binary Times (LitInt 2) (LitInt 1)) (LitInt 2)
   , "tMath6" ~: "-1 + 2" |~?= Binary Plus (Negative (LitInt 1)) (LitInt 2)
   , "tMath7" ~: "-(1 + 2)" |~?= Negative (Binary Plus (LitInt 1) (LitInt 2))
-  , "tFun1" ~: "f('a')" |~?= FunctionCall "f" [LitChar 'a']
-  , "tFun1" ~: "f ( 'a' ) " |~?= FunctionCall "f" [LitChar 'a']
-  , "tFun2" ~: "f()" |~?= FunctionCall "f" []
-  , "tFun3" ~: "f('a', \"bcd\", 1)" |~?= FunctionCall "f" [LitChar 'a', LitString "bcd", LitInt 1]
+  , "tFun1" ~: "f('a')" |~?= FunctionCall (Function "f" [LitChar 'a'])
+  , "tFun1" ~: "f ( 'a' ) " |~?= FunctionCall (Function "f" [LitChar 'a'])
+  , "tFun2" ~: "f()" |~?= FunctionCall (Function "f" [])
+  , "tFun3" ~: "f('a', \"bcd\", 1)" |~?= FunctionCall (Function "f" [LitChar 'a', LitString "bcd", LitInt 1])
   , "tFun5" ~: bad "f('a', \"bcd\" 1)"
   , "tFun6" ~: bad "f('a', \"bcd\",, 1)"
   , "tFun7" ~: bad "f('a', \"bcd\"1"
@@ -83,12 +83,12 @@ tests = test
   , "tVar1" ~: "ident" |~?= Var (Scalar "ident")
   , "tVar1" ~: "ident\n" |~?= Var (Scalar "ident")
   , "tVar2" ~: bad "1dent"
-  , "tComplex1" ~: "f(x,y) + 1" |~?= Binary Plus (FunctionCall "f" [Var (Scalar "x"), Var (Scalar "y")]) (LitInt 1)
-  , "tComplex1" ~: "f ( x , y  )+   1" |~?= Binary Plus (FunctionCall "f" [Var (Scalar "x"), Var (Scalar "y")]) (LitInt 1)
-  , "tComplex2" ~: "f(x,y + 1)" |~?= (FunctionCall "f" [Var (Scalar "x"), Binary Plus (Var (Scalar "y")) (LitInt 1)])
-  , "tComplex3" ~: "f(x,(y + 1) * 3)" |~?= (FunctionCall "f" [Var (Scalar "x"), Binary Times (Binary Plus (Var (Scalar "y")) (LitInt 1)) (LitInt 3)])
-  , "tComplex4" ~: "a[f(x,(y + 1) * 3)]" |~?= Var (Array "a" (FunctionCall "f" [Var (Scalar "x"), Binary Times (Binary Plus (Var (Scalar "y")) (LitInt 1)) (LitInt 3)]))
-  , "tComplex4" ~: "a   [ f(x   ,  (y + 1) * 3 ) ]" |~?= Var (Array "a" (FunctionCall "f" [Var (Scalar "x"), Binary Times (Binary Plus (Var (Scalar "y")) (LitInt 1)) (LitInt 3)]))
+  , "tComplex1" ~: "f(x,y) + 1" |~?= Binary Plus (FunctionCall (Function "f" [Var (Scalar "x"), Var (Scalar "y")])) (LitInt 1)
+  , "tComplex1" ~: "f ( x , y  )+   1" |~?= Binary Plus (FunctionCall (Function "f" [Var (Scalar "x"), Var (Scalar "y")])) (LitInt 1)
+  , "tComplex2" ~: "f(x,y + 1)" |~?= (FunctionCall (Function "f" [Var (Scalar "x"), Binary Plus (Var (Scalar "y")) (LitInt 1)]))
+  , "tComplex3" ~: "f(x,(y + 1) * 3)" |~?= (FunctionCall (Function "f" [Var (Scalar "x"), Binary Times (Binary Plus (Var (Scalar "y")) (LitInt 1)) (LitInt 3)]))
+  , "tComplex4" ~: "a[f(x,(y + 1) * 3)]" |~?= Var (Array "a" (FunctionCall (Function "f" [Var (Scalar "x"), Binary Times (Binary Plus (Var (Scalar "y")) (LitInt 1)) (LitInt 3)])))
+  , "tComplex4" ~: "a   [ f(x   ,  (y + 1) * 3 ) ]" |~?= Var (Array "a" (FunctionCall (Function "f" [Var (Scalar "x"), Binary Times (Binary Plus (Var (Scalar "y")) (LitInt 1)) (LitInt 3)])))
   , "tComplex5" ~: bad "af(x,(y + 1) * 3)]"
   , "tComplex6" ~: bad "a[f(x,y + 1) * 3)]"
   ]

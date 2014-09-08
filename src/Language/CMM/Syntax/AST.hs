@@ -8,7 +8,7 @@ data Expression = Negative      Expression
                 | Binary        BinaryOp Expression Expression
                 | Relative      RelativeOp Expression Expression
                 | Logical       LogicalOp Expression Expression
-                | FunctionCall  Identifier [Expression]
+                | FunctionCall  Function
                 | Var           Variable
                 deriving (Show, Eq)
 
@@ -24,7 +24,7 @@ data Statement = If Expression Statement
                | For (Maybe Assignment) (Maybe Expression) (Maybe Assignment) Statement
                | Return (Maybe Expression)
                | Assign Assignment
-               | ProcedureCall Expression -- will speficially be a FunctionCall
+               | ProcedureCall Function
                | Bracketed [Statement]
                | None
                deriving (Show, Eq)
@@ -32,6 +32,8 @@ data Statement = If Expression Statement
 data Variable = Scalar Identifier
               | Array Identifier Expression
               deriving (Show, Eq)
+
+data Function = Function Identifier [Expression] deriving (Show, Eq)
 
 data Assignment = Assignment Variable Expression
                 deriving (Show, Eq)
