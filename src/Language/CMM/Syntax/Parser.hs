@@ -135,18 +135,10 @@ varP = liftM (Var . Scalar) identifier
 
 statementP :: Parser Statement
 statementP = returnP
-         <|> try ifElseP
          <|> ifP
          <|> assignP
          <|> forP
          <|> bracketedP
-
-ifP :: Parser Statement
-ifP = do
-  reserved "if"
-  e <- parens expressionP
-  s <- statementP
-  return $ If e s
 
 returnP :: Parser Statement
 returnP = do
@@ -155,14 +147,16 @@ returnP = do
   semi
   return $ Return e
 
-ifElseP :: Parser Statement
-ifElseP = do
+ifP :: Parser Statement
+ifP = do
   reserved "if"
   e <- parens expressionP
   ifS <- statementP
-  reserved "else"
-  elseS <- statementP
-  return $ IfElse e ifS elseS
+  mElse <- optionMaybe $ reserved "else"
+  case mElse of
+       Nothing -> return $ If e ifS
+       Just _  -> do elseS <- statementP
+                     return $ IfElse e ifS elseS
 
 whileP :: Parser Statement
 whileP = do
