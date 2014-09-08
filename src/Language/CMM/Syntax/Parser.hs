@@ -18,6 +18,9 @@ languageDef = emptyDef { Token.commentStart    = "/*"
                                                  , "else"
                                                  , "while"
                                                  , "for"
+                                                 , "void"
+                                                 , "char"
+                                                 , "int"
                                                  , "return"
                                                  ]
                        , Token.reservedOpNames = [ "+", "-", "*", "/", "<", ">"
@@ -34,9 +37,11 @@ reservedOp = Token.reservedOp lexer
 parens     = Token.parens     lexer
 integer    = Token.integer    lexer
 semi       = Token.semi       lexer
+comma      = Token.comma      lexer
 whiteSpace = Token.whiteSpace lexer
 brackets   = Token.brackets   lexer
 commaSep   = Token.commaSep   lexer
+commaSep1  = Token.commaSep1  lexer
 braces     = Token.braces     lexer
 lexeme     = Token.lexeme     lexer
 
@@ -46,8 +51,7 @@ lexeme     = Token.lexeme     lexer
 expressionP :: Parser Expression
 expressionP = operationP
           <|> functionCallP
-          <|> arrayIndexP
-          <|> varP
+          <|> varExpressionP
           <|> litIntP
           <|> litCharP
           <|> litStringP
@@ -100,8 +104,7 @@ operators = [ [ Prefix (reservedOp "-" >> return Negative)
 
 terms = parens expressionP
     <|> functionCallP
-    <|> arrayIndexP
-    <|> varP
+    <|> varExpressionP
     <|> litIntP
     <|> litCharP
     <|> litStringP
@@ -109,35 +112,33 @@ terms = parens expressionP
 
 
 functionCallP :: Parser Expression
--- didnt use:
---     functionCallP = liftM2 FunctionCall identifier (parens $ commaSep expressionP)
--- so that I can avoid having "try" at the expressionP level
 functionCallP = do
   ident <- try (do {i <- identifier; lexeme $ char '('; return i})
   params <- commaSep $ lexeme expressionP
   lexeme $ char ')'
   return $ FunctionCall $ Function ident params
 
-arrayIndexP :: Parser Expression
--- arrayIndexP = liftM2 ArrayIndex identifier (brackets expressionP)
--- again, avoiding "try" at the expressionP level
-arrayIndexP = do
+varExpressionP :: Parser Expression
+varExpressionP = liftM Var varP
+
+varP = arrayP <|> scalarP
+
+scalarP :: Parser Variable
+scalarP = liftM Scalar identifier
+
+arrayP :: Parser Variable
+arrayP = do
   ident <- try (do {i <- identifier; lexeme $ char '['; return i})
   idx <- expressionP
   lexeme $ char ']'
-  return $ Var (Array ident idx)
-
-
-varP :: Parser Expression
-varP = liftM (Var . Scalar) identifier
+  return $ Array ident idx
 
 --
 -- Statement Parser
 --
 
 statementP :: Parser Statement
-statementP = returnP
-         <|> ifP
+statementP = returnP <|> ifP
          <|> assignP
          <|> forP
          <|> whileP
@@ -178,7 +179,7 @@ assignP = do
 
 assignmentP :: Parser Assignment
 assignmentP = do
-  Var var <- arrayIndexP <|> varP
+  var <- varP
   lexeme $ char '='
   e <- expressionP
   return $ Assignment var e
@@ -207,3 +208,68 @@ procedureCallP = do
   semi
   return $ ProcedureCall f
 
+--
+-- Function Parsing
+--
+
+varDeclP :: Parser VarDecl
+varDeclP = do
+  t <- typeP
+  vars <- commaSep1 $ arrayDeclP <|> scalarP
+  semi
+  return $ VarDecl t vars
+
+arrayDeclP :: Parser Variable
+arrayDeclP = do
+  ident <- try (do {i <- identifier; lexeme $ char '['; return i})
+  size <- litIntP
+  lexeme $ char ']'
+  return $ Array ident size
+
+parametersP :: Parser Parameters
+parametersP = voidP <|> paramsP <?> "function parameters"
+
+voidP :: Parser Parameters
+voidP = reserved "void" >> return Void
+
+paramsP :: Parser Parameters
+paramsP = liftM Parameters (commaSep1 paramP)
+
+paramP :: Parser Parameter
+paramP = do
+  t <- typeP
+  i <- identifier
+  mArr <- optionMaybe $ ((lexeme $ char '[') >> (lexeme $ char ']'))
+  case mArr of
+       Nothing -> return $ ScalarParam t i
+       Just _  -> return $ ArrayParam  t i
+
+typeP :: Parser Type
+typeP = (reserved "char" >> return Char) <|> (reserved "int" >> return Int)
+
+functionDefP :: Parser FunctionDef
+functionDefP = typedFunctionDefP
+           <|> voidFunctionDefP
+           <?> "function declaration"
+
+typedFunctionDefP :: Parser FunctionDef
+typedFunctionDefP = do
+  t <- typeP
+  i <- identifier
+  p <- parens parametersP
+  lexeme $ char '{'
+  varDecls <- many varDeclP
+  ss <- many statementP
+  lexeme $ char '}'
+  return $ FunctionDef t i p varDecls ss
+
+voidFunctionDefP :: Parser FunctionDef
+voidFunctionDefP = do
+  reserved "void"
+  i <- identifier
+  p <- parens parametersP
+  lexeme $ char '{'
+  varDecls <- many varDeclP
+  ss <- many statementP
+  lexeme $ char '}'
+  return $ VoidFunctionDef i p varDecls ss

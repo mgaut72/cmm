@@ -46,3 +46,9 @@ test-suite statement
   type:                exitcode-stdio-1.0
   build-depends:       base >= 4 && < 5, HUnit, cmm , parsec
 
+test-suite functionDef
+  hs-source-dirs:      tests
+  main-is:             FunctionDefs.hs
+  type:                exitcode-stdio-1.0
+  build-depends:       base >= 4 && < 5, HUnit, cmm , parsec
+

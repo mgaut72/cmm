@@ -13,10 +13,21 @@ data Expression = Negative      Expression
                 deriving (Show, Eq)
 
 
--- data Function = Function Type Identifier Parameters Body
+data FunctionDef = FunctionDef Type Identifier Parameters [VarDecl] [Statement]
+                 | VoidFunctionDef  Identifier Parameters [VarDecl] [Statement]
+                 deriving (Show, Eq)
 
--- data Parameters = Void
---                 | Parameters [(Type, Variable)]
+data Parameters = Void
+                 | Parameters [Parameter]
+                 deriving (Show, Eq)
+
+data Parameter = ScalarParam Type Identifier
+               | ArrayParam  Type Identifier
+               deriving (Show, Eq)
+
+data VarDecl = VarDecl Type [Variable] deriving (Show, Eq)
+
+data Type = Char | Int deriving (Show, Eq)
 
 data Statement = If Expression Statement
                | IfElse Expression Statement Statement
