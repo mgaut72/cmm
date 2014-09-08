@@ -138,6 +138,7 @@ statementP = returnP
          <|> ifP
          <|> assignP
          <|> forP
+         <|> whileP
          <|> bracketedP
 
 returnP :: Parser Statement
