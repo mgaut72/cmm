@@ -51,6 +51,7 @@ expressionP = operationP
           <|> litIntP
           <|> litCharP
           <|> litStringP
+          <?> "expression"
 
 litIntP :: Parser Expression
 litIntP = liftM LitInt integer
@@ -104,6 +105,7 @@ terms = parens expressionP
     <|> litIntP
     <|> litCharP
     <|> litStringP
+    <?> "expression term"
 
 
 functionCallP :: Parser Expression
@@ -140,6 +142,8 @@ statementP = returnP
          <|> forP
          <|> whileP
          <|> bracketedP
+         <?> "statement"
+
 
 returnP :: Parser Statement
 returnP = do

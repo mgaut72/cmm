@@ -81,5 +81,10 @@ tests = test
   , "bracketed1" ~: "if (a == 1) {\n\treturn 1;}\nelse{\n\treturn 0;}" |~?= IfElse (Relative Eq (Var (Scalar "a")) (LitInt 1))
                                                                                    (Bracketed [Return (Just (LitInt 1))])
                                                                                    (Bracketed [Return (Just (LitInt 0))])
+  , "bracketed2" ~: "if (a == 1) {}\nelse{\n\treturn 0;}" |~?= IfElse (Relative Eq (Var (Scalar "a")) (LitInt 1))
+                                                                                   (Bracketed [])
+                                                                                   (Bracketed [Return (Just (LitInt 0))])
+  , "bracketed3" ~: bad "if (a == 1) \nelse{\n\treturn 0;}"
+
 
   ]

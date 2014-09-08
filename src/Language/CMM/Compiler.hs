@@ -11,7 +11,6 @@ compileCMM = readExpr
 readExpr s = parse ep "compile" s
  where ep = do
          whiteSpace
-         e <- expressionP
-         whiteSpace
+         e <- statementP
          eof
          return e
