@@ -33,6 +33,12 @@ tests = TestList [ TestLabel "function" f1
                  , TestLabel "noVarDecs" f2
                  , TestLabel "noStatements" f3
                  , TestLabel "empty body" f4
+                 , TestLabel "no parameters" f5
+                 , TestLabel "bad no parameters" f6
+                 , TestLabel "void function" v1
+                 , TestLabel "void noVarDecs" v2
+                 , TestLabel "void noStatements" v3
+                 , TestLabel "void empty body" v4
                  ]
 
 f1 = unlines [ "int main(int argc, char argv[]) {"
@@ -91,5 +97,73 @@ f4 = unlines [ "int main(int argc, char argv[]) {"
              , "}"
              ]
     |~?= FunctionDef Int "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
+                     [] []
+
+f5 = unlines [ "int main(void) {"
+             , "}"
+             ]
+    |~?= FunctionDef Int "main" Void [] []
+
+f6 = bad $ unlines [ "int main() {"
+                   , "}"
+                   ]
+
+
+v1 = unlines [ "void main(int argc, char argv[]) {"
+             , "\tint i, j  , k;  "
+             , "\tint results[10 ]     ; " 
+             -- end declarations
+             , "\tfor(i = 0; i < 10; i = i + 1){"
+             , "\t\tresults[i] = i;"
+             , "\t}"
+             , "\treturn 0;"
+             -- end statements
+             , "}"
+             ]
+    |~?= VoidFunctionDef "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
+                     [ VarDecl Int [Scalar "i", Scalar "j", Scalar "k"]
+                     , VarDecl Int [Array "results" (LitInt 10)]
+                     ]
+                     [ For (Just (Assignment (Scalar "i") (LitInt 0)))
+                               (Just (Relative Less (Var (Scalar "i")) (LitInt 10)))
+                               (Just (Assignment (Scalar "i") (Binary Plus (Var (Scalar "i")) (LitInt 1))))
+                           (Bracketed [Assign (Assignment (Array "results" (Var (Scalar "i"))) (Var (Scalar "i")))])
+                     , Return (Just (LitInt 0))
+                     ]
+
+v2 = unlines [ "void main(int argc, char argv[]) {"
+             , "\tfor(i = 0; i < 10; i = i + 1){"
+             , "\t\tresults[i] = i;"
+             , "\t}"
+             , "\treturn 0;"
+             -- end statements
+             , "}"
+             ]
+    |~?= VoidFunctionDef "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
+                     []
+                     [ For (Just (Assignment (Scalar "i") (LitInt 0)))
+                               (Just (Relative Less (Var (Scalar "i")) (LitInt 10)))
+                               (Just (Assignment (Scalar "i") (Binary Plus (Var (Scalar "i")) (LitInt 1))))
+                           (Bracketed [Assign (Assignment (Array "results" (Var (Scalar "i"))) (Var (Scalar "i")))])
+                     , Return (Just (LitInt 0))
+                     ]
+
+v3 = unlines [ "void main(int argc, char argv[]) {"
+             , "\tint i, j  , k;  "
+             , "\tint results[10 ]     ; " 
+             -- end statements
+             , "}"
+             ]
+    |~?= VoidFunctionDef "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
+                     [ VarDecl Int [Scalar "i", Scalar "j", Scalar "k"]
+                     , VarDecl Int [Array "results" (LitInt 10)]
+                     ]
+                     []
+
+
+v4 = unlines [ "void main(int argc, char argv[]) {"
+             , "}"
+             ]
+    |~?= VoidFunctionDef "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
                      [] []
 
