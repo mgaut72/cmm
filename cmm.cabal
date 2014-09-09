@@ -52,3 +52,8 @@ test-suite functionDef
   type:                exitcode-stdio-1.0
   build-depends:       base >= 4 && < 5, HUnit, cmm , parsec
 
+test-suite hlint
+  hs-source-dirs:      tests
+  main-is:             HLint.hs
+  type:                exitcode-stdio-1.0
+  build-depends:       base >= 4 && < 5, hlint

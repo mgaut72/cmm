@@ -113,7 +113,7 @@ terms = parens expressionP
 
 functionCallP :: Parser Expression
 functionCallP = do
-  ident <- try (do {i <- identifier; lexeme $ char '('; return i})
+  ident <- try $ identifierFollowedBy '('
   params <- commaSep $ lexeme expressionP
   lexeme $ char ')'
   return $ FunctionCall $ Function ident params
@@ -128,10 +128,17 @@ scalarP = liftM Scalar identifier
 
 arrayP :: Parser Variable
 arrayP = do
-  ident <- try (do {i <- identifier; lexeme $ char '['; return i})
+  ident <- try $ identifierFollowedBy '['
   idx <- expressionP
   lexeme $ char ']'
   return $ Array ident idx
+
+identifierFollowedBy :: Char -> Parser Identifier
+identifierFollowedBy c = do
+  i <- identifier
+  lexeme $ char c
+  return i
+
 
 --
 -- Statement Parser
@@ -221,7 +228,7 @@ varDeclP = do
 
 arrayDeclP :: Parser Variable
 arrayDeclP = do
-  ident <- try (do {i <- identifier; lexeme $ char '['; return i})
+  ident <- try $ identifierFollowedBy '['
   size <- litIntP
   lexeme $ char ']'
   return $ Array ident size
@@ -239,7 +246,7 @@ paramP :: Parser Parameter
 paramP = do
   t <- typeP
   i <- identifier
-  mArr <- optionMaybe $ ((lexeme $ char '[') >> (lexeme $ char ']'))
+  mArr <- optionMaybe (lexeme (char '[') >> lexeme (char ']'))
   case mArr of
        Nothing -> return $ ScalarParam t i
        Just _  -> return $ ArrayParam  t i
@@ -255,21 +262,19 @@ functionDefP = typedFunctionDefP
 typedFunctionDefP :: Parser FunctionDef
 typedFunctionDefP = do
   t <- typeP
+  generalFunctionDefP $ FunctionDef t
+
+
+generalFunctionDefP f = do
   i <- identifier
   p <- parens parametersP
   lexeme $ char '{'
   varDecls <- many varDeclP
   ss <- many statementP
   lexeme $ char '}'
-  return $ FunctionDef t i p varDecls ss
+  return $ f i p varDecls ss
 
 voidFunctionDefP :: Parser FunctionDef
 voidFunctionDefP = do
   reserved "void"
-  i <- identifier
-  p <- parens parametersP
-  lexeme $ char '{'
-  varDecls <- many varDeclP
-  ss <- many statementP
-  lexeme $ char '}'
-  return $ VoidFunctionDef i p varDecls ss
+  generalFunctionDefP VoidFunctionDef

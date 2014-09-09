@@ -13,7 +13,7 @@ main = do
      then exitFailure
      else exitSuccess
 
-readExpr s = parse (ep) "testParse" s
+readExpr = parse ep "testParse"
  where ep = do
          whiteSpace
          e <- functionDefP

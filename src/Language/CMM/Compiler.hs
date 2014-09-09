@@ -8,7 +8,7 @@ import Language.CMM.Syntax.Parser
 
 compileCMM = readExpr
 
-readExpr s = parse ep "compile" s
+readExpr = parse ep "compile"
  where ep = do
          whiteSpace
          e <- statementP

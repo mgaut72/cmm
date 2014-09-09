@@ -13,7 +13,7 @@ main = do
      then exitFailure
      else exitSuccess
 
-readExpr s = parse (ep) "testParse" s
+readExpr = parse ep "testParse"
  where ep = do
          whiteSpace
          e <- expressionP
@@ -85,8 +85,8 @@ tests = test
   , "tVar2" ~: bad "1dent"
   , "tComplex1" ~: "f(x,y) + 1" |~?= Binary Plus (FunctionCall (Function "f" [Var (Scalar "x"), Var (Scalar "y")])) (LitInt 1)
   , "tComplex1" ~: "f ( x , y  )+   1" |~?= Binary Plus (FunctionCall (Function "f" [Var (Scalar "x"), Var (Scalar "y")])) (LitInt 1)
-  , "tComplex2" ~: "f(x,y + 1)" |~?= (FunctionCall (Function "f" [Var (Scalar "x"), Binary Plus (Var (Scalar "y")) (LitInt 1)]))
-  , "tComplex3" ~: "f(x,(y + 1) * 3)" |~?= (FunctionCall (Function "f" [Var (Scalar "x"), Binary Times (Binary Plus (Var (Scalar "y")) (LitInt 1)) (LitInt 3)]))
+  , "tComplex2" ~: "f(x,y + 1)" |~?= FunctionCall (Function "f" [Var (Scalar "x"), Binary Plus (Var (Scalar "y")) (LitInt 1)])
+  , "tComplex3" ~: "f(x,(y + 1) * 3)" |~?= FunctionCall (Function "f" [Var (Scalar "x"), Binary Times (Binary Plus (Var (Scalar "y")) (LitInt 1)) (LitInt 3)])
   , "tComplex4" ~: "a[f(x,(y + 1) * 3)]" |~?= Var (Array "a" (FunctionCall (Function "f" [Var (Scalar "x"), Binary Times (Binary Plus (Var (Scalar "y")) (LitInt 1)) (LitInt 3)])))
   , "tComplex4" ~: "a   [ f(x   ,  (y + 1) * 3 ) ]" |~?= Var (Array "a" (FunctionCall (Function "f" [Var (Scalar "x"), Binary Times (Binary Plus (Var (Scalar "y")) (LitInt 1)) (LitInt 3)])))
   , "tComplex5" ~: bad "af(x,(y + 1) * 3)]"
