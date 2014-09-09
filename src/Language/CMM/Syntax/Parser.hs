@@ -289,9 +289,9 @@ funcStubP = liftM2 FuncStub identifier (parens parametersP)
 --
 
 declarationP :: Parser Declaration
-declarationP = variableDeclP
-           <|> try functionDeclP
+declarationP = try functionDeclP
            <|> voidFunctionDeclP
+           <|> variableDeclP
            <?> "declaration"
 
 variableDeclP :: Parser Declaration
