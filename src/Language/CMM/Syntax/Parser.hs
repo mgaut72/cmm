@@ -45,6 +45,7 @@ commaSep   = Token.commaSep   lexer
 commaSep1  = Token.commaSep1  lexer
 braces     = Token.braces     lexer
 lexeme     = Token.lexeme     lexer
+symbol     = Token.symbol     lexer
 
 --
 -- Expression Parsing
@@ -65,7 +66,7 @@ litCharP :: Parser Expression
 litCharP = do
   char '\''
   c <- satisfy f <|> try (string "\\0" >> return '\0') <|> (string "\\n" >> return '\n')
-  lexeme $ char '\''
+  symbol "'"
   return $ LitChar c
  where f c = isPrint c && c /= '\'' && c /= '\\'
 
@@ -74,7 +75,7 @@ litStringP :: Parser Expression
 litStringP = do
   char '"'
   s <- many $ (string "\\n" >> return '\n') <|> satisfy f
-  lexeme $ char '"'
+  symbol "\""
   return $ LitString s
  where f c = isPrint c && c /= '"'
 
@@ -115,8 +116,8 @@ terms = parens expressionP
 functionCallP :: Parser Expression
 functionCallP = do
   ident <- try $ identifierFollowedBy '('
-  params <- commaSep $ lexeme expressionP
-  lexeme $ char ')'
+  params <- commaSep expressionP
+  symbol ")"
   return $ FunctionCall $ Function ident params
 
 varExpressionP :: Parser Expression
@@ -131,13 +132,13 @@ arrayP :: Parser Variable
 arrayP = do
   ident <- try $ identifierFollowedBy '['
   idx <- expressionP
-  lexeme $ char ']'
+  symbol "]"
   return $ Array ident idx
 
 identifierFollowedBy :: Char -> Parser Identifier
 identifierFollowedBy c = do
   i <- identifier
-  lexeme $ char c
+  symbol [c]
   return i
 
 
@@ -188,20 +189,20 @@ assignP = do
 assignmentP :: Parser Assignment
 assignmentP = do
   var <- varP
-  lexeme $ char '='
+  symbol "="
   e <- expressionP
   return $ Assignment var e
 
 forP :: Parser Statement
 forP = do
   reserved "for"
-  lexeme $ char '('
+  symbol "("
   a1 <- optionMaybe assignmentP
   semi
   e <- optionMaybe expressionP
   semi
   a2 <- optionMaybe assignmentP
-  lexeme $ char ')'
+  symbol ")"
   s <- statementP
   return $ For a1 e a2 s
 
@@ -231,7 +232,7 @@ arrayDeclP :: Parser Variable
 arrayDeclP = do
   ident <- try $ identifierFollowedBy '['
   size <- litIntP
-  lexeme $ char ']'
+  symbol "]"
   return $ Array ident size
 
 parametersP :: Parser Parameters
@@ -247,7 +248,7 @@ paramP :: Parser Parameter
 paramP = do
   t <- typeP
   i <- identifier
-  mArr <- optionMaybe (lexeme (char '[') >> lexeme (char ']'))
+  mArr <- optionMaybe (symbol "[" >> symbol "]")
   case mArr of
        Nothing -> return $ ScalarParam t i
        Just _  -> return $ ArrayParam  t i
@@ -269,10 +270,10 @@ typedFunctionDefP = do
 generalFunctionDefP f = do
   i <- identifier
   p <- parens parametersP
-  lexeme $ char '{'
+  symbol "{"
   varDecls <- many varDeclP
   ss <- many statementP
-  lexeme $ char '}'
+  symbol "}"
   return $ f i p varDecls ss
 
 voidFunctionDefP :: Parser FunctionDef
