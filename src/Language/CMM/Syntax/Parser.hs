@@ -284,6 +284,10 @@ voidFunctionDefP = do
 funcStubP :: Parser FuncStub
 funcStubP = liftM2 FuncStub identifier (parens parametersP)
 
+--
+-- Declaration
+--
+
 declarationP :: Parser Declaration
 declarationP = variableDeclP
            <|> try functionDeclP
@@ -310,3 +314,19 @@ voidFunctionDeclP = do
   return $ VoidFunctionDecl ext stubs
 
 isExtP = option False (reserved "extern" >> return True)
+
+--
+-- ProgramData
+--
+
+progDataP :: Parser ProgData
+progDataP = try funcP <|> declP
+
+declP :: Parser ProgData
+declP = liftM Decl declarationP
+
+funcP :: Parser ProgData
+funcP = liftM Func functionDefP
+
+programP :: Parser Program
+programP = liftM Program (many progDataP)
