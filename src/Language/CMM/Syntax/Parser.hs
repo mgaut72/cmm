@@ -22,6 +22,7 @@ languageDef = emptyDef { Token.commentStart    = "/*"
                                                  , "char"
                                                  , "int"
                                                  , "return"
+                                                 , "extern"
                                                  ]
                        , Token.reservedOpNames = [ "+", "-", "*", "/", "<", ">"
                                                  , "<=", ">=", "==", "!=", "||"
@@ -257,7 +258,7 @@ typeP = (reserved "char" >> return Char) <|> (reserved "int" >> return Int)
 functionDefP :: Parser FunctionDef
 functionDefP = typedFunctionDefP
            <|> voidFunctionDefP
-           <?> "function declaration"
+           <?> "function definition"
 
 typedFunctionDefP :: Parser FunctionDef
 typedFunctionDefP = do
@@ -278,3 +279,33 @@ voidFunctionDefP :: Parser FunctionDef
 voidFunctionDefP = do
   reserved "void"
   generalFunctionDefP VoidFunctionDef
+
+funcStubP :: Parser FuncStub
+funcStubP = liftM2 FuncStub identifier (parens parametersP)
+
+declarationP :: Parser Declaration
+declarationP = variableDeclP
+           <|> try functionDeclP
+           <|> voidFunctionDeclP
+           <?> "declaration"
+
+variableDeclP :: Parser Declaration
+variableDeclP = liftM VariableDecl varDeclP
+
+functionDeclP :: Parser Declaration
+functionDeclP = do
+  ext <- isExtP
+  t <- typeP
+  stubs <- commaSep1 funcStubP
+  semi
+  return $ FunctionDecl ext t stubs
+
+voidFunctionDeclP :: Parser Declaration
+voidFunctionDeclP = do
+  ext <- isExtP
+  reserved "void"
+  stubs <- commaSep1 funcStubP
+  semi
+  return $ VoidFunctionDecl ext stubs
+
+isExtP = option False (reserved "extern" >> return True)

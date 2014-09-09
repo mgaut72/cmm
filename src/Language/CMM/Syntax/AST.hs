@@ -1,6 +1,6 @@
 module Language.CMM.Syntax.AST where
 
-data Program = [ProgData] deriving (Show, Eq)
+data Program = Program [ProgData] deriving (Show, Eq)
 
 data ProgData = Decl Declaration
               | Func FunctionDef
@@ -12,6 +12,8 @@ data Declaration = VariableDecl     VarDecl
                  deriving (Show, Eq)
 
 data FuncStub = FuncStub Identifier Parameters deriving (Show, Eq)
+
+type IsExtern = Bool
 
 data Expression = Negative      Expression
                 | Not           Expression
