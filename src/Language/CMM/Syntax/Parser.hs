@@ -64,7 +64,7 @@ litCharP :: Parser Expression
 litCharP = do
   char '\''
   c <- satisfy f <|> try (string "\\0" >> return '\0') <|> (string "\\n" >> return '\n')
-  char '\''
+  lexeme $ char '\''
   return $ LitChar c
  where f c = isPrint c && c /= '\'' && c /= '\\'
 
@@ -73,7 +73,7 @@ litStringP :: Parser Expression
 litStringP = do
   char '"'
   s <- many $ (string "\\n" >> return '\n') <|> satisfy f
-  char '"'
+  lexeme $ char '"'
   return $ LitString s
  where f c = isPrint c && c /= '"'
 

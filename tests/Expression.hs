@@ -17,7 +17,6 @@ readExpr = parse ep "testParse"
  where ep = do
          whiteSpace
          e <- expressionP
-         whiteSpace
          eof
          return e
 
