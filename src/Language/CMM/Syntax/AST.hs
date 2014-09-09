@@ -1,5 +1,18 @@
 module Language.CMM.Syntax.AST where
 
+data Program = [ProgData] deriving (Show, Eq)
+
+data ProgData = Decl Declaration
+              | Func FunctionDef
+              deriving (Show, Eq)
+
+data Declaration = VariableDecl     VarDecl
+                 | FunctionDecl     IsExtern Type [FuncStub]
+                 | VoidFunctionDecl IsExtern [FuncStub]
+                 deriving (Show, Eq)
+
+data FuncStub = FuncStub Identifier Parameters deriving (Show, Eq)
+
 data Expression = Negative      Expression
                 | Not           Expression
                 | LitInt        Integer
@@ -54,5 +67,3 @@ type Identifier = String
 data LogicalOp  = And | Or deriving (Show, Eq)
 data RelativeOp = Eq | Neq | Leq | Less | Geq | Greater deriving (Show, Eq)
 data BinaryOp   = Plus | Minus | Times | Divide  deriving (Show, Eq)
-
-
