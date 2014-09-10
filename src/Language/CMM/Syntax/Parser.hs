@@ -147,7 +147,8 @@ identifierFollowedBy c = do
 --
 
 statementP :: Parser Statement
-statementP = returnP <|> ifP
+statementP = returnP
+         <|> ifP
          <|> assignP
          <|> forP
          <|> whileP
