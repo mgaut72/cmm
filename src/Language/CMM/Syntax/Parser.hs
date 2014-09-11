@@ -224,7 +224,7 @@ procedureCallP = do
 
 varDeclP :: Parser VarDecl
 varDeclP = do
-  t <- typeP
+  t <- nonVoidTypeP
   vars <- commaSep1 $ arrayDeclP <|> scalarP
   semi
   return $ VarDecl t vars
@@ -237,50 +237,39 @@ arrayDeclP = do
   return $ Array ident size
 
 parametersP :: Parser Parameters
-parametersP = voidP <|> paramsP <?> "function parameters"
+parametersP = voidParameterP <|> paramsP <?> "function parameters"
 
-voidP :: Parser Parameters
-voidP = reserved "void" >> return Void
+voidParameterP :: Parser Parameters
+voidParameterP = reserved "void" >> return VoidParameter
 
 paramsP :: Parser Parameters
 paramsP = liftM Parameters (commaSep1 paramP)
 
 paramP :: Parser Parameter
 paramP = do
-  t <- typeP
+  t <- nonVoidTypeP
   i <- identifier
   mArr <- optionMaybe (symbol "[" >> symbol "]")
   case mArr of
        Nothing -> return $ ScalarParam t i
        Just _  -> return $ ArrayParam  t i
 
+nonVoidTypeP :: Parser Type
+nonVoidTypeP = (reserved "char" >> return Char) <|> (reserved "int" >> return Int)
+
 typeP :: Parser Type
-typeP = (reserved "char" >> return Char) <|> (reserved "int" >> return Int)
+typeP = nonVoidTypeP <|> (reserved "void" >> return Void)
 
 functionDefP :: Parser FunctionDef
-functionDefP = typedFunctionDefP
-           <|> voidFunctionDefP
-           <?> "function definition"
-
-typedFunctionDefP :: Parser FunctionDef
-typedFunctionDefP = do
+functionDefP = do
   t <- typeP
-  generalFunctionDefP $ FunctionDef t
-
-
-generalFunctionDefP f = do
   i <- identifier
   p <- parens parametersP
   symbol "{"
   varDecls <- many varDeclP
   ss <- many statementP
   symbol "}"
-  return $ f i p varDecls ss
-
-voidFunctionDefP :: Parser FunctionDef
-voidFunctionDefP = do
-  reserved "void"
-  generalFunctionDefP VoidFunctionDef
+  return $ FunctionDef t i p varDecls ss
 
 funcStubP :: Parser FuncStub
 funcStubP = liftM2 FuncStub identifier (parens parametersP)
@@ -291,7 +280,6 @@ funcStubP = liftM2 FuncStub identifier (parens parametersP)
 
 declarationP :: Parser Declaration
 declarationP = try functionDeclP
-           <|> voidFunctionDeclP
            <|> variableDeclP
            <?> "declaration"
 
@@ -305,14 +293,6 @@ functionDeclP = do
   stubs <- commaSep1 funcStubP
   semi
   return $ FunctionDecl ext t stubs
-
-voidFunctionDeclP :: Parser Declaration
-voidFunctionDeclP = do
-  ext <- isExtP
-  reserved "void"
-  stubs <- commaSep1 funcStubP
-  semi
-  return $ VoidFunctionDecl ext stubs
 
 isExtP = option False (reserved "extern" >> return True)
 

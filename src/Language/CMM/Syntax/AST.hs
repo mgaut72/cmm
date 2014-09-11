@@ -8,7 +8,6 @@ data ProgData = Decl Declaration
 
 data Declaration = VariableDecl     VarDecl
                  | FunctionDecl     IsExtern Type [FuncStub]
-                 | VoidFunctionDecl IsExtern [FuncStub]
                  deriving (Show, Eq)
 
 data FuncStub = FuncStub Identifier Parameters deriving (Show, Eq)
@@ -29,12 +28,11 @@ data Expression = Negative      Expression
 
 
 data FunctionDef = FunctionDef Type Identifier Parameters [VarDecl] [Statement]
-                 | VoidFunctionDef  Identifier Parameters [VarDecl] [Statement]
                  deriving (Show, Eq)
 
-data Parameters = Void
-                 | Parameters [Parameter]
-                 deriving (Show, Eq)
+data Parameters = VoidParameter
+                | Parameters [Parameter]
+                deriving (Show, Eq)
 
 data Parameter = ScalarParam Type Identifier
                | ArrayParam  Type Identifier
@@ -42,7 +40,7 @@ data Parameter = ScalarParam Type Identifier
 
 data VarDecl = VarDecl Type [Variable] deriving (Show, Eq)
 
-data Type = Char | Int deriving (Show, Eq)
+data Type = Char | Int | Void deriving (Show, Eq)
 
 data Statement = If Expression Statement
                | IfElse Expression Statement Statement

@@ -68,7 +68,7 @@ tests = test
 
   -- FunctionDecl
   , "fd1" ~: "int main(void);"
-        |~?= FunctionDecl False Int [FuncStub "main" Void]
+        |~?= FunctionDecl False Int [FuncStub "main" VoidParameter]
   , "fd2" ~: "int main(int asdf);"
         |~?= FunctionDecl False Int [FuncStub "main" (Parameters [ScalarParam Int "asdf"])]
   , "fd3" ~: "int main(int asdf,int arr[],char car);"
@@ -79,7 +79,7 @@ tests = test
                                             ])
                ]
   , "fd4" ~: "extern int main(void);"
-        |~?= FunctionDecl True Int [FuncStub "main" Void]
+        |~?= FunctionDecl True Int [FuncStub "main" VoidParameter]
   , "fd5" ~: "extern int main(int asdf);"
         |~?= FunctionDecl True Int [FuncStub "main" (Parameters [ScalarParam Int "asdf"])]
   , "fd6" ~: "extern int main(int asdf,int arr[],char car);"
@@ -90,22 +90,22 @@ tests = test
                                             ])
                ]
   , "vd1" ~: "void main(void);"
-        |~?= VoidFunctionDecl False [FuncStub "main" Void]
+        |~?= FunctionDecl False Void [FuncStub "main" VoidParameter]
   , "vd2" ~: "void main(int asdf);"
-        |~?= VoidFunctionDecl False [FuncStub "main" (Parameters [ScalarParam Int "asdf"])]
+        |~?= FunctionDecl False Void [FuncStub "main" (Parameters [ScalarParam Int "asdf"])]
   , "vd3" ~: "void main(int asdf,int arr[],char car);"
-        |~?= VoidFunctionDecl False
-               [ FuncStub "main" (Parameters [ ScalarParam Int  "asdf"
+        |~?= FunctionDecl False Void
+              [ FuncStub "main" (Parameters [ ScalarParam Int  "asdf"
                                             , ArrayParam  Int  "arr"
                                             , ScalarParam Char "car"
                                             ])
-               ]
+              ]
   , "vd4" ~: "extern void main(void);"
-        |~?= VoidFunctionDecl True [FuncStub "main" Void]
+        |~?= FunctionDecl True Void [FuncStub "main" VoidParameter]
   , "vd5" ~: "extern void main(int asdf);"
-        |~?= VoidFunctionDecl True [FuncStub "main" (Parameters [ScalarParam Int "asdf"])]
+        |~?= FunctionDecl True Void [FuncStub "main" (Parameters [ScalarParam Int "asdf"])]
   , "vd6" ~: "extern void main(int asdf,int arr[],char car);"
-        |~?= VoidFunctionDecl True
+        |~?= FunctionDecl True Void
                [ FuncStub "main" (Parameters [ ScalarParam Int  "asdf"
                                             , ArrayParam  Int  "arr"
                                             , ScalarParam Char "car"

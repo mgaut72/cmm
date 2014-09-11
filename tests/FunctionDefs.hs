@@ -102,7 +102,7 @@ f4 = unlines [ "int main(int argc, char argv[]) {"
 f5 = unlines [ "int main(void) {"
              , "}"
              ]
-    |~?= FunctionDef Int "main" Void [] []
+    |~?= FunctionDef Int "main" VoidParameter [] []
 
 f6 = bad $ unlines [ "int main() {"
                    , "}"
@@ -120,7 +120,7 @@ v1 = unlines [ "void main(int argc, char argv[]) {"
              -- end statements
              , "}"
              ]
-    |~?= VoidFunctionDef "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
+    |~?= FunctionDef Void "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
                      [ VarDecl Int [Scalar "i", Scalar "j", Scalar "k"]
                      , VarDecl Int [Array "results" (LitInt 10)]
                      ]
@@ -139,7 +139,7 @@ v2 = unlines [ "void main(int argc, char argv[]) {"
              -- end statements
              , "}"
              ]
-    |~?= VoidFunctionDef "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
+    |~?= FunctionDef Void "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
                      []
                      [ For (Just (Assignment (Scalar "i") (LitInt 0)))
                                (Just (Relative Less (Var (Scalar "i")) (LitInt 10)))
@@ -154,7 +154,7 @@ v3 = unlines [ "void main(int argc, char argv[]) {"
              -- end statements
              , "}"
              ]
-    |~?= VoidFunctionDef "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
+    |~?= FunctionDef Void "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
                      [ VarDecl Int [Scalar "i", Scalar "j", Scalar "k"]
                      , VarDecl Int [Array "results" (LitInt 10)]
                      ]
@@ -164,6 +164,6 @@ v3 = unlines [ "void main(int argc, char argv[]) {"
 v4 = unlines [ "void main(int argc, char argv[]) {"
              , "}"
              ]
-    |~?= VoidFunctionDef "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
+    |~?= FunctionDef Void "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
                      [] []
 
