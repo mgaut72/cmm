@@ -3,9 +3,11 @@ import Test.HUnit
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Error
 import Control.Monad
+import Data.Map.Strict as M
 
 import Language.CMM.Syntax.AST
 import Language.CMM.Syntax.Parser
+import Language.CMM.Syntax.TypeChecker
 
 main = do
   cs <- runTestTT tests
@@ -13,7 +15,11 @@ main = do
      then exitFailure
      else exitSuccess
 
-readExpr = parse ep "testParse"
+initialTables = Tables { _symbols = M.empty
+                       , _functions = M.empty
+                       }
+
+readExpr = runParser ep initialTables "compile"
  where ep = do
          whiteSpace
          e <- functionDefP

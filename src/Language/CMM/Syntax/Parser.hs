@@ -2,12 +2,16 @@ module Language.CMM.Syntax.Parser where
 
 import Control.Monad
 import Text.ParserCombinators.Parsec
+import Text.Parsec.Prim (Parsec)
 import Text.ParserCombinators.Parsec.Language
 import Text.ParserCombinators.Parsec.Expr
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Data.Char (isPrint)
 
 import Language.CMM.Syntax.AST
+import Language.CMM.Syntax.TypeChecker
+
+type MyParser = Parsec String Tables
 
 languageDef = emptyDef { Token.commentStart    = "/*"
                        , Token.commentEnd      = "*/"
@@ -50,7 +54,7 @@ symbol     = Token.symbol     lexer
 --
 -- Expression Parsing
 --
-expressionP :: Parser Expression
+expressionP :: MyParser Expression
 expressionP = operationP
           <|> functionCallP
           <|> varExpressionP
@@ -59,10 +63,10 @@ expressionP = operationP
           <|> litStringP
           <?> "expression"
 
-litIntP :: Parser Expression
+litIntP :: MyParser Expression
 litIntP = liftM LitInt integer
 
-litCharP :: Parser Expression
+litCharP :: MyParser Expression
 litCharP = do
   char '\''
   c <- satisfy f <|> try (string "\\0" >> return '\0') <|> (string "\\n" >> return '\n')
@@ -71,7 +75,7 @@ litCharP = do
  where f c = isPrint c && c /= '\'' && c /= '\\'
 
 
-litStringP :: Parser Expression
+litStringP :: MyParser Expression
 litStringP = do
   char '"'
   s <- many $ (string "\\n" >> return '\n') <|> satisfy f
@@ -79,7 +83,7 @@ litStringP = do
   return $ LitString s
  where f c = isPrint c && c /= '"'
 
-operationP :: Parser Expression
+operationP :: MyParser Expression
 operationP = buildExpressionParser operators terms
 
 operators = [ [ Prefix (reservedOp "-" >> return Negative)
@@ -113,29 +117,29 @@ terms = parens expressionP
     <?> "expression term"
 
 
-functionCallP :: Parser Expression
+functionCallP :: MyParser Expression
 functionCallP = do
   ident <- try $ identifierFollowedBy '('
   params <- commaSep expressionP
   symbol ")"
   return $ FunctionCall $ Function ident params
 
-varExpressionP :: Parser Expression
+varExpressionP :: MyParser Expression
 varExpressionP = liftM Var varP
 
 varP = arrayP <|> scalarP
 
-scalarP :: Parser Variable
+scalarP :: MyParser Variable
 scalarP = liftM Scalar identifier
 
-arrayP :: Parser Variable
+arrayP :: MyParser Variable
 arrayP = do
   ident <- try $ identifierFollowedBy '['
   idx <- expressionP
   symbol "]"
   return $ Array ident idx
 
-identifierFollowedBy :: Char -> Parser Identifier
+identifierFollowedBy :: Char -> MyParser Identifier
 identifierFollowedBy c = do
   i <- identifier
   symbol [c]
@@ -146,7 +150,7 @@ identifierFollowedBy c = do
 -- Statement Parser
 --
 
-statementP :: Parser Statement
+statementP :: MyParser Statement
 statementP = returnP
          <|> ifP
          <|> assignP
@@ -156,14 +160,14 @@ statementP = returnP
          <?> "statement"
 
 
-returnP :: Parser Statement
+returnP :: MyParser Statement
 returnP = do
   reserved "return"
   e <- optionMaybe expressionP
   semi
   return $ Return e
 
-ifP :: Parser Statement
+ifP :: MyParser Statement
 ifP = do
   reserved "if"
   e <- parens expressionP
@@ -174,27 +178,27 @@ ifP = do
        Just _  -> do elseS <- statementP
                      return $ IfElse e ifS elseS
 
-whileP :: Parser Statement
+whileP :: MyParser Statement
 whileP = do
   reserved "while"
   e <- parens expressionP
   s <- statementP
   return $ While e s
 
-assignP :: Parser Statement
+assignP :: MyParser Statement
 assignP = do
   a <- assignmentP
   semi
   return $ Assign a
 
-assignmentP :: Parser Assignment
+assignmentP :: MyParser Assignment
 assignmentP = do
   var <- varP
   symbol "="
   e <- expressionP
   return $ Assignment var e
 
-forP :: Parser Statement
+forP :: MyParser Statement
 forP = do
   reserved "for"
   symbol "("
@@ -207,12 +211,12 @@ forP = do
   s <- statementP
   return $ For a1 e a2 s
 
-bracketedP :: Parser Statement
+bracketedP :: MyParser Statement
 bracketedP = do
   statements <- braces $ many statementP
   return $ Bracketed statements
 
-procedureCallP :: Parser Statement
+procedureCallP :: MyParser Statement
 procedureCallP = do
   FunctionCall f <- functionCallP
   semi
@@ -222,30 +226,30 @@ procedureCallP = do
 -- Function Parsing
 --
 
-varDeclP :: Parser VarDecl
+varDeclP :: MyParser VarDecl
 varDeclP = do
   t <- nonVoidTypeP
   vars <- commaSep1 $ arrayDeclP <|> scalarP
   semi
   return $ VarDecl t vars
 
-arrayDeclP :: Parser Variable
+arrayDeclP :: MyParser Variable
 arrayDeclP = do
   ident <- try $ identifierFollowedBy '['
   size <- litIntP
   symbol "]"
   return $ Array ident size
 
-parametersP :: Parser Parameters
+parametersP :: MyParser Parameters
 parametersP = voidParameterP <|> paramsP <?> "function parameters"
 
-voidParameterP :: Parser Parameters
+voidParameterP :: MyParser Parameters
 voidParameterP = reserved "void" >> return VoidParameter
 
-paramsP :: Parser Parameters
+paramsP :: MyParser Parameters
 paramsP = liftM Parameters (commaSep1 paramP)
 
-paramP :: Parser Parameter
+paramP :: MyParser Parameter
 paramP = do
   t <- nonVoidTypeP
   i <- identifier
@@ -254,13 +258,13 @@ paramP = do
        Nothing -> return $ ScalarParam t i
        Just _  -> return $ ArrayParam  t i
 
-nonVoidTypeP :: Parser Type
+nonVoidTypeP :: MyParser Type
 nonVoidTypeP = (reserved "char" >> return Char) <|> (reserved "int" >> return Int)
 
-typeP :: Parser Type
+typeP :: MyParser Type
 typeP = nonVoidTypeP <|> (reserved "void" >> return Void)
 
-functionDefP :: Parser FunctionDef
+functionDefP :: MyParser FunctionDef
 functionDefP = do
   t <- typeP
   i <- identifier
@@ -271,22 +275,22 @@ functionDefP = do
   symbol "}"
   return $ FunctionDef t i p varDecls ss
 
-funcStubP :: Parser FuncStub
+funcStubP :: MyParser FuncStub
 funcStubP = liftM2 FuncStub identifier (parens parametersP)
 
 --
 -- Declaration
 --
 
-declarationP :: Parser Declaration
+declarationP :: MyParser Declaration
 declarationP = try functionDeclP
            <|> variableDeclP
            <?> "declaration"
 
-variableDeclP :: Parser Declaration
+variableDeclP :: MyParser Declaration
 variableDeclP = liftM VariableDecl varDeclP
 
-functionDeclP :: Parser Declaration
+functionDeclP :: MyParser Declaration
 functionDeclP = do
   ext <- isExtP
   t <- typeP
@@ -300,14 +304,14 @@ isExtP = option False (reserved "extern" >> return True)
 -- ProgramData
 --
 
-progDataP :: Parser ProgData
+progDataP :: MyParser ProgData
 progDataP = try funcP <|> declP
 
-declP :: Parser ProgData
+declP :: MyParser ProgData
 declP = liftM Decl declarationP
 
-funcP :: Parser ProgData
+funcP :: MyParser ProgData
 funcP = liftM Func functionDefP
 
-programP :: Parser Program
+programP :: MyParser Program
 programP = liftM Program (many progDataP)

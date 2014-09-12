@@ -4,11 +4,18 @@ module Language.CMM.Compiler (
 where
 
 import Text.ParserCombinators.Parsec
+import Data.Map.Strict as M
+
 import Language.CMM.Syntax.Parser
+import Language.CMM.Syntax.TypeChecker
 
 compileCMM = readExpr
 
-readExpr = parse ep "compile"
+initialTables = Tables { _symbols = M.empty
+                       , _functions = M.empty
+                       }
+
+readExpr = runParser ep initialTables "compile"
  where ep = do
          whiteSpace
          e <- statementP
