@@ -53,13 +53,13 @@ symbol     = Token.symbol     lexer
 -- Expression Parsing
 --
 expressionP :: MyParser Expression
-expressionP = operationP
+expressionP = ( operationP
           <|> functionCallP
           <|> varExpressionP
           <|> litIntP
           <|> litCharP
           <|> litStringP
-          <?> "expression"
+          <?> "expression") >>= typeCheck
 
 litIntP :: MyParser Expression
 litIntP = liftM LitInt integer

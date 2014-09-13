@@ -7,7 +7,13 @@ import Text.Parsec.Prim
 
 import Language.CMM.Syntax.AST
 
---type TypeChecker a = State Tables (Either String a)
+typeCheck :: Expression -> MyParser Expression
+typeCheck e = do
+  t <- typeOf e
+  case t of
+    Right t -> return e
+    Left m -> fail $ "type error: " ++ m
+
 
 lookUpArgs :: Identifier -> MyParser (Either String [TType])
 lookUpArgs i = do
