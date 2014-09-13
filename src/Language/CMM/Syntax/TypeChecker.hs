@@ -1,59 +1,32 @@
-{-# LANGUAGE TemplateHaskell #-}
 module Language.CMM.Syntax.TypeChecker where
 
 import Data.Map.Strict as M
 import Control.Monad.State
 import Control.Lens
+import Text.Parsec.Prim
 
 import Language.CMM.Syntax.AST
 
-data TType = TBool
-           | TChar
-           | TInt
-           | TVoid
-           | TArray TType
-           deriving (Show)
+--type TypeChecker a = State Tables (Either String a)
 
-instance Eq TType where
-  TBool == TBool = True
-  TChar == TChar = True
-  TInt  == TInt  = True
-  TVoid == TVoid = True
-  TChar == TInt  = True
-  TInt  == TChar = True
-  TArray t1 == TArray t2 = t1 == t2
-  (==) _ _ = False
-
-
-type SymbolTable = M.Map Identifier TType
-type FunctionArgumentTable = M.Map Identifier [TType]
-
-data Tables = Tables { _symbols :: SymbolTable
-                     , _functions :: FunctionArgumentTable
-                     }
-
-makeLenses ''Tables
-
-type TypeChecker a = State Tables (Either String a)
-
-lookUpArgs :: Identifier -> TypeChecker [TType]
+lookUpArgs :: Identifier -> MyParser (Either String [TType])
 lookUpArgs i = do
-  fcns <- use functions
-  let t = M.lookup i fcns
+  s <- getState
+  let t = M.lookup i (view functions s)
   case t of
     Just t  -> return $ Right t
     Nothing -> return $ Left ("Identifier '" ++ i ++ "' is not a function found in scope")
 
 
-lookUpSymb :: Identifier -> TypeChecker TType
+lookUpSymb :: Identifier -> MyParser (Either String TType)
 lookUpSymb i = do
-  symbs <- use symbols
-  let t = M.lookup i symbs
+  s <- getState
+  let t = M.lookup i (view symbols s)
   case t of
       Just t  -> return $ Right t
       Nothing -> return $ Left ("Identifier " ++ i ++ " not found in scope")
 
-compatibleWith :: Expression -> TType -> TypeChecker TType
+compatibleWith :: Expression -> TType -> MyParser (Either String TType)
 compatibleWith e t = do
   et <- typeOf e
   case et of
@@ -61,7 +34,7 @@ compatibleWith e t = do
              | otherwise -> return $ Left (show e ++ " is not compatible with " ++ show t)
     m -> return m
 
-allCompatibleWith :: [Expression] -> TType -> TypeChecker TType
+allCompatibleWith :: [Expression] -> TType -> MyParser (Either String TType)
 allCompatibleWith [e] t = compatibleWith e t
 allCompatibleWith (e:es) t = do
   t1 <- compatibleWith e t
@@ -76,7 +49,7 @@ allCompatibleWith (e:es) t = do
 
 
 
-typeOf :: Expression -> TypeChecker TType
+typeOf :: Expression -> MyParser (Either String TType)
 
 typeOf (LitInt _) = return $ Right TInt
 

@@ -1,4 +1,15 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Language.CMM.Syntax.AST where
+
+import Data.Map.Strict as M
+import Control.Lens
+import Text.Parsec.Prim (Parsec)
+
+-- Parser type
+type MyParser a = Parsec String Tables a
+
+
+-- Language tree types
 
 data Program = Program [ProgData] deriving (Show, Eq)
 
@@ -67,3 +78,34 @@ type Identifier = String
 data LogicalOp  = And | Or deriving (Show, Eq)
 data RelativeOp = Eq | Neq | Leq | Less | Geq | Greater deriving (Show, Eq)
 data BinaryOp   = Plus | Minus | Times | Divide  deriving (Show, Eq)
+
+
+-- Other AST related structures
+
+
+data TType = TBool
+           | TChar
+           | TInt
+           | TVoid
+           | TArray TType
+           deriving (Show)
+
+instance Eq TType where
+  TBool == TBool = True
+  TChar == TChar = True
+  TInt  == TInt  = True
+  TVoid == TVoid = True
+  TChar == TInt  = True
+  TInt  == TChar = True
+  TArray t1 == TArray t2 = t1 == t2
+  (==) _ _ = False
+
+
+type SymbolTable = M.Map Identifier TType
+type FunctionArgumentTable = M.Map Identifier [TType]
+
+data Tables = Tables { _symbols :: SymbolTable
+                     , _functions :: FunctionArgumentTable
+                     }
+
+makeLenses ''Tables

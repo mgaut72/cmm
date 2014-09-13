@@ -3,6 +3,9 @@ import Test.HUnit
 import Control.Monad
 import Control.Monad.State
 import Data.Map.Strict as M
+-- import Text.Parsec.Prim
+import Text.ParserCombinators.Parsec
+import Text.ParserCombinators.Parsec.Error
 
 import Language.CMM.Syntax.AST
 import Language.CMM.Syntax.TypeChecker
@@ -24,13 +27,15 @@ fcnList = [("none", []), ("one", [TInt]), ("two", [TInt, TChar])]
 
 
 (|~?=) :: Expression -> TType -> Test
-a |~?= b = evalState (typeOf a) initialState ~?= Right b
+a |~?= b = runParser (typeOf a) initialState "" "" ~?= Right (Right b)
 
 bad a = TestCase (unless (isLeft res) (assertFailure ("expected bad parse\ngot: " ++ show res)))
- where res = evalState (typeOf a) initialState
+ where Right res = runParser (typeOf a) initialState "" ""
        isLeft (Right a) = False
        isLeft (Left a) = True
 
+instance (Eq ParseError) where
+  a == b = errorMessages a == errorMessages b
 
 
 tests = test

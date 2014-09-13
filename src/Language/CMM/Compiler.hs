@@ -6,6 +6,7 @@ where
 import Text.ParserCombinators.Parsec
 import Data.Map.Strict as M
 
+import Language.CMM.Syntax.AST
 import Language.CMM.Syntax.Parser
 import Language.CMM.Syntax.TypeChecker
 

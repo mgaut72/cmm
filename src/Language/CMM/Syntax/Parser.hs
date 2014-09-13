@@ -11,8 +11,6 @@ import Data.Char (isPrint)
 import Language.CMM.Syntax.AST
 import Language.CMM.Syntax.TypeChecker
 
-type MyParser = Parsec String Tables
-
 languageDef = emptyDef { Token.commentStart    = "/*"
                        , Token.commentEnd      = "*/"
                        , Token.commentLine     = "//"

@@ -18,8 +18,8 @@ cabal-version:       >=1.10
 library
   exposed-modules:
     Language.CMM.Syntax.Parser,
-    Language.CMM.Syntax.AST
-    Language.CMM.Syntax.TypeChecker
+    Language.CMM.Syntax.AST,
+    Language.CMM.Syntax.TypeChecker,
     Language.CMM.Compiler
   -- other-modules:
   -- other-extensions:
@@ -69,4 +69,4 @@ test-suite typeCheck
   hs-source-dirs:      tests
   main-is:             TypeCheck.hs
   type:                exitcode-stdio-1.0
-  build-depends:       base >= 4 && < 5, HUnit, cmm, containers, mtl
+  build-depends:       base >= 4 && < 5, HUnit, cmm, containers, mtl, parsec
