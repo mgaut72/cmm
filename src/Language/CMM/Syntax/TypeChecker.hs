@@ -4,6 +4,7 @@ import Data.Map.Strict as M
 import Control.Monad.State
 import Control.Lens
 import Text.Parsec.Prim
+import Text.ParserCombinators.Parsec
 
 import Language.CMM.Syntax.AST
 
@@ -12,7 +13,7 @@ typeCheck e = do
   t <- typeOf e
   case t of
     Right t -> return e
-    Left m -> fail $ "type error: " ++ m
+    Left m -> unexpected $ "type error: " ++ m
 
 
 lookUpArgs :: Identifier -> MyParser (Either String [TType])
