@@ -68,8 +68,14 @@ test-suite declarations
   type:                exitcode-stdio-1.0
   build-depends:       base >= 4 && < 5, HUnit, cmm , parsec, containers
 
-test-suite typeCheck
+test-suite typeCheckExpression
   hs-source-dirs:      tests
-  main-is:             TypeCheck.hs
+  main-is:             TypeCheckExpression.hs
+  type:                exitcode-stdio-1.0
+  build-depends:       base >= 4 && < 5, HUnit, cmm, containers, mtl, parsec
+
+test-suite typeCheckStatement
+  hs-source-dirs:      tests
+  main-is:             TypeCheckStatement.hs
   type:                exitcode-stdio-1.0
   build-depends:       base >= 4 && < 5, HUnit, cmm, containers, mtl, parsec
