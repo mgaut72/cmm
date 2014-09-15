@@ -22,7 +22,9 @@ initialState = Tables { _symbols = M.fromList symbolList
                       }
 
 symbolList = [ ("a", TInt), ("b", TChar), ("none", TInt)
-             , ("one", TInt), ("two", TInt)]
+             , ("one", TInt), ("two", TInt), ("aa", TArray TInt)
+             , ("bb", TArray TChar)
+             ]
 fcnList = [("none", []), ("one", [TInt]), ("two", [TInt, TChar])]
 
 
@@ -61,12 +63,12 @@ tests = test
   , "tVar" ~: Binary Plus (Var (Scalar "a")) (Var (Scalar "a")) |~?= TInt
   , "tVar" ~: Binary Plus (LitChar 'a') (Var (Scalar "a")) |~?= TInt
   , "tVar" ~: Binary Minus (Var (Scalar "a")) (Var (Scalar "b")) |~?= TInt
-  , "tArr" ~: Var (Array "a" (LitInt 1)) |~?= TInt
-  , "tArr" ~: Var (Array "a" (LitChar '1')) |~?= TInt
-  , "tArr" ~: bad $ Var (Array "a" (LitString "1"))
-  , "tArr" ~: Var (Array "a" (Binary Plus (LitInt 1) (LitInt 2))) |~?= TInt
-  , "tArr" ~: Var (Array "b" (Binary Plus (LitInt 1) (LitInt 2))) |~?= TChar
-  , "tArr" ~: bad $ Var (Array "b" (Binary Plus (LitInt 1) (LitString "2")))
+  , "tArr" ~: Var (Array "aa" (LitInt 1)) |~?= TInt
+  , "tArr" ~: Var (Array "aa" (LitChar '1')) |~?= TInt
+  , "tArr" ~: bad $ Var (Array "aa" (LitString "1"))
+  , "tArr" ~: Var (Array "aa" (Binary Plus (LitInt 1) (LitInt 2))) |~?= TInt
+  , "tArr" ~: Var (Array "bb" (Binary Plus (LitInt 1) (LitInt 2))) |~?= TChar
+  , "tArr" ~: bad $ Var (Array "bb" (Binary Plus (LitInt 1) (LitString "2")))
   , "tFcn" ~: FunctionCall (Function "none" []) |~?= TInt
   , "tFcn" ~: bad $ FunctionCall (Function "none" [LitInt 1])
   , "tFcn" ~: FunctionCall (Function "one" [LitInt 1]) |~?= TInt
