@@ -1,4 +1,4 @@
-module Language.CMM.Syntax.TypeChecker where
+module Language.CMM.Syntax.TypeChecker.Expression where
 
 import Data.Map.Strict as M
 import Control.Monad.State
@@ -8,8 +8,8 @@ import Text.ParserCombinators.Parsec
 
 import Language.CMM.Syntax.AST
 
-typeCheck :: Expression -> MyParser Expression
-typeCheck e = do
+typeCheckExpression :: Expression -> MyParser Expression
+typeCheckExpression e = do
   t <- typeOf e
   case t of
     Right t -> return e
@@ -95,4 +95,8 @@ typeOf (Var (Array i e)) = do
   et <- compatibleWith e TInt
   case et of
     Left m    -> return $ Left m
-    otherwise -> lookUpSymb i
+    otherwise -> do
+      t <- lookUpSymb i
+      case t of
+        Right (TArray at) -> return $ Right at
+        otherwise        -> return $ Left "Array index performed on non-array variable"

@@ -20,7 +20,9 @@ library
     Language.CMM.Syntax.Parser.Base,
     Language.CMM.Syntax.Parser.UnTyped,
     Language.CMM.Syntax.AST,
-    Language.CMM.Syntax.TypeChecker,
+    Language.CMM.Syntax.TypeChecker.Expression
+    Language.CMM.Syntax.TypeChecker.Statement
+    Language.CMM.Syntax.TypeChecker.Assignment
     Language.CMM.Compiler
   -- other-modules:
   -- other-extensions:
