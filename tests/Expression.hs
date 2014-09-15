@@ -16,16 +16,9 @@ main = do
      then exitFailure
      else exitSuccess
 
-initialTables = Tables { _symbols = syms
-                       , _functions = fcns
+initialTables = Tables { _symbols = M.empty
+                       , _functions = M.empty
                        }
-
-syms = M.fromList [ ("f", TInt), ("ident", TInt), ("a", TInt), ("f1", TInt)
-                  , ("f0", TInt), ("f3", TInt), ("x", TInt), ("y", TInt)
-                  ]
-fcns = M.fromList [ ("f", [TInt, TInt]), ("f", [TInt, TInt]), ("f0", [])
-                  , ("f1", [TInt]), ("f3", [TChar, TArray TChar, TInt])
-                  ]
 
 readExpr = runParser ep initialTables "compile"
  where ep = do
@@ -58,13 +51,23 @@ tests = test
   , "testNegative1" ~: " - 1 " |~?= Negative (LitInt 1)
   , "testNegative2" ~: "-'a'" |~?= Negative (LitChar 'a')
   , "testNegative3" ~: bad "--2"
-  , "testNegative4" ~: "-(-56)" |~?= Negative (Negative (LitInt 56))
+  , "testNegative4" ~: "-\"ab\"" |~?= Negative (LitString "ab")
+  , "testNegative5" ~: "-(-56)" |~?= Negative (Negative (LitInt 56))
   , "testNegative5" ~: "- ( - 56 )" |~?= Negative (Negative (LitInt 56))
-  , "testNegative6" ~: bad "- ( - 5 6 )"
-  , "testNegative7" ~: bad "-'56"
-  , "testNot1" ~: "!(1==1)" |~?= Not (Relative Eq (LitInt 1) (LitInt 1))
-  , "testNot1" ~: "! ( 1 == 1 ) " |~?= Not (Relative Eq (LitInt 1) (LitInt 1))
+  , "testNegative5" ~: bad "- ( - 5 6 )"
+  , "testNegative6" ~: bad "-'56"
+  , "testNot1" ~: "!1" |~?= Not (LitInt 1)
+  , "testNot1" ~: "! 1 " |~?= Not (LitInt 1)
+  , "testNot2" ~: "!'a'" |~?= Not (LitChar 'a')
+  , "testNot3" ~: bad "!-2"
+  , "testNot4" ~: "!\"ab\"" |~?= Not (LitString "ab")
+  , "testNot5" ~: "!(!56)" |~?= Not (Not (LitInt 56))
   , "testNot6" ~: bad "!'56"
+  , "testNotNeg1" ~: bad "!-1"
+  , "testNotNeg2" ~: bad "-!1"
+  , "testNotNeg3" ~: "-(!1)" |~?= Negative (Not (LitInt 1))
+  , "testNotNeg3" ~: "- ( ! 1 )" |~?= Negative (Not (LitInt 1))
+  , "testNotNeg4" ~: "!(-1)" |~?= Not (Negative (LitInt 1))
   , "tMath1" ~: "1 + 2" |~?= Binary Plus (LitInt 1) (LitInt 2)
   , "tMath2" ~: "23 * 1 + 2" |~?= Binary Plus (Binary Times (LitInt 23) (LitInt 1)) (LitInt 2)
   , "tMath3" ~: "2 * (1 + 24)" |~?= Binary Times (LitInt 2) (Binary Plus (LitInt 1) (LitInt 24))
@@ -72,10 +75,10 @@ tests = test
   , "tMath5" ~: "2 * 1 / 2" |~?= Binary Divide (Binary Times (LitInt 2) (LitInt 1)) (LitInt 2)
   , "tMath6" ~: "-1 + 2" |~?= Binary Plus (Negative (LitInt 1)) (LitInt 2)
   , "tMath7" ~: "-(1 + 2)" |~?= Negative (Binary Plus (LitInt 1) (LitInt 2))
-  , "tFun1" ~: "f1('a')" |~?= FunctionCall (Function "f1" [LitChar 'a'])
-  , "tFun1" ~: "f1 ( 'a' ) " |~?= FunctionCall (Function "f1" [LitChar 'a'])
-  , "tFun2" ~: "f0()" |~?= FunctionCall (Function "f0" [])
-  , "tFun3" ~: "f3('a', \"bcd\", 1)" |~?= FunctionCall (Function "f3" [LitChar 'a', LitString "bcd", LitInt 1])
+  , "tFun1" ~: "f('a')" |~?= FunctionCall (Function "f" [LitChar 'a'])
+  , "tFun1" ~: "f ( 'a' ) " |~?= FunctionCall (Function "f" [LitChar 'a'])
+  , "tFun2" ~: "f()" |~?= FunctionCall (Function "f" [])
+  , "tFun3" ~: "f('a', \"bcd\", 1)" |~?= FunctionCall (Function "f" [LitChar 'a', LitString "bcd", LitInt 1])
   , "tFun5" ~: bad "f('a', \"bcd\" 1)"
   , "tFun6" ~: bad "f('a', \"bcd\",, 1)"
   , "tFun7" ~: bad "f('a', \"bcd\"1"
