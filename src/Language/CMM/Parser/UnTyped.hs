@@ -1,6 +1,6 @@
-module Language.CMM.Syntax.Parser.UnTyped where
+module Language.CMM.Parser.UnTyped where
 
-import Language.CMM.Syntax.Parser.Base
+import Language.CMM.Parser.Base
 
 expressionP     = baseExpressionP expressionP
 statementP      = baseStatementP expressionP

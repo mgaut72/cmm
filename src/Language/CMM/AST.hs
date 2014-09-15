@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Language.CMM.Syntax.AST where
+module Language.CMM.AST where
 
 import Data.Map.Strict as M
 import Control.Lens

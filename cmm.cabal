@@ -17,12 +17,12 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:
-    Language.CMM.Syntax.Parser.Base,
-    Language.CMM.Syntax.Parser.UnTyped,
-    Language.CMM.Syntax.AST,
-    Language.CMM.Syntax.TypeChecker.Expression
-    Language.CMM.Syntax.TypeChecker.Statement
-    Language.CMM.Syntax.TypeChecker.Assignment
+    Language.CMM.Parser.Base,
+    Language.CMM.Parser.UnTyped,
+    Language.CMM.AST,
+    Language.CMM.TypeChecker.Expression
+    Language.CMM.TypeChecker.Statement
+    Language.CMM.TypeChecker.Assignment
     Language.CMM.Compiler
   -- other-modules:
   -- other-extensions:

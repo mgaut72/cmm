@@ -1,7 +1,7 @@
-module Language.CMM.Syntax.Parser.Typed where
+module Language.CMM.Parser.Typed where
 
-import Language.CMM.Syntax.Parser.Base
-import Language.CMM.Syntax.TypeChecker
+import Language.CMM.Parser.Base
+import Language.CMM.TypeChecker.Expression
 
 expressionP   = baseExpressionP expressionP >>= typeCheckExpression
 statementP    = baseStatementP expressionP

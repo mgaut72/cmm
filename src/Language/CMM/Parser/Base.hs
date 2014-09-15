@@ -1,4 +1,4 @@
-module Language.CMM.Syntax.Parser.Base where
+module Language.CMM.Parser.Base where
 --
 -- To get an actual parser One needs to define:
 --    * expressionP     in term of baseExpressionP
@@ -16,7 +16,7 @@ import Text.ParserCombinators.Parsec.Expr
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Data.Char (isPrint)
 
-import Language.CMM.Syntax.AST
+import Language.CMM.AST
 
 languageDef = emptyDef { Token.commentStart    = "/*"
                        , Token.commentEnd      = "*/"

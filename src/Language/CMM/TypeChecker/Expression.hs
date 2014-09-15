@@ -1,4 +1,4 @@
-module Language.CMM.Syntax.TypeChecker.Expression where
+module Language.CMM.TypeChecker.Expression where
 
 import Data.Map.Strict as M
 import Control.Monad.State
@@ -6,7 +6,7 @@ import Control.Lens
 import Text.Parsec.Prim
 import Text.ParserCombinators.Parsec
 
-import Language.CMM.Syntax.AST
+import Language.CMM.AST
 
 typeCheckExpression :: Expression -> MyParser Expression
 typeCheckExpression e = do

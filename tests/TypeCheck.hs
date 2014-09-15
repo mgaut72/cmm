@@ -7,8 +7,8 @@ import Data.Map.Strict as M
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Error
 
-import Language.CMM.Syntax.AST
-import Language.CMM.Syntax.TypeChecker.Expression
+import Language.CMM.AST
+import Language.CMM.TypeChecker.Expression
 
 main = do
   cs <- runTestTT tests

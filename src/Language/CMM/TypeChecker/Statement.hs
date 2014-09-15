@@ -1,8 +1,8 @@
-module Language.CMM.Syntax.TypeChecker.Statement where
+module Language.CMM.TypeChecker.Statement where
 
-import Language.CMM.Syntax.TypeChecker.Expression
-import Language.CMM.Syntax.TypeChecker.Assignment
-import Language.CMM.Syntax.AST
+import Language.CMM.TypeChecker.Expression
+import Language.CMM.TypeChecker.Assignment
+import Language.CMM.AST
 import Text.ParserCombinators.Parsec
 
 typeCheckStatement :: Statement -> MyParser Statement

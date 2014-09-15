@@ -5,9 +5,9 @@ import Text.ParserCombinators.Parsec.Error
 import Control.Monad
 import Data.Map.Strict as M
 
-import Language.CMM.Syntax.AST
-import Language.CMM.Syntax.Parser.Base
-import Language.CMM.Syntax.Parser.UnTyped
+import Language.CMM.AST
+import Language.CMM.Parser.Base
+import Language.CMM.Parser.UnTyped
 
 main = do
   cs <- runTestTT tests
