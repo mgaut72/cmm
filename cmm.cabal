@@ -17,7 +17,8 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:
-    Language.CMM.Syntax.Parser,
+    Language.CMM.Syntax.Parser.Base,
+    Language.CMM.Syntax.Parser.UnTyped,
     Language.CMM.Syntax.AST,
     Language.CMM.Syntax.TypeChecker,
     Language.CMM.Compiler

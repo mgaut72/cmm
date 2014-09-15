@@ -1,4 +1,12 @@
-module Language.CMM.Syntax.Parser where
+module Language.CMM.Syntax.Parser.Base where
+--
+-- To get an actual parser One needs to define:
+--    * expressionP     in term of baseExpressionP
+--    * statementP      in terms of baseStatementP
+--    * functionDefP    in terms of baseFunctionDefP
+--    * funcP           in terms of baseFuncP
+--    * progDataP       in terms of baseProgDataP
+--    * programP        in terms of baseProgramP
 
 import Control.Monad
 import Text.ParserCombinators.Parsec
@@ -9,7 +17,6 @@ import qualified Text.ParserCombinators.Parsec.Token as Token
 import Data.Char (isPrint)
 
 import Language.CMM.Syntax.AST
-import Language.CMM.Syntax.TypeChecker
 
 languageDef = emptyDef { Token.commentStart    = "/*"
                        , Token.commentEnd      = "*/"
@@ -53,11 +60,11 @@ symbol     = Token.symbol     lexer
 -- Expression Parsing
 --
 
-expressionP :: MyParser Expression
-expressionP = untypedExpressionP >>= typeCheck
- where untypedExpressionP = operationP
-                        <|> functionCallP
-                        <|> varExpressionP
+baseExpressionP :: MyParser Expression -> MyParser Expression
+baseExpressionP eP = untypedExpressionP
+ where untypedExpressionP = operationP eP
+                        <|> functionCallP eP
+                        <|> varExpressionP eP
                         <|> litIntP
                         <|> litCharP
                         <|> litStringP
@@ -83,8 +90,8 @@ litStringP = do
   return $ LitString s
  where f c = isPrint c && c /= '"'
 
-operationP :: MyParser Expression
-operationP = buildExpressionParser operators terms
+operationP :: MyParser Expression -> MyParser Expression
+operationP eP = buildExpressionParser operators (terms eP)
 
 operators = [ [ Prefix (reservedOp "-" >> return Negative)
               , Prefix (reservedOp "!" >> return Not)
@@ -108,34 +115,34 @@ operators = [ [ Prefix (reservedOp "-" >> return Negative)
               ]
             ]
 
-terms = parens expressionP
-    <|> functionCallP
-    <|> varExpressionP
+terms eP = parens eP
+    <|> functionCallP eP
+    <|> varExpressionP eP
     <|> litIntP
     <|> litCharP
     <|> litStringP
     <?> "expression term"
 
 
-functionCallP :: MyParser Expression
-functionCallP = do
+functionCallP :: MyParser Expression -> MyParser Expression
+functionCallP eP = do
   ident <- try $ identifierFollowedBy '('
-  params <- commaSep expressionP
+  params <- commaSep eP
   symbol ")"
   return $ FunctionCall $ Function ident params
 
-varExpressionP :: MyParser Expression
-varExpressionP = liftM Var varP
+varExpressionP :: MyParser Expression -> MyParser Expression
+varExpressionP eP = liftM Var (varP eP)
 
-varP = arrayP <|> scalarP
+varP eP = arrayP eP <|> scalarP
 
 scalarP :: MyParser Variable
 scalarP = liftM Scalar identifier
 
-arrayP :: MyParser Variable
-arrayP = do
+arrayP :: MyParser Expression -> MyParser Variable
+arrayP eP = do
   ident <- try $ identifierFollowedBy '['
-  idx <- expressionP
+  idx <- eP
   symbol "]"
   return $ Array ident idx
 
@@ -150,75 +157,76 @@ identifierFollowedBy c = do
 -- Statement Parser
 --
 
-statementP :: MyParser Statement
-statementP = returnP
-         <|> ifP
-         <|> assignP
-         <|> forP
-         <|> whileP
-         <|> bracketedP
+baseStatementP :: MyParser Expression -> MyParser Statement
+baseStatementP eP = returnP eP
+         <|> ifP eP
+         <|> assignP eP
+         <|> forP eP
+         <|> whileP eP
+         <|> bracketedP eP
+         <|> procedureCallP eP
          <?> "statement"
 
 
-returnP :: MyParser Statement
-returnP = do
+returnP :: MyParser Expression -> MyParser Statement
+returnP eP = do
   reserved "return"
-  e <- optionMaybe expressionP
+  e <- optionMaybe eP
   semi
   return $ Return e
 
-ifP :: MyParser Statement
-ifP = do
+ifP :: MyParser Expression -> MyParser Statement
+ifP eP = do
   reserved "if"
-  e <- parens expressionP
-  ifS <- statementP
+  e <- parens eP
+  ifS <- baseStatementP eP
   mElse <- optionMaybe $ reserved "else"
   case mElse of
        Nothing -> return $ If e ifS
-       Just _  -> do elseS <- statementP
+       Just _  -> do elseS <- baseStatementP eP
                      return $ IfElse e ifS elseS
 
-whileP :: MyParser Statement
-whileP = do
+whileP :: MyParser Expression -> MyParser Statement
+whileP eP = do
   reserved "while"
-  e <- parens expressionP
-  s <- statementP
+  e <- parens eP
+  s <- baseStatementP eP
   return $ While e s
 
-assignP :: MyParser Statement
-assignP = do
-  a <- assignmentP
+assignP :: MyParser Expression -> MyParser Statement
+assignP eP = do
+  a <- assignmentP eP
   semi
   return $ Assign a
 
-assignmentP :: MyParser Assignment
-assignmentP = do
-  var <- varP
+assignmentP :: MyParser Expression -> MyParser Assignment
+assignmentP eP = do
+  var <- varP eP
   symbol "="
-  e <- expressionP
+  e <- eP
   return $ Assignment var e
 
-forP :: MyParser Statement
-forP = do
+forP :: MyParser Expression -> MyParser Statement
+forP eP = do
   reserved "for"
   symbol "("
-  a1 <- optionMaybe assignmentP
+  a1 <- optionMaybe $ assignmentP eP
   semi
-  e <- optionMaybe expressionP
+  e <- optionMaybe eP
   semi
-  a2 <- optionMaybe assignmentP
+  a2 <- optionMaybe $ assignmentP eP
   symbol ")"
-  s <- statementP
+  s <- baseStatementP eP
   return $ For a1 e a2 s
 
-bracketedP :: MyParser Statement
-bracketedP = do
-  statements <- braces $ many statementP
+bracketedP :: MyParser Expression -> MyParser Statement
+bracketedP eP = do
+  statements <- braces $ many (baseStatementP eP)
   return $ Bracketed statements
 
-procedureCallP :: MyParser Statement
-procedureCallP = do
-  FunctionCall f <- functionCallP
+procedureCallP :: MyParser Expression -> MyParser Statement
+procedureCallP eP = do
+  FunctionCall f <- functionCallP eP
   semi
   return $ ProcedureCall f
 
@@ -264,14 +272,14 @@ nonVoidTypeP = (reserved "char" >> return Char) <|> (reserved "int" >> return In
 typeP :: MyParser Type
 typeP = nonVoidTypeP <|> (reserved "void" >> return Void)
 
-functionDefP :: MyParser FunctionDef
-functionDefP = do
+baseFunctionDefP :: MyParser Expression -> MyParser FunctionDef
+baseFunctionDefP eP = do
   t <- typeP
   i <- identifier
   p <- parens parametersP
   symbol "{"
   varDecls <- many varDeclP
-  ss <- many statementP
+  ss <- many $ baseStatementP eP
   symbol "}"
   return $ FunctionDef t i p varDecls ss
 
@@ -304,14 +312,14 @@ isExtP = option False (reserved "extern" >> return True)
 -- ProgramData
 --
 
-progDataP :: MyParser ProgData
-progDataP = try funcP <|> declP
+baseProgDataP :: MyParser Expression -> MyParser ProgData
+baseProgDataP eP = try (baseFuncP eP) <|> declP
 
 declP :: MyParser ProgData
 declP = liftM Decl declarationP
 
-funcP :: MyParser ProgData
-funcP = liftM Func functionDefP
+baseFuncP :: MyParser Expression -> MyParser ProgData
+baseFuncP eP = liftM Func (baseFunctionDefP eP)
 
-programP :: MyParser Program
-programP = liftM Program (many progDataP)
+baseProgramP :: MyParser Expression -> MyParser Program
+baseProgramP eP = liftM Program (many $ baseProgDataP eP)

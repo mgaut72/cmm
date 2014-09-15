@@ -6,7 +6,8 @@ import Control.Monad
 import Data.Map.Strict as M
 
 import Language.CMM.Syntax.AST
-import Language.CMM.Syntax.Parser
+import Language.CMM.Syntax.Parser.UnTyped
+import Language.CMM.Syntax.Parser.Base
 import Language.CMM.Syntax.TypeChecker
 
 main = do
