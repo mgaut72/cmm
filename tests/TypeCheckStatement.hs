@@ -56,4 +56,5 @@ tests = test
   , "return" ~: good $ Return Nothing
   , "return" ~: good $ Return (Just (LitInt 1))
   , "none" ~: good $ None
+  , "for" ~: good $ For Nothing Nothing Nothing None
   ]
