@@ -2,6 +2,7 @@ module Language.CMM.TypeChecker.Statement where
 
 import Text.ParserCombinators.Parsec
 import Control.Monad
+import Control.Lens
 
 import Language.CMM.TypeChecker.Expression
 import Language.CMM.TypeChecker.Assignment
@@ -48,7 +49,23 @@ typeCheckStatement x@(For a1 e a2 s) = do
   return x
 
 
-typeCheckStatement x@(Return e) = return x
+typeCheckStatement x@(Return me) = do
+  s <- getState
+  let t = view currentFunctionType s
+  case me of
+    Nothing -> if t == TVoid
+                 then return x
+                 else unexpected "Type error: Current function is void but there is a non-void return statement"
+    Just e  -> do
+      ee <- typeOf e
+      case ee of
+        Right te
+          | t == te   -> return x
+          | otherwise -> unexpected $ "Type error: current function has declared type '"
+                                      ++ show t ++ "' but the return type is '"
+                                      ++ show te ++ "'"
+        Left m        -> unexpected m
+
 
 typeCheckStatement None = return None
 

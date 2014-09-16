@@ -57,7 +57,7 @@ tests = test
   , "while" ~: good $ While (Logical And (Not (Relative Leq (LitChar '1') (LitInt 2))) (Not (Relative Leq (LitChar '1') (LitInt 2)))) None
   , "while" ~: bad  $ While (Binary Plus (LitChar '1') (LitInt 2)) None
   , "return" ~: good $ Return Nothing
-  , "return" ~: good $ Return (Just (LitInt 1))
+  , "return" ~: bad $ Return (Just (LitInt 1)) -- invalid return type given function context
   , "for" ~: good $ For Nothing Nothing Nothing None
   , "for" ~: good $ For Nothing
                         (Just (Relative Leq (LitChar '1') (LitInt 2)))
