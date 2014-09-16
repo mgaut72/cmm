@@ -165,8 +165,11 @@ baseStatementP eP = returnP eP
          <|> whileP eP
          <|> bracketedP eP
          <|> procedureCallP eP
+         <|> noneP
          <?> "statement"
 
+noneP :: MyParser Statement
+noneP = semi >> return None
 
 returnP :: MyParser Expression -> MyParser Statement
 returnP eP = do
