@@ -15,10 +15,6 @@ main = do
      then exitFailure
      else exitSuccess
 
-initialTables = Tables { _symbols = M.empty
-                       , _functions = M.empty
-                       }
-
 readExpr = runParser ep initialTables "compile"
  where ep = do
          whiteSpace
@@ -55,8 +51,9 @@ tests = test
   , "if3" ~: "if ( 1 + 1  )   return 1; " |~?= If (Binary Plus (LitInt 1) (LitInt 1)) (Return (Just (LitInt 1)))
   , "if3" ~: "if ( 1 + 1  )\n\treturn 1; " |~?= If (Binary Plus (LitInt 1) (LitInt 1)) (Return (Just (LitInt 1)))
   , "if4" ~: bad "if ( 1 + 1  ))   return 1; "
-  , "if4" ~: bad "if (( 1 + 1  )   return 1; "
+  , "if4" ~: "if (( 1 + 1  )   return 1; " |~?= If ErrorE Return (Just (LitInt 1))
   , "if5" ~: bad "if  1 + 1    return 1; "
+  , "if5" ~: "if(  1  1 )   return 1; " |~?= If ErrorE Return (Just (LitInt 1))
   , "ifelse1" ~: "if (1) return 1; else return;" |~?= IfElse (LitInt 1) (Return (Just (LitInt 1))) (Return Nothing)
   , "ifelse1" ~: "if ( 1 ) return 1  ; else\treturn ; " |~?= IfElse (LitInt 1) (Return (Just (LitInt 1))) (Return Nothing)
   , "ifelse1" ~: "if (1) return 1;else return;" |~?= IfElse (LitInt 1) (Return (Just (LitInt 1))) (Return Nothing)
@@ -95,6 +92,4 @@ tests = test
   , "assign1" ~: " a = 1 ; " |~?= Assign (Assignment (Scalar "a") (LitInt 1))
   , "assign1" ~: " a = f(1) ; " |~?= Assign (Assignment (Scalar "a") (FunctionCall (Function "f" [LitInt 1])))
   , "assign1" ~: " a[2] = f(1) ; " |~?= Assign (Assignment (Array "a" (LitInt 2)) (FunctionCall (Function "f" [LitInt 1])))
-
-
   ]

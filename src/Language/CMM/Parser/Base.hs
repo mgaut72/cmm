@@ -157,14 +157,14 @@ identifierFollowedBy c = do
 --
 
 baseStatementP :: MyParser Expression -> MyParser Statement
-baseStatementP eP = returnP eP
+baseStatementP eP = try (returnP eP
          <|> ifP eP
          <|> assignP eP
          <|> forP eP
          <|> whileP eP
          <|> bracketedP eP
-         <|> procedureCallP eP
-         <|> ifErrorP ep
+         <|> procedureCallP eP)
+         <|> ifErrorP eP
          <?> "statement"
 
 
@@ -329,7 +329,7 @@ baseProgramP eP = liftM Program (many $ baseProgDataP eP)
 --
 
 errorUntil :: Char -> MyParser Expression
-errorUntil c = manyTil anyChar (try $ char c) >> return ErrorE
+errorUntil c = manyTill anyChar (try $ char c) >> return ErrorE
 
 ifErrorP :: MyParser Expression -> MyParser Statement
 ifErrorP eP = do

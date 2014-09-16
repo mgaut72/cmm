@@ -19,6 +19,7 @@ main = do
 initialState :: Tables
 initialState = Tables { _symbols = M.fromList symbolList
                       , _functions = M.fromList fcnList
+                      , _parseErrors = []
                       }
 
 symbolList = [ ("a", TInt), ("b", TChar), ("none", TInt)

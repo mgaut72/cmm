@@ -107,7 +107,12 @@ type FunctionArgumentTable = M.Map Identifier [TType]
 
 data Tables = Tables { _symbols :: SymbolTable
                      , _functions :: FunctionArgumentTable
-                     , _errors :: [String]
+                     , _parseErrors :: [String]
                      }
 
 makeLenses ''Tables
+
+initialTables = Tables { _symbols = M.empty
+                       , _functions = M.empty
+                       , _parseErrors = []
+                       }
