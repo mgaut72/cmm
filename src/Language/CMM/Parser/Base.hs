@@ -15,7 +15,6 @@ import Text.ParserCombinators.Parsec.Language
 import Text.ParserCombinators.Parsec.Expr
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Data.Char (isPrint)
-
 import Language.CMM.AST
 
 languageDef = emptyDef { Token.commentStart    = "/*"
@@ -165,6 +164,7 @@ baseStatementP eP = returnP eP
          <|> whileP eP
          <|> bracketedP eP
          <|> procedureCallP eP
+         <|> ifErrorP ep
          <?> "statement"
 
 
@@ -323,3 +323,19 @@ baseFuncP eP = liftM Func (baseFunctionDefP eP)
 
 baseProgramP :: MyParser Expression -> MyParser Program
 baseProgramP eP = liftM Program (many $ baseProgDataP eP)
+
+--
+-- Error Recover
+--
+
+errorUntil :: Char -> MyParser Expression
+errorUntil c = manyTil anyChar (try $ char c) >> return ErrorE
+
+ifErrorP :: MyParser Expression -> MyParser Statement
+ifErrorP eP = do
+  reserved "if"
+  symbol "("
+  e <- errorUntil ')'
+  whiteSpace
+  ifS <- baseStatementP eP
+  return $ If e ifS

@@ -35,6 +35,7 @@ data Expression = Negative      Expression
                 | Logical       LogicalOp Expression Expression
                 | FunctionCall  Function
                 | Var           Variable
+                | ErrorE
                 deriving (Show, Eq)
 
 
@@ -106,6 +107,7 @@ type FunctionArgumentTable = M.Map Identifier [TType]
 
 data Tables = Tables { _symbols :: SymbolTable
                      , _functions :: FunctionArgumentTable
+                     , _errors :: [String]
                      }
 
 makeLenses ''Tables
