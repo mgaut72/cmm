@@ -15,10 +15,6 @@ main = do
      then exitFailure
      else exitSuccess
 
-initialTables = Tables { _symbols = M.empty
-                       , _functions = M.empty
-                       }
-
 readExpr = runParser ep initialTables "compile"
  where ep = do
          whiteSpace

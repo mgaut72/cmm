@@ -28,10 +28,12 @@ lookUpArgs i = do
 lookUpSymb :: Identifier -> MyParser (Either String TType)
 lookUpSymb i = do
   s <- getState
-  let t = M.lookup i (view symbols s)
-  case t of
-      Just t  -> return $ Right t
-      Nothing -> return $ Left ("Identifier " ++ i ++ " not found in scope")
+  let tloc = M.lookup i (view localSymbols s)
+  let tglo = M.lookup i (view globalSymbols s)
+  case (tloc, tglo) of
+      (Just t, _)  -> return $ Right t
+      (_, Just t)  -> return $ Right t
+      otherwise    -> return $ Left ("Identifier " ++ i ++ " not found in scope")
 
 compatibleWith :: Expression -> TType -> MyParser (Either String TType)
 compatibleWith e t = do

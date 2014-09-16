@@ -12,10 +12,6 @@ import Language.CMM.Parser.Base
 
 compileCMM = readExpr
 
-initialTables = Tables { _symbols = M.empty
-                       , _functions = M.empty
-                       }
-
 readExpr = runParser ep initialTables "compile"
  where ep = do
          whiteSpace
