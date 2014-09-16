@@ -31,10 +31,10 @@ fcnList = [("none", []), ("one", [TInt]), ("two", [TInt, TChar])]
 
 
 (|~?=) :: Expression -> TType -> Test
-a |~?= b = runParser (typeOf a) initialState "" "" ~?= Right (Right b)
+a |~?= b = runParser (typeOf a) initialState "" "" ~?= Right b
 
 bad a = TestCase (unless (isLeft res) (assertFailure ("expected bad parse\ngot: " ++ show res)))
- where Right res = runParser (typeOf a) initialState "" ""
+ where res = runParser (typeOf a) initialState "" ""
        isLeft (Right a) = False
        isLeft (Left a) = True
 
