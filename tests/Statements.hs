@@ -95,6 +95,5 @@ tests = test
   , "assign1" ~: " a = 1 ; " |~?= Assign (Assignment (Scalar "a") (LitInt 1))
   , "assign1" ~: " a = f(1) ; " |~?= Assign (Assignment (Scalar "a") (FunctionCall (Function "f" [LitInt 1])))
   , "assign1" ~: " a[2] = f(1) ; " |~?= Assign (Assignment (Array "a" (LitInt 2)) (FunctionCall (Function "f" [LitInt 1])))
-
-
+  , "none" ~: " ; " |~?= None
   ]
