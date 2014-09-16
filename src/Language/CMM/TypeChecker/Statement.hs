@@ -1,9 +1,11 @@
 module Language.CMM.TypeChecker.Statement where
 
+import Text.ParserCombinators.Parsec
+import Control.Monad
+
 import Language.CMM.TypeChecker.Expression
 import Language.CMM.TypeChecker.Assignment
 import Language.CMM.AST
-import Text.ParserCombinators.Parsec
 
 typeCheckStatement :: Statement -> MyParser Statement
 
@@ -30,7 +32,7 @@ typeCheckStatement x@(While e s) = do
 
 typeCheckStatement x@(For a1 e a2 s) = do
   case a1 of
-    Just a  -> typeCheckAssignment a
+    Just a  -> void $ typeCheckAssignment a
     Nothing -> return ()
   case e of
     Just ex -> do
@@ -40,7 +42,7 @@ typeCheckStatement x@(For a1 e a2 s) = do
         Left  m     -> unexpected $ "type error: Conditional of For statement must be of type Bool: " ++ m
     Nothing -> return ()
   case a2 of
-    Just a  -> typeCheckAssignment a
+    Just a  -> void $ typeCheckAssignment a
     Nothing -> return ()
   typeCheckStatement s
   return x

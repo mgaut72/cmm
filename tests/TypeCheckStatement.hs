@@ -27,7 +27,7 @@ symbolList = [ ("a", TInt), ("b", TChar), ("none", TInt)
 fcnList = [("none", []), ("one", [TInt]), ("two", [TInt, TChar])]
 
 
-a |~?= b = runParser (typeCheckStatement a) initialState "" "" ~?= (Right b)
+a |~?= b = runParser (typeCheckStatement a) initialState "" "" ~?= Right b
 
 bad a = TestCase (unless (isLeft res) (assertFailure ("expected bad parse\ngot: " ++ show res)))
  where res = runParser (typeCheckStatement a) initialState "" ""
