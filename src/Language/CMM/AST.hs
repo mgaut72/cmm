@@ -106,7 +106,7 @@ data Tables = Tables { _globalSymbols       :: SymbolTable
                      , _localSymbols        :: SymbolTable
                      , _functions           :: FunctionArgumentTable
                      , _currentFunctionType :: TType
-                     }
+                     } deriving (Show, Eq)
 
 makeLenses ''Tables
 
