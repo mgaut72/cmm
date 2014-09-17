@@ -269,11 +269,12 @@ paramP = do
        Nothing -> return $ ScalarParam t i
        Just _  -> return $ ArrayParam  t i
 
-nonVoidTypeP :: MyParser Type
-nonVoidTypeP = (reserved "char" >> return Char) <|> (reserved "int" >> return Int)
+nonVoidTypeP :: MyParser TType
+nonVoidTypeP = (reserved "char" >> return TChar)
+           <|> (reserved "int" >> return TInt)
 
-typeP :: MyParser Type
-typeP = nonVoidTypeP <|> (reserved "void" >> return Void)
+typeP :: MyParser TType
+typeP = nonVoidTypeP <|> (reserved "void" >> return TVoid)
 
 baseFunctionDefP :: MyParser Expression -> MyParser FunctionDef
 baseFunctionDefP eP = do

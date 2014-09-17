@@ -54,9 +54,9 @@ f1 = unlines [ "int main(int argc, char argv[]) {"
              -- end statements
              , "}"
              ]
-    |~?= FunctionDef Int "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
-                     [ VarDecl Int [Scalar "i", Scalar "j", Scalar "k"]
-                     , VarDecl Int [Array "results" (LitInt 10)]
+    |~?= FunctionDef TInt "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"])
+                     [ VarDecl TInt [Scalar "i", Scalar "j", Scalar "k"]
+                     , VarDecl TInt [Array "results" (LitInt 10)]
                      ]
                      [ For (Just (Assignment (Scalar "i") (LitInt 0)))
                                (Just (Relative Less (Var (Scalar "i")) (LitInt 10)))
@@ -73,7 +73,7 @@ f2 = unlines [ "int main(int argc, char argv[]) {"
              -- end statements
              , "}"
              ]
-    |~?= FunctionDef Int "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
+    |~?= FunctionDef TInt "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"])
                      []
                      [ For (Just (Assignment (Scalar "i") (LitInt 0)))
                                (Just (Relative Less (Var (Scalar "i")) (LitInt 10)))
@@ -88,9 +88,9 @@ f3 = unlines [ "int main(int argc, char argv[]) {"
              -- end statements
              , "}"
              ]
-    |~?= FunctionDef Int "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
-                     [ VarDecl Int [Scalar "i", Scalar "j", Scalar "k"]
-                     , VarDecl Int [Array "results" (LitInt 10)]
+    |~?= FunctionDef TInt "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"])
+                     [ VarDecl TInt [Scalar "i", Scalar "j", Scalar "k"]
+                     , VarDecl TInt [Array "results" (LitInt 10)]
                      ]
                      []
 
@@ -98,13 +98,13 @@ f3 = unlines [ "int main(int argc, char argv[]) {"
 f4 = unlines [ "int main(int argc, char argv[]) {"
              , "}"
              ]
-    |~?= FunctionDef Int "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
+    |~?= FunctionDef TInt "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"])
                      [] []
 
 f5 = unlines [ "int main(void) {"
              , "}"
              ]
-    |~?= FunctionDef Int "main" VoidParameter [] []
+    |~?= FunctionDef TInt "main" VoidParameter [] []
 
 f6 = bad $ unlines [ "int main() {"
                    , "}"
@@ -122,9 +122,9 @@ v1 = unlines [ "void main(int argc, char argv[]) {"
              -- end statements
              , "}"
              ]
-    |~?= FunctionDef Void "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
-                     [ VarDecl Int [Scalar "i", Scalar "j", Scalar "k"]
-                     , VarDecl Int [Array "results" (LitInt 10)]
+    |~?= FunctionDef TVoid "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"])
+                     [ VarDecl TInt [Scalar "i", Scalar "j", Scalar "k"]
+                     , VarDecl TInt [Array "results" (LitInt 10)]
                      ]
                      [ For (Just (Assignment (Scalar "i") (LitInt 0)))
                                (Just (Relative Less (Var (Scalar "i")) (LitInt 10)))
@@ -141,7 +141,7 @@ v2 = unlines [ "void main(int argc, char argv[]) {"
              -- end statements
              , "}"
              ]
-    |~?= FunctionDef Void "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
+    |~?= FunctionDef TVoid "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"])
                      []
                      [ For (Just (Assignment (Scalar "i") (LitInt 0)))
                                (Just (Relative Less (Var (Scalar "i")) (LitInt 10)))
@@ -156,9 +156,9 @@ v3 = unlines [ "void main(int argc, char argv[]) {"
              -- end statements
              , "}"
              ]
-    |~?= FunctionDef Void "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
-                     [ VarDecl Int [Scalar "i", Scalar "j", Scalar "k"]
-                     , VarDecl Int [Array "results" (LitInt 10)]
+    |~?= FunctionDef TVoid "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"])
+                     [ VarDecl TInt [Scalar "i", Scalar "j", Scalar "k"]
+                     , VarDecl TInt [Array "results" (LitInt 10)]
                      ]
                      []
 
@@ -166,6 +166,6 @@ v3 = unlines [ "void main(int argc, char argv[]) {"
 v4 = unlines [ "void main(int argc, char argv[]) {"
              , "}"
              ]
-    |~?= FunctionDef Void "main" (Parameters [ScalarParam Int "argc", ArrayParam Char "argv"])
+    |~?= FunctionDef TVoid "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"])
                      [] []
 
