@@ -16,9 +16,10 @@ main = do
      else exitSuccess
 
 initialState :: Tables
-initialState = Tables { _symbols = M.fromList symbolList
+initialState = Tables { _globalSymbols = M.fromList symbolList
+                      , _localSymbols = M.empty
                       , _functions = M.fromList fcnList
-                      , _parseErrors = []
+                      , _currentFunctionType = TVoid
                       }
 
 symbolList = [ ("a", TInt), ("b", TChar), ("none", TInt)

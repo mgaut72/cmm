@@ -16,14 +16,15 @@ main = do
      else exitSuccess
 
 initialState :: Tables
-initialState = Tables { _symbols = M.fromList symbolList
+initialState = Tables { _globalSymbols = M.fromList symbolList
+                      , _localSymbols = M.empty
                       , _functions = M.fromList fcnList
-                      , _parseErrors = []
+                      , _currentFunctionType = TVoid
                       }
 
 symbolList = [ ("a", TInt), ("b", TChar), ("none", TInt)
              , ("one", TInt), ("two", TInt), ("aa", TArray TInt)
-             , ("bb", TArray TChar)
+             , ("bb", TArray TChar), ("i", TInt)
              ]
 fcnList = [("none", []), ("one", [TInt]), ("two", [TInt, TChar])]
 
@@ -45,7 +46,8 @@ instance (Eq ParseError) where
 
 
 tests = test
-  [ "if" ~: good $ If (Relative Leq (LitChar '1') (LitInt 2)) None
+  [ "none" ~: good $ None
+  , "if" ~: good $ If (Relative Leq (LitChar '1') (LitInt 2)) None
   , "if" ~: good $ If (Logical And (Not (Relative Leq (LitChar '1') (LitInt 2))) (Not (Relative Leq (LitChar '1') (LitInt 2)))) None
   , "if" ~: bad  $ If (Binary Plus (LitChar '1') (LitInt 2)) None
   , "ife" ~: good $ IfElse (Relative Leq (LitChar '1') (LitInt 2)) None None
@@ -55,7 +57,49 @@ tests = test
   , "while" ~: good $ While (Logical And (Not (Relative Leq (LitChar '1') (LitInt 2))) (Not (Relative Leq (LitChar '1') (LitInt 2)))) None
   , "while" ~: bad  $ While (Binary Plus (LitChar '1') (LitInt 2)) None
   , "return" ~: good $ Return Nothing
-  , "return" ~: good $ Return (Just (LitInt 1))
-  , "none" ~: good $ None
+  , "return" ~: bad $ Return (Just (LitInt 1)) -- invalid return type given function context
   , "for" ~: good $ For Nothing Nothing Nothing None
+  , "for" ~: good $ For Nothing
+                        (Just (Relative Leq (LitChar '1') (LitInt 2)))
+                        Nothing
+                        None
+  , "for" ~: good $ For (Just (Assignment (Scalar "i") (LitInt 0)))
+                        (Just (Relative Leq (Var (Scalar "i")) (LitInt 5)))
+                        Nothing
+                        None
+  , "for" ~: good $ For
+                    (Just (Assignment (Scalar "i") (LitInt 0)))
+                    (Just (Relative Leq (Var (Scalar "i")) (LitInt 5)))
+                    (Just (Assignment (Scalar "i") (Binary Plus (Var (Scalar "i")) (LitInt 1))))
+                    None
+  , "for" ~: bad $  For
+                    (Just (Assignment (Scalar "j") (LitInt 0))) -- j does not exist
+                    (Just (Relative Leq (Var (Scalar "i")) (LitInt 5)))
+                    (Just (Assignment (Scalar "i") (Binary Plus (Var (Scalar "i")) (LitInt 1))))
+                    None
+  , "for" ~: bad $  For
+                    (Just (Assignment (Scalar "i") (LitInt 0)))
+                    (Just (Relative Leq (Var (Scalar "j")) (LitInt 5))) -- j does not exist
+                    (Just (Assignment (Scalar "i") (Binary Plus (Var (Scalar "i")) (LitInt 1))))
+                    None
+  , "for" ~: bad $  For
+                    (Just (Assignment (Scalar "i") (LitInt 0)))
+                    (Just (Relative Leq (Var (Scalar "j")) (LitInt 5)))
+                    (Just (Assignment (Scalar "i") (Binary Plus (Var (Scalar "j")) (LitInt 1)))) -- j does not exist
+                    None
+  , "for" ~: bad $  For
+                    (Just (Assignment (Scalar "i") (LitInt 0)))
+                    (Just (Relative Leq (Var (Scalar "j")) (LitInt 5)))
+                    (Just (Assignment (Scalar "j") (Binary Plus (Var (Scalar "i")) (LitInt 1)))) -- j does not exist
+                    None
+  , "bracketed" ~: good $ Bracketed [ None ]
+  , "bracketed" ~: good $ Bracketed [ None, None ]
+  , "bracketed" ~: bad  $ Bracketed [ None
+                                    , While (Binary Plus (LitChar '1') (LitInt 2)) None
+                                    , None
+                                    ]
+  , "bracketed" ~: good $ Bracketed [ None
+                                    , If (Relative Leq (LitChar '1') (LitInt 2)) None
+                                    , None
+                                    ]
   ]

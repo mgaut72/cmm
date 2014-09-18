@@ -10,11 +10,9 @@ import Language.CMM.AST
 import Language.CMM.Parser.UnTyped
 import Language.CMM.Parser.Base
 
-compileCMM = readExpr
-
-readExpr = runParser ep initialTables "compile"
- where ep = do
+compileCMM = runParser p initialTables "compile"
+ where p = do
          whiteSpace
-         e <- expressionP
+         prog <- programP
          eof
-         return e
+         return prog

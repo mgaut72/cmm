@@ -158,15 +158,18 @@ identifierFollowedBy c = do
 
 baseStatementP :: MyParser Expression -> MyParser Statement
 baseStatementP eP = try (returnP eP
-         <|> ifP eP
-         <|> assignP eP
-         <|> forP eP
-         <|> whileP eP
-         <|> bracketedP eP
-         <|> procedureCallP eP)
-         <|> ifErrorP eP
-         <?> "statement"
+                <|> ifP eP
+                <|> procedureCallP eP
+                <|> assignP eP
+                <|> forP eP
+                <|> whileP eP
+                <|> bracketedP eP
+                <|> noneP)
+                <|> ifErrorP eP
+                <?> "statement"
 
+noneP :: MyParser Statement
+noneP = semi >> return None
 
 returnP :: MyParser Expression -> MyParser Statement
 returnP eP = do
@@ -266,11 +269,12 @@ paramP = do
        Nothing -> return $ ScalarParam t i
        Just _  -> return $ ArrayParam  t i
 
-nonVoidTypeP :: MyParser Type
-nonVoidTypeP = (reserved "char" >> return Char) <|> (reserved "int" >> return Int)
+nonVoidTypeP :: MyParser TType
+nonVoidTypeP = (reserved "char" >> return TChar)
+           <|> (reserved "int" >> return TInt)
 
-typeP :: MyParser Type
-typeP = nonVoidTypeP <|> (reserved "void" >> return Void)
+typeP :: MyParser TType
+typeP = nonVoidTypeP <|> (reserved "void" >> return TVoid)
 
 baseFunctionDefP :: MyParser Expression -> MyParser FunctionDef
 baseFunctionDefP eP = do

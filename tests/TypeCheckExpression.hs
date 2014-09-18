@@ -17,9 +17,10 @@ main = do
      else exitSuccess
 
 initialState :: Tables
-initialState = Tables { _symbols = M.fromList symbolList
+initialState = Tables { _globalSymbols = M.fromList symbolList
+                      , _localSymbols = M.empty
                       , _functions = M.fromList fcnList
-                      , _parseErrors = []
+                      , _currentFunctionType = TVoid
                       }
 
 symbolList = [ ("a", TInt), ("b", TChar), ("none", TInt)
@@ -30,10 +31,10 @@ fcnList = [("none", []), ("one", [TInt]), ("two", [TInt, TChar])]
 
 
 (|~?=) :: Expression -> TType -> Test
-a |~?= b = runParser (typeOf a) initialState "" "" ~?= Right (Right b)
+a |~?= b = runParser (typeOf a) initialState "" "" ~?= Right b
 
 bad a = TestCase (unless (isLeft res) (assertFailure ("expected bad parse\ngot: " ++ show res)))
- where Right res = runParser (typeOf a) initialState "" ""
+ where res = runParser (typeOf a) initialState "" ""
        isLeft (Right a) = False
        isLeft (Left a) = True
 

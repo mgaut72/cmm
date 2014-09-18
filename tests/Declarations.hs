@@ -32,16 +32,16 @@ instance (Eq ParseError) where
   a == b = errorMessages a == errorMessages b
 
 tests = test 
-  [ "vd1" ~: "int a;" |~?= VariableDecl (VarDecl Int [Scalar "a"])
-  , "vd1" ~: "int abc ; " |~?= VariableDecl (VarDecl Int [Scalar "abc"])
-  , "vd2" ~: "int ac,bc; " |~?= VariableDecl (VarDecl Int [Scalar "ac", Scalar "bc"])
-  , "vd2" ~: "int ac ,  bc ; " |~?= VariableDecl (VarDecl Int [Scalar "ac", Scalar "bc"])
-  , "vd3" ~: "int ac[10]; " |~?= VariableDecl (VarDecl Int [Array "ac" (LitInt 10)])
-  , "vd3" ~: "int ac  [ 10  ]  ; " |~?= VariableDecl (VarDecl Int [Array "ac" (LitInt 10)])
+  [ "vd1" ~: "int a;" |~?= VariableDecl (VarDecl TInt [Scalar "a"])
+  , "vd1" ~: "int abc ; " |~?= VariableDecl (VarDecl TInt [Scalar "abc"])
+  , "vd2" ~: "int ac,bc; " |~?= VariableDecl (VarDecl TInt [Scalar "ac", Scalar "bc"])
+  , "vd2" ~: "int ac ,  bc ; " |~?= VariableDecl (VarDecl TInt [Scalar "ac", Scalar "bc"])
+  , "vd3" ~: "int ac[10]; " |~?= VariableDecl (VarDecl TInt [Array "ac" (LitInt 10)])
+  , "vd3" ~: "int ac  [ 10  ]  ; " |~?= VariableDecl (VarDecl TInt [Array "ac" (LitInt 10)])
   , "vd4" ~: "int arr [ 10  ], foo  ; "
-        |~?= VariableDecl (VarDecl Int [Array "arr" (LitInt 10), Scalar "foo"])
+        |~?= VariableDecl (VarDecl TInt [Array "arr" (LitInt 10), Scalar "foo"])
   , "vd4" ~: "int arr[10],foo;"
-        |~?= VariableDecl (VarDecl Int [Array "arr" (LitInt 10), Scalar "foo"])
+        |~?= VariableDecl (VarDecl TInt [Array "arr" (LitInt 10), Scalar "foo"])
   , "vd5" ~: bad "intarr[10],foo;"
   , "vd5" ~: bad "int arr[];"
   , "vd5" ~: bad "int arr[3]"
@@ -51,15 +51,15 @@ tests = test
   , "vd5" ~: bad "int foo = 5;"
   , "vd5" ~: bad "foo;"
   , "vd5" ~: bad "void foo;"
-  , "vd1" ~: "char abc ; " |~?= VariableDecl (VarDecl Char [Scalar "abc"])
-  , "vd2" ~: "char ac,bc; " |~?= VariableDecl (VarDecl Char [Scalar "ac", Scalar "bc"])
-  , "vd2" ~: "char ac ,  bc ; " |~?= VariableDecl (VarDecl Char [Scalar "ac", Scalar "bc"])
-  , "vd3" ~: "char ac[10]; " |~?= VariableDecl (VarDecl Char [Array "ac" (LitInt 10)])
-  , "vd3" ~: "char ac  [ 10  ]  ; " |~?= VariableDecl (VarDecl Char [Array "ac" (LitInt 10)])
+  , "vd1" ~: "char abc ; " |~?= VariableDecl (VarDecl TChar [Scalar "abc"])
+  , "vd2" ~: "char ac,bc; " |~?= VariableDecl (VarDecl TChar [Scalar "ac", Scalar "bc"])
+  , "vd2" ~: "char ac ,  bc ; " |~?= VariableDecl (VarDecl TChar [Scalar "ac", Scalar "bc"])
+  , "vd3" ~: "char ac[10]; " |~?= VariableDecl (VarDecl TChar [Array "ac" (LitInt 10)])
+  , "vd3" ~: "char ac  [ 10  ]  ; " |~?= VariableDecl (VarDecl TChar [Array "ac" (LitInt 10)])
   , "vd4" ~: "char arr [ 10  ], foo  ; "
-        |~?= VariableDecl (VarDecl Char [Array "arr" (LitInt 10), Scalar "foo"])
+        |~?= VariableDecl (VarDecl TChar [Array "arr" (LitInt 10), Scalar "foo"])
   , "vd4" ~: "char arr[10],foo;"
-        |~?= VariableDecl (VarDecl Char [Array "arr" (LitInt 10), Scalar "foo"])
+        |~?= VariableDecl (VarDecl TChar [Array "arr" (LitInt 10), Scalar "foo"])
   , "vd5" ~: bad "chararr[10],foo;"
   , "vd5" ~: bad "char arr[];"
   , "vd5" ~: bad "char arr[3]"
@@ -70,47 +70,47 @@ tests = test
 
   -- FunctionDecl
   , "fd1" ~: "int main(void);"
-        |~?= FunctionDecl False Int [FuncStub "main" VoidParameter]
+        |~?= FunctionDecl False TInt [FuncStub "main" VoidParameter]
   , "fd2" ~: "int main(int asdf);"
-        |~?= FunctionDecl False Int [FuncStub "main" (Parameters [ScalarParam Int "asdf"])]
+        |~?= FunctionDecl False TInt [FuncStub "main" (Parameters [ScalarParam TInt "asdf"])]
   , "fd3" ~: "int main(int asdf,int arr[],char car);"
-        |~?= FunctionDecl False Int
-               [ FuncStub "main" (Parameters [ ScalarParam Int  "asdf"
-                                            , ArrayParam  Int  "arr"
-                                            , ScalarParam Char "car"
+        |~?= FunctionDecl False TInt
+               [ FuncStub "main" (Parameters [ ScalarParam TInt  "asdf"
+                                            , ArrayParam  TInt  "arr"
+                                            , ScalarParam TChar "car"
                                             ])
                ]
   , "fd4" ~: "extern int main(void);"
-        |~?= FunctionDecl True Int [FuncStub "main" VoidParameter]
+        |~?= FunctionDecl True TInt [FuncStub "main" VoidParameter]
   , "fd5" ~: "extern int main(int asdf);"
-        |~?= FunctionDecl True Int [FuncStub "main" (Parameters [ScalarParam Int "asdf"])]
+        |~?= FunctionDecl True TInt [FuncStub "main" (Parameters [ScalarParam TInt "asdf"])]
   , "fd6" ~: "extern int main(int asdf,int arr[],char car);"
-        |~?= FunctionDecl True Int
-               [ FuncStub "main" (Parameters [ ScalarParam Int  "asdf"
-                                            , ArrayParam  Int  "arr"
-                                            , ScalarParam Char "car"
+        |~?= FunctionDecl True TInt
+               [ FuncStub "main" (Parameters [ ScalarParam TInt  "asdf"
+                                            , ArrayParam  TInt  "arr"
+                                            , ScalarParam TChar "car"
                                             ])
                ]
   , "vd1" ~: "void main(void);"
-        |~?= FunctionDecl False Void [FuncStub "main" VoidParameter]
+        |~?= FunctionDecl False TVoid [FuncStub "main" VoidParameter]
   , "vd2" ~: "void main(int asdf);"
-        |~?= FunctionDecl False Void [FuncStub "main" (Parameters [ScalarParam Int "asdf"])]
+        |~?= FunctionDecl False TVoid [FuncStub "main" (Parameters [ScalarParam TInt "asdf"])]
   , "vd3" ~: "void main(int asdf,int arr[],char car);"
-        |~?= FunctionDecl False Void
-              [ FuncStub "main" (Parameters [ ScalarParam Int  "asdf"
-                                            , ArrayParam  Int  "arr"
-                                            , ScalarParam Char "car"
+        |~?= FunctionDecl False TVoid
+              [ FuncStub "main" (Parameters [ ScalarParam TInt  "asdf"
+                                            , ArrayParam  TInt  "arr"
+                                            , ScalarParam TChar "car"
                                             ])
               ]
   , "vd4" ~: "extern void main(void);"
-        |~?= FunctionDecl True Void [FuncStub "main" VoidParameter]
+        |~?= FunctionDecl True TVoid [FuncStub "main" VoidParameter]
   , "vd5" ~: "extern void main(int asdf);"
-        |~?= FunctionDecl True Void [FuncStub "main" (Parameters [ScalarParam Int "asdf"])]
+        |~?= FunctionDecl True TVoid [FuncStub "main" (Parameters [ScalarParam TInt "asdf"])]
   , "vd6" ~: "extern void main(int asdf,int arr[],char car);"
-        |~?= FunctionDecl True Void
-               [ FuncStub "main" (Parameters [ ScalarParam Int  "asdf"
-                                            , ArrayParam  Int  "arr"
-                                            , ScalarParam Char "car"
+        |~?= FunctionDecl True TVoid
+               [ FuncStub "main" (Parameters [ ScalarParam TInt  "asdf"
+                                            , ArrayParam  TInt  "arr"
+                                            , ScalarParam TChar "car"
                                             ])
                ]
   ]

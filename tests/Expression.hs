@@ -15,7 +15,6 @@ main = do
      then exitFailure
      else exitSuccess
 
-
 readExpr = runParser ep initialTables "compile"
  where ep = do
          whiteSpace

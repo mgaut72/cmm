@@ -24,6 +24,7 @@ library
     Language.CMM.TypeChecker.Expression
     Language.CMM.TypeChecker.Statement
     Language.CMM.TypeChecker.Assignment
+    Language.CMM.TypeChecker.Declaration
     Language.CMM.Compiler
   -- other-modules:
   -- other-extensions:
@@ -86,3 +87,9 @@ test-suite typeCheckAssignment
   main-is:             TypeCheckAssignment.hs
   type:                exitcode-stdio-1.0
   build-depends:       base >= 4 && < 5, HUnit, cmm, containers, mtl, parsec
+
+test-suite typeCheckDeclaration
+  hs-source-dirs:      tests
+  main-is:             TypeCheckDeclaration.hs
+  type:                exitcode-stdio-1.0
+  build-depends:       base >= 4 && < 5, HUnit, cmm, containers, mtl, parsec, lens

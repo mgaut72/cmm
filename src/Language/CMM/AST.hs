@@ -18,7 +18,7 @@ data ProgData = Decl Declaration
               deriving (Show, Eq)
 
 data Declaration = VariableDecl     VarDecl
-                 | FunctionDecl     IsExtern Type [FuncStub]
+                 | FunctionDecl     IsExtern TType [FuncStub]
                  deriving (Show, Eq)
 
 data FuncStub = FuncStub Identifier Parameters deriving (Show, Eq)
@@ -39,20 +39,18 @@ data Expression = Negative      Expression
                 deriving (Show, Eq)
 
 
-data FunctionDef = FunctionDef Type Identifier Parameters [VarDecl] [Statement]
+data FunctionDef = FunctionDef TType Identifier Parameters [VarDecl] [Statement]
                  deriving (Show, Eq)
 
 data Parameters = VoidParameter
                 | Parameters [Parameter]
                 deriving (Show, Eq)
 
-data Parameter = ScalarParam Type Identifier
-               | ArrayParam  Type Identifier
+data Parameter = ScalarParam TType Identifier
+               | ArrayParam  TType Identifier
                deriving (Show, Eq)
 
-data VarDecl = VarDecl Type [Variable] deriving (Show, Eq)
-
-data Type = Char | Int | Void deriving (Show, Eq)
+data VarDecl = VarDecl TType [Variable] deriving (Show, Eq)
 
 data Statement = If Expression Statement
                | IfElse Expression Statement Statement
@@ -105,14 +103,16 @@ instance Eq TType where
 type SymbolTable = M.Map Identifier TType
 type FunctionArgumentTable = M.Map Identifier [TType]
 
-data Tables = Tables { _symbols :: SymbolTable
-                     , _functions :: FunctionArgumentTable
-                     , _parseErrors :: [String]
-                     }
+data Tables = Tables { _globalSymbols       :: SymbolTable
+                     , _localSymbols        :: SymbolTable
+                     , _functions           :: FunctionArgumentTable
+                     , _currentFunctionType :: TType
+                     } deriving (Show, Eq)
 
 makeLenses ''Tables
 
-initialTables = Tables { _symbols = M.empty
-                       , _functions = M.empty
-                       , _parseErrors = []
+initialTables = Tables { _globalSymbols       = M.empty
+                       , _localSymbols        = M.empty
+                       , _functions           = M.empty
+                       , _currentFunctionType = TVoid
                        }
