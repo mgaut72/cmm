@@ -159,14 +159,14 @@ identifierFollowedBy c = do
 
 baseStatementP :: MyParser Expression -> MyParser Statement
 baseStatementP eP = returnP eP
-         <|> ifP eP
-         <|> assignP eP
-         <|> forP eP
-         <|> whileP eP
-         <|> bracketedP eP
-         <|> procedureCallP eP
-         <|> noneP
-         <?> "statement"
+                <|> ifP eP
+                <|> procedureCallP eP
+                <|> assignP eP
+                <|> forP eP
+                <|> whileP eP
+                <|> bracketedP eP
+                <|> noneP
+                <?> "statement"
 
 noneP :: MyParser Statement
 noneP = semi >> return None
