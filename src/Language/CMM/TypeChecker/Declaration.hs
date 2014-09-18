@@ -21,7 +21,7 @@ typeCheckDeclaration isGlobal d = case d of
 
 addFcnIdentifier :: TType -> FuncStub -> MyParser ()
 addFcnIdentifier t f = checkStub f
-                    >> (modifyState $ globalSymbols %~ M.insert i t)
+                    >> modifyState (globalSymbols %~ M.insert i t)
  where i = getI f
        getI (FuncStub ident _) = ident
 
@@ -35,7 +35,7 @@ addFcnPrototype (FuncStub i p) = modifyState $ functions %~ M.insert i pTypes
 
 addVarIdentifier :: Bool -> TType -> Variable -> MyParser ()
 addVarIdentifier isGlobal t v = checkVariable isGlobal v
-                             >> (modifyState $ table %~ M.insert i t)
+                             >> modifyState (table %~ M.insert i t)
  where i = getI v
        table = if isGlobal then globalSymbols else localSymbols
        getI (Array i (LitInt s)) = i
