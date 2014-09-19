@@ -107,6 +107,7 @@ data Tables = Tables { _globalSymbols       :: SymbolTable
                      , _localSymbols        :: SymbolTable
                      , _functions           :: FunctionArgumentTable
                      , _currentFunctionType :: TType
+                     , _parseErrors         :: [String]
                      } deriving (Show, Eq)
 
 makeLenses ''Tables
@@ -115,4 +116,5 @@ initialTables = Tables { _globalSymbols       = M.empty
                        , _localSymbols        = M.empty
                        , _functions           = M.empty
                        , _currentFunctionType = TVoid
+                       , _parseErrors         = []
                        }
