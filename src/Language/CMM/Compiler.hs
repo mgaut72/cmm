@@ -3,14 +3,14 @@ module Language.CMM.Compiler (
 )
 where
 
-import Text.ParserCombinators.Parsec
+import Text.Parsec
 import Data.Map.Strict as M
 
 import Language.CMM.AST
 import Language.CMM.Parser.UnTyped
 import Language.CMM.Parser.Base
 
-compileCMM = runParser p initialTables "compile"
+compileCMM = runParserT p initialTables "compile"
  where p = do
          whiteSpace
          prog <- programP

@@ -4,10 +4,10 @@ module Language.CMM.AST where
 import qualified Data.Map.Strict as M
 import Data.List
 import Control.Lens
-import Text.Parsec.Prim (Parsec)
+import Text.Parsec.Prim (ParsecT)
 
 -- Parser type
-type MyParser a = Parsec String Tables a
+type MyParser a = ParsecT String Tables IO a
 
 
 -- Language tree types
@@ -217,7 +217,6 @@ data Tables = Tables { _globalSymbols       :: SymbolTable
                      , _localSymbols        :: SymbolTable
                      , _functions           :: FunctionArgumentTable
                      , _currentFunctionType :: TType
-                     , _parseErrors         :: [String]
                      } deriving (Show, Eq)
 
 makeLenses ''Tables
@@ -226,5 +225,4 @@ initialTables = Tables { _globalSymbols       = M.empty
                        , _localSymbols        = M.empty
                        , _functions           = M.empty
                        , _currentFunctionType = TVoid
-                       , _parseErrors         = []
                        }

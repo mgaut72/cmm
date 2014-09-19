@@ -9,34 +9,41 @@ module Language.CMM.Parser.Base where
 --    * programP        in terms of baseProgramP
 
 import Control.Monad
-import Text.ParserCombinators.Parsec
-import Text.Parsec.Prim (Parsec)
-import Text.ParserCombinators.Parsec.Language
-import Text.ParserCombinators.Parsec.Expr
-import qualified Text.ParserCombinators.Parsec.Token as Token
+import Control.Monad.IO.Class
+import Text.Parsec
+import Text.Parsec.Language
+import Text.Parsec.Expr
+import qualified Text.Parsec.Token as Token
 import Data.Char (isPrint)
+import System.IO
+
 import Language.CMM.AST
 
-languageDef = emptyDef { Token.commentStart    = "/*"
-                       , Token.commentEnd      = "*/"
-                       , Token.commentLine     = "//"
-                       , Token.identStart      = letter
-                       , Token.identLetter     = alphaNum <|> char '_'
-                       , Token.reservedNames   = [ "if"
-                                                 , "else"
-                                                 , "while"
-                                                 , "for"
-                                                 , "void"
-                                                 , "char"
-                                                 , "int"
-                                                 , "return"
-                                                 , "extern"
-                                                 ]
-                       , Token.reservedOpNames = [ "+", "-", "*", "/", "<", ">"
-                                                 , "<=", ">=", "==", "!=", "||"
-                                                 , "&&", "!"
-                                                 ]
-                       }
+languageDef = Token.LanguageDef
+  { Token.commentStart    = "/*"
+  , Token.commentEnd      = "*/"
+  , Token.commentLine     = "//"
+  , Token.nestedComments  = True
+  , Token.identStart      = letter
+  , Token.identLetter     = alphaNum <|> char '_'
+  , Token.reservedNames   = [ "if"
+                            , "else"
+                            , "while"
+                            , "for"
+                            , "void"
+                            , "char"
+                            , "int"
+                            , "return"
+                            , "extern"
+                            ]
+  , Token.opLetter        = oneOf ":!#$%&*+./<=>?@\\^|-~"
+  , Token.opStart         = oneOf ":!#$%&*+./<=>?@\\^|-~"
+  , Token.reservedOpNames = [ "+", "-", "*", "/", "<"
+                            , ">" , "<=", ">=", "=="
+                            , "!=", "||", "&&", "!"
+                            ]
+  , Token.caseSensitive   = True
+  }
 
 lexer = Token.makeTokenParser languageDef
 
@@ -333,19 +340,28 @@ baseProgramP eP = liftM Program (many $ baseProgDataP eP)
 --
 
 errorUntil :: Char -> MyParser Expression
-errorUntil c = manyTill anyChar (try $ char c) >> return ErrorE
+errorUntil c = manyTill anyChar (try $ char c) >> whiteSpace >> return ErrorE
+
+recordError :: String -> MyParser ()
+recordError m = do
+  p <- getPosition
+  let l = sourceLine p
+  let c = sourceColumn p
+  let msg = "Error near line " ++ show l ++ ", column " ++ show c ++ ":\n\t" ++ m ++ "\n\n"
+  liftIO $ hPutStr stderr msg
 
 ifErrorP :: MyParser Expression -> MyParser Statement
 ifErrorP eP = do
   reserved "if"
   symbol "("
+  recordError "bad expression in the conditional of the if statement"
   e <- errorUntil ')'
-  whiteSpace
   ifS <- baseStatementP eP
   return $ If e ifS
 
 returnErrorP :: MyParser Statement
 returnErrorP = do
   reserved "return"
+  recordError "bad return value expression"
   e <- errorUntil ';'
-  return $ Return e
+  return $ Return (Just e)
