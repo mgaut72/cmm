@@ -173,6 +173,7 @@ baseStatementP eP = try (returnP eP
                 <|> bracketedP eP
                 <|> noneP)
                 <|> ifErrorP eP
+                <|> returnErrorP
                 <?> "statement"
 
 noneP :: MyParser Statement
