@@ -343,3 +343,9 @@ ifErrorP eP = do
   whiteSpace
   ifS <- baseStatementP eP
   return $ If e ifS
+
+returnErrorP :: MyParser Statement
+returnErrorP = do
+  reserved "return"
+  e <- errorUntil ';'
+  return $ Return e
