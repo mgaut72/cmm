@@ -2,9 +2,10 @@ import System.Exit
 import Test.HUnit
 import Control.Monad
 import Control.Monad.State
+import Control.Monad.Writer
 import Data.Map.Strict as M
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Error
+import Text.Parsec
+import Text.Parsec.Error
 
 import Language.CMM.AST
 import Language.CMM.TypeChecker.Assignment
@@ -29,17 +30,19 @@ symbolList = [ ("a", TInt), ("b", TChar), ("none", TInt)
 fcnList = [("none", []), ("one", [TInt]), ("two", [TInt, TChar])]
 
 
-a |~?= b = runParser (typeCheckAssignment a) initialState "" "" ~?= Right b
+readA a = fst . runWriter . runParserT (typeCheckAssignment a) initialState "" $ ""
+
+a |~?= b = readA a ~?= Right b
 
 bad a = TestCase (unless (isLeft res) (assertFailure ("expected bad parse\ngot: " ++ show res)))
- where res = runParser (typeCheckAssignment a) initialState "" ""
-       isLeft (Right a) = False
-       isLeft (Left a) = True
+ where res = readA a
+       isLeft (Right _) = False
+       isLeft (Left _) = True
 
 good a = TestCase (unless (isRight res) (assertFailure ("expected good parse\ngot: " ++ show res)))
- where res = runParser (typeCheckAssignment a) initialState "" ""
-       isRight (Right a) = True
-       isRight (Left a) = False
+ where res = readA a
+       isRight (Right _) = True
+       isRight (Left _) = False
 
 instance (Eq ParseError) where
   a == b = errorMessages a == errorMessages b

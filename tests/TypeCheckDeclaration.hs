@@ -2,10 +2,11 @@ import System.Exit
 import Test.HUnit
 import Control.Monad
 import Control.Monad.State
+import Control.Monad.Writer
 import Control.Lens
 import Data.Map.Strict as M
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Error
+import Text.Parsec
+import Text.Parsec.Error
 
 import Language.CMM.AST
 import Language.CMM.TypeChecker.Declaration
@@ -16,11 +17,13 @@ main = do
      then exitFailure
      else exitSuccess
 
-as |~?= b = runParser p initialTables "" "" ~?= Right b
- where p = mapM_ (typeCheckDeclaration False) as >> getState
+readD ds = fst . runWriter . runParserT p initialTables "" $ ""
+ where p = mapM_ (typeCheckDeclaration False) ds >> getState
+
+as |~?= b = readD as ~?= Right b
 
 bad a = TestCase (unless (isLeft res) (assertFailure ("expected bad parse\ngot: " ++ show res)))
- where res = runParser (mapM_ (typeCheckDeclaration False) a >> getState) initialTables "" ""
+ where res = readD a
        isLeft (Right _) = False
        isLeft (Left _) = True
 --

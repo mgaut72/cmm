@@ -2,9 +2,10 @@ import System.Exit
 import Test.HUnit
 import Control.Monad
 import Control.Monad.State
+import Control.Monad.Writer
 import Data.Map.Strict as M
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Error
+import Text.Parsec
+import Text.Parsec.Error
 
 import Language.CMM.AST
 import Language.CMM.TypeChecker.Statement
@@ -29,15 +30,17 @@ symbolList = [ ("a", TInt), ("b", TChar), ("none", TInt)
 fcnList = [("none", []), ("one", [TInt]), ("two", [TInt, TChar])]
 
 
-a |~?= b = runParser (typeCheckStatement a) initialState "" "" ~?= Right b
+readS a = fst . runWriter . runParserT (typeCheckStatement a) initialState "" $ ""
+
+a |~?= b =  readS a ~?= Right b
 
 bad a = TestCase (unless (isLeft res) (assertFailure ("expected bad parse\ngot: " ++ show res)))
- where res = runParser (typeCheckStatement a) initialState "" ""
+ where res = readS a
        isLeft (Right a) = False
        isLeft (Left a) = True
 
 good a = TestCase (unless (isRight res) (assertFailure ("expected good parse\ngot: " ++ show res)))
- where res = runParser (typeCheckStatement a) initialState "" ""
+ where res = readS a
        isRight (Right a) = True
        isRight (Left a) = False
 

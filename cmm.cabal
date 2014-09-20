@@ -44,19 +44,19 @@ test-suite expressions
   hs-source-dirs:      tests
   main-is:             Expression.hs
   type:                exitcode-stdio-1.0
-  build-depends:       base >= 4 && < 5, HUnit, cmm , parsec, containers
+  build-depends:       base >= 4 && < 5, HUnit, cmm , parsec, containers, mtl
 
 test-suite statement
   hs-source-dirs:      tests
   main-is:             Statements.hs
   type:                exitcode-stdio-1.0
-  build-depends:       base >= 4 && < 5, HUnit, cmm , parsec, containers
+  build-depends:       base >= 4 && < 5, HUnit, cmm , parsec, containers, mtl
 
 test-suite functionDef
   hs-source-dirs:      tests
   main-is:             FunctionDefs.hs
   type:                exitcode-stdio-1.0
-  build-depends:       base >= 4 && < 5, HUnit, cmm , parsec, containers
+  build-depends:       base >= 4 && < 5, HUnit, cmm , parsec, containers, mtl
 
 test-suite hlint
   hs-source-dirs:      tests
@@ -68,7 +68,7 @@ test-suite declarations
   hs-source-dirs:      tests
   main-is:             Declarations.hs
   type:                exitcode-stdio-1.0
-  build-depends:       base >= 4 && < 5, HUnit, cmm , parsec, containers
+  build-depends:       base >= 4 && < 5, HUnit, cmm , parsec, containers, mtl
 
 test-suite typeCheckExpression
   hs-source-dirs:      tests

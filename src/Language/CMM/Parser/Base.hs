@@ -9,7 +9,7 @@ module Language.CMM.Parser.Base where
 --    * programP        in terms of baseProgramP
 
 import Control.Monad
-import Control.Monad.IO.Class
+import Control.Monad.Writer
 import Text.Parsec
 import Text.Parsec.Language
 import Text.Parsec.Expr
@@ -164,17 +164,17 @@ identifierFollowedBy c = do
 --
 
 baseStatementP :: MyParser Expression -> MyParser Statement
-baseStatementP eP = try (returnP eP
-                <|> ifP eP
-                <|> procedureCallP eP
-                <|> assignP eP
-                <|> forP eP
-                <|> whileP eP
-                <|> bracketedP eP
-                <|> noneP)
-                <|> ifErrorP eP
-                <|> returnErrorP
-                <?> "statement"
+baseStatementP eP = try validP <|> recoverableP <?> "statement"
+ where validP = returnP eP
+            <|> ifP eP
+            <|> procedureCallP eP
+            <|> assignP eP
+            <|> forP eP
+            <|> whileP eP
+            <|> bracketedP eP
+            <|> noneP
+       recoverableP = ifErrorP eP
+                  <|> returnErrorP
 
 noneP :: MyParser Statement
 noneP = semi >> return None
@@ -349,7 +349,7 @@ recordError m = do
   let l = sourceLine p
   let c = sourceColumn p
   let msg = "Error near line " ++ show l ++ ", column " ++ show c ++ ":\n\t" ++ m ++ "\n\n"
-  liftIO $ hPutStr stderr msg
+  lift $ tell [msg]
 
 ifErrorP :: MyParser Expression -> MyParser Statement
 ifErrorP eP = do

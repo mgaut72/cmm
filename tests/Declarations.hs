@@ -1,8 +1,9 @@
 import System.Exit
 import Test.HUnit
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Error
+import Text.Parsec
+import Text.Parsec.Error
 import Control.Monad
+import Control.Monad.Writer
 import Data.Map.Strict as M
 
 import Language.CMM.AST
@@ -15,7 +16,7 @@ main = do
      then exitFailure
      else exitSuccess
 
-readExpr = runParser ep initialTables "compile"
+readExpr = fst . runWriter . runParserT ep initialTables "compile"
  where ep = do
          whiteSpace
          e <- declarationP

@@ -1,8 +1,9 @@
 import System.Exit
 import Test.HUnit
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Error
+import Text.Parsec
+import Text.Parsec.Error
 import Control.Monad
+import Control.Monad.Writer
 import Data.Map.Strict as M
 
 import Language.CMM.AST
@@ -15,7 +16,7 @@ main = do
      then exitFailure
      else exitSuccess
 
-readExpr = runParser ep initialTables "compile"
+readExpr = fst . runWriter . runParserT ep initialTables "compile"
  where ep = do
          whiteSpace
          e <- statementP
@@ -51,9 +52,9 @@ tests = test
   , "if3" ~: "if ( 1 + 1  )   return 1; " |~?= If (Binary Plus (LitInt 1) (LitInt 1)) (Return (Just (LitInt 1)))
   , "if3" ~: "if ( 1 + 1  )\n\treturn 1; " |~?= If (Binary Plus (LitInt 1) (LitInt 1)) (Return (Just (LitInt 1)))
   , "if4" ~: bad "if ( 1 + 1  ))   return 1; "
-  , "if4" ~: "if (( 1 + 1  )   return 1; " |~?= If ErrorE Return (Just (LitInt 1))
+  , "if4" ~: "if (( 1 + 1  )   return 1; " |~?= If ErrorE (Return (Just (LitInt 1)))
   , "if5" ~: bad "if  1 + 1    return 1; "
-  , "if5" ~: "if(  1  1 )   return 1; " |~?= If ErrorE Return (Just (LitInt 1))
+  , "if5" ~: "if(  1  1 )   return 1; " |~?= If ErrorE (Return (Just (LitInt 1)))
   , "ifelse1" ~: "if (1) return 1; else return;" |~?= IfElse (LitInt 1) (Return (Just (LitInt 1))) (Return Nothing)
   , "ifelse1" ~: "if ( 1 ) return 1  ; else\treturn ; " |~?= IfElse (LitInt 1) (Return (Just (LitInt 1))) (Return Nothing)
   , "ifelse1" ~: "if (1) return 1;else return;" |~?= IfElse (LitInt 1) (Return (Just (LitInt 1))) (Return Nothing)

@@ -4,10 +4,11 @@ module Language.CMM.AST where
 import qualified Data.Map.Strict as M
 import Data.List
 import Control.Lens
+import Control.Monad.Writer
 import Text.Parsec.Prim (ParsecT)
 
 -- Parser type
-type MyParser a = ParsecT String Tables IO a
+type MyParser a = ParsecT String Tables (Writer [String]) a
 
 
 -- Language tree types
@@ -15,7 +16,7 @@ type MyParser a = ParsecT String Tables IO a
 data Program = Program [ProgData] deriving (Eq)
 
 instance Show Program where
-  show (Program ps) = concat $ map show ps
+  show (Program ps) = concatMap show ps
 
 data ProgData = Decl Declaration
               | Func FunctionDef
@@ -34,7 +35,7 @@ instance Show Declaration where
   show (FunctionDecl b t fs)
     | b     = "extern " ++ fd
     | not b = fd
-   where fd = show t ++ " " ++ (concat . intersperse ", " . map show $ fs) ++ ";\n"
+   where fd = show t ++ " " ++ (intercalate ", " . map show $ fs) ++ ";\n"
 
 data FuncStub = FuncStub Identifier Parameters deriving (Eq)
 
@@ -85,7 +86,7 @@ data Parameters = VoidParameter
 
 instance Show Parameters where
   show VoidParameter   = "void"
-  show (Parameters ps) = concat . intersperse ", " . map show $ ps
+  show (Parameters ps) = intercalate ", " . map show $ ps
 
 data Parameter = ScalarParam TType Identifier
                | ArrayParam  TType Identifier
@@ -98,7 +99,7 @@ instance Show Parameter where
 data VarDecl = VarDecl TType [Variable] deriving (Eq)
 
 instance Show VarDecl where
-  show (VarDecl t vs) = show t ++ " " ++ (concat . intersperse ", " . map show $ vs) ++ ";\n"
+  show (VarDecl t vs) = show t ++ " " ++ (intercalate ", " . map show $ vs) ++ ";\n"
 
 data Statement = If Expression Statement
                | IfElse Expression Statement Statement
@@ -147,7 +148,7 @@ instance Show Variable where
 data Function = Function Identifier [Expression] deriving (Eq)
 
 instance Show Function where
-  show (Function i es) = i ++ "(" ++ (concat . intersperse ", " . map show $ es) ++ ")"
+  show (Function i es) = i ++ "(" ++ (intercalate ", " . map show $ es) ++ ")"
 
 data Assignment = Assignment Variable Expression
                 deriving (Eq)
