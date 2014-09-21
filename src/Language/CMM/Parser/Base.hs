@@ -190,12 +190,17 @@ ifP :: MyParser Expression -> MyParser Statement
 ifP eP = do
   reserved "if"
   e <- parens eP
+  ifOrIfElse e eP
+
+
+ifOrIfElse e eP = do
   ifS <- baseStatementP eP
   mElse <- optionMaybe $ reserved "else"
   case mElse of
        Nothing -> return $ If e ifS
        Just _  -> do elseS <- baseStatementP eP
                      return $ IfElse e ifS elseS
+
 
 whileP :: MyParser Expression -> MyParser Statement
 whileP eP = do
@@ -340,8 +345,7 @@ baseProgramP eP = liftM Program (many $ baseProgDataP eP)
 -- Error Recover
 --
 
-errorUntil :: Char -> MyParser Expression
-errorUntil c = manyTill anyChar (try $ char c) >> whiteSpace >> return ErrorE
+errorUntil p = manyTill anyChar (try $ lookAhead p) >> return ErrorE
 
 recordError :: String -> MyParser ()
 recordError m = do
@@ -356,13 +360,14 @@ ifErrorP eP = do
   reserved "if"
   symbol "("
   recordError "bad expression in the conditional of the if statement"
-  e <- errorUntil ')'
-  ifS <- baseStatementP eP
-  return $ If e ifS
+  e <- errorUntil $ char ')'
+  symbol ")"
+  ifOrIfElse e eP
 
 returnErrorP :: MyParser Statement
 returnErrorP = do
   reserved "return"
   recordError "bad return value expression"
-  e <- errorUntil ';'
+  e <- errorUntil $ char ';'
+  semi
   return $ Return (Just e)

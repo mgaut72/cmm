@@ -56,6 +56,7 @@ tests = test
   , "if5" ~: bad "if  1 + 1    return 1; "
   , "if5" ~: "if(  1  1 )   return 1; " |~?= If ErrorE (Return (Just (LitInt 1)))
   , "ifelse1" ~: "if (1) return 1; else return;" |~?= IfElse (LitInt 1) (Return (Just (LitInt 1))) (Return Nothing)
+  , "ifelse1" ~: "if (1 2) return 1; else return;" |~?= IfElse ErrorE (Return (Just (LitInt 1))) (Return Nothing)
   , "ifelse1" ~: "if ( 1 ) return 1  ; else\treturn ; " |~?= IfElse (LitInt 1) (Return (Just (LitInt 1))) (Return Nothing)
   , "ifelse1" ~: "if (1) return 1;else return;" |~?= IfElse (LitInt 1) (Return (Just (LitInt 1))) (Return Nothing)
   , "ifelse1" ~: "if (1)\n\treturn 1;\nelse\n\treturn;" |~?= IfElse (LitInt 1) (Return (Just (LitInt 1))) (Return Nothing)
