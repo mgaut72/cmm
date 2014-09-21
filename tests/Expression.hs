@@ -93,4 +93,5 @@ tests = test
   , "tComplex4" ~: "a   [ f(x   ,  (y + 1) * 3 ) ]" |~?= Var (Array "a" (FunctionCall (Function "f" [Var (Scalar "x"), Binary Times (Binary Plus (Var (Scalar "y")) (LitInt 1)) (LitInt 3)])))
   , "tComplex5" ~: bad "af(x,(y + 1) * 3)]"
   , "tComplex6" ~: bad "a[f(x,y + 1) * 3)]"
+  , "test" ~: bad "i 10"
   ]

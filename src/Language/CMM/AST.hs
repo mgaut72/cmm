@@ -110,6 +110,7 @@ data Statement = If Expression Statement
                | ProcedureCall Function
                | Bracketed [Statement]
                | None
+               | ErrorS
                deriving (Eq)
 
 instance Show Statement where
@@ -130,6 +131,7 @@ instance Show Statement where
   show (Bracketed ss) = "{\n" ++ indent (concatMap show ss) ++ "}" ++ "\n"
   show None = ";" ++ "\n"
   show (ProcedureCall f) = show f ++ ";" ++ "\n"
+  show ErrorS = "<ERROR>"
 
 showM Nothing = ""
 showM (Just a) = show a
@@ -151,10 +153,12 @@ instance Show Function where
   show (Function i es) = i ++ "(" ++ (intercalate ", " . map show $ es) ++ ")"
 
 data Assignment = Assignment Variable Expression
+                | ErrorA
                 deriving (Eq)
 
 instance Show Assignment where
   show (Assignment v e) = show v ++ " = " ++ show e
+  show ErrorA = "<ERROR>"
 
 type Identifier = String
 

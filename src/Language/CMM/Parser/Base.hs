@@ -19,6 +19,8 @@ import System.IO
 
 import Language.CMM.AST
 
+{-# ANN module "HLint: ignore Reduce duplication" #-}
+
 languageDef = Token.LanguageDef
   { Token.commentStart    = "/*"
   , Token.commentEnd      = "*/"
@@ -164,7 +166,7 @@ identifierFollowedBy c = do
 --
 
 baseStatementP :: MyParser Expression -> MyParser Statement
-baseStatementP eP = try validP <|> recoverableP <?> "statement"
+baseStatementP eP = try validP <|> recoverableP
  where validP = returnP eP
             <|> ifP eP
             <|> procedureCallP eP
@@ -175,6 +177,11 @@ baseStatementP eP = try validP <|> recoverableP <?> "statement"
             <|> noneP
        recoverableP = ifErrorP eP
                   <|> returnErrorP
+                  <|> try (forError1P eP)
+                  <|> forError2P eP
+                  <|> whileErrorP eP
+                  <|> assignErrorP eP
+                  <|> procedureCallErrorP eP
 
 noneP :: MyParser Statement
 noneP = semi >> return None
@@ -345,7 +352,7 @@ baseProgramP eP = liftM Program (many $ baseProgDataP eP)
 -- Error Recover
 --
 
-errorUntil p = manyTill anyChar (try $ lookAhead p) >> return ErrorE
+errorUntil e p = manyTill anyChar (try $ lookAhead p) >> return e
 
 recordError :: String -> MyParser ()
 recordError m = do
@@ -360,7 +367,7 @@ ifErrorP eP = do
   reserved "if"
   symbol "("
   recordError "bad expression in the conditional of the if statement"
-  e <- errorUntil $ char ')'
+  e <- errorUntil ErrorE $ char ')'
   symbol ")"
   ifOrIfElse e eP
 
@@ -368,6 +375,57 @@ returnErrorP :: MyParser Statement
 returnErrorP = do
   reserved "return"
   recordError "bad return value expression"
-  e <- errorUntil $ char ';'
+  e <- errorUntil ErrorE $ char ';'
   semi
   return $ Return (Just e)
+
+forError1P eP = do
+  reserved "for"
+  symbol "("
+  a1 <- try (optionMaybe (assignmentP eP)) <|> err1
+  semi
+  e <- try (optionMaybe eP) <|> err2
+  semi
+  a2 <- try (optionMaybe (assignmentP eP)) <|> err3
+  symbol ")"
+  s <- baseStatementP eP
+  return $ For a1 e a2 s
+ where
+   err1 = recordError "Bad first assignment in for statement" >> errorUntil (Just ErrorA) semi
+   err2 = recordError "Bad expression expression in for statement" >> errorUntil (Just ErrorE) semi
+   err3 = recordError "bad last assignment in for statement" >> errorUntil (Just ErrorA) (char ')')
+
+forError2P eP = do
+  reserved "for"
+  symbol "("
+  errorUntil (Just ErrorA) (char ')')
+  recordError "Bad for statement: unknown error inside the parens"
+  symbol ")"
+  s <- baseStatementP eP
+  return $ For (Just ErrorA) (Just ErrorE) (Just ErrorA) s
+
+whileErrorP :: MyParser Expression -> MyParser Statement
+whileErrorP eP = do
+  reserved "while"
+  symbol "("
+  recordError "bad expression in the conditional of the while statement"
+  e <- errorUntil ErrorE $ char ')'
+  symbol ")"
+  s <- baseStatementP eP
+  return $ While e s
+
+assignErrorP eP = do
+  var <- varP eP
+  symbol "="
+  recordError "bad assignment in the expression being assigned"
+  e <- errorUntil ErrorE semi
+  semi
+  return $ Assign $ Assignment var e
+
+procedureCallErrorP eP = do
+  ident <- try $ identifierFollowedBy '('
+  recordError "bad parameters to procedure call"
+  params <- errorUntil [ErrorE] $ char ')'
+  symbol ")"
+  semi
+  return $ ProcedureCall $ Function ident params
