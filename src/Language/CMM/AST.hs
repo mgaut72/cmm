@@ -40,7 +40,7 @@ instance Show Declaration where
 data FuncStub = FuncStub Identifier Parameters deriving (Eq)
 
 instance Show FuncStub where
-  show (FuncStub i p) = show i ++ "(" ++ show p ++ ")"
+  show (FuncStub i p) = i ++ "(" ++ show p ++ ")"
 
 type IsExtern = Bool
 

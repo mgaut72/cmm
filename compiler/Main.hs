@@ -8,4 +8,4 @@ main = do
   hPutStr stderr $ unlines errors
   case res of
        Right a -> putStrLn $ show a
-       Left  a -> hPutStrLn $ show a
+       Left  a -> hPutStrLn stderr $ show a
