@@ -3,9 +3,8 @@ import System.IO
 import Language.CMM.Compiler
 
 main = do
-  program <- getContents           -- read from stdin
-  let (res, errors) = compileCMM program
-  hPutStr stderr $ unlines errors
-  case res of
-       Right a -> putStrLn $ show a
-       Left  a -> hPutStrLn stderr $ show a
+  program <- getContents
+  case compileCMM program of
+       (Right a, []) -> putStrLn $ show a
+       (Right a, es) -> hPutStr stderr $ unlines es
+       (Left  a, es) -> hPutStrLn stderr $ unlines es ++ show a
