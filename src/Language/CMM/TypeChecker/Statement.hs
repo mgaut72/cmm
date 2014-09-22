@@ -7,6 +7,7 @@ import Control.Lens
 import Language.CMM.TypeChecker.Expression
 import Language.CMM.TypeChecker.Assignment
 import Language.CMM.AST
+import Language.CMM.Error
 
 typeCheckStatement :: Statement -> MyParser Statement
 
@@ -40,19 +41,19 @@ typeCheckStatement x@(For ma1 me ma2 s) = do
 typeCheckStatement x@(Return Nothing) = do
   s <- getState
   let expectedT = view currentFunctionType s
-  if expectedT == TVoid
-    then return x
-    else unexpected "Type error: Current function is non-void but there is a void return statement"
+  unless (expectedT == TVoid) err
+  return x
+ where err =  recordError "Type error: Current function is non-void but there is a void return statement"
 
 typeCheckStatement x@(Return (Just e)) = do
   s <- getState
   let expectedT = view currentFunctionType s
   t <- typeOf e
-  if expectedT == t
-    then return x
-    else unexpected $ "Type error: Current function has type '"
-                   ++ show expectedT ++ "' but return statement has type '"
-                   ++ show t ++ "'"
+  unless (expectedT == t) $ err expectedT t
+  return x
+ where err t1 t2 = recordError $ "Type error: Current function has type '"
+          ++ show t1 ++ "' but return statement has type '"
+          ++ show t2 ++ "'"
 
 typeCheckStatement None = return None
 

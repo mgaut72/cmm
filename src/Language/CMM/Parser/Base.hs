@@ -9,7 +9,6 @@ module Language.CMM.Parser.Base where
 --    * programP        in terms of baseProgramP
 
 import Control.Monad
-import Control.Monad.Writer
 import Text.Parsec
 import Text.Parsec.Language
 import Text.Parsec.Expr
@@ -18,6 +17,7 @@ import Data.Char (isPrint)
 import System.IO
 
 import Language.CMM.AST
+import Language.CMM.Error
 
 {-# ANN module "HLint: ignore Reduce duplication" #-}
 
@@ -353,14 +353,6 @@ baseProgramP eP = liftM Program (many $ baseProgDataP eP)
 --
 
 errorUntil e p = manyTill anyChar (try $ lookAhead p) >> return e
-
-recordError :: String -> MyParser ()
-recordError m = do
-  p <- getPosition
-  let l = sourceLine p
-  let c = sourceColumn p
-  let msg = "Error near line " ++ show l ++ ", column " ++ show c ++ ":\n\t" ++ m ++ "\n\n"
-  lift $ tell [msg]
 
 ifErrorP :: MyParser Expression -> MyParser Statement
 ifErrorP eP = do

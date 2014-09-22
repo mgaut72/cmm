@@ -196,6 +196,7 @@ data TType = TBool
            | TInt
            | TVoid
            | TArray TType
+           | TError
 
 instance Eq TType where
   TBool == TBool = True
@@ -213,6 +214,7 @@ instance Show TType where
   show TInt  = "int"
   show TChar = "char"
   show TVoid = "void"
+  show TError = "<ERROR>"
 
 
 type SymbolTable = M.Map Identifier TType

@@ -9,6 +9,7 @@ import Text.ParserCombinators.Parsec
 import Text.Parsec.Prim
 
 import Language.CMM.AST
+import Language.CMM.Error
 
 typeCheckDeclaration :: Bool -> Declaration -> MyParser Declaration
 
@@ -46,7 +47,7 @@ checkStub (FuncStub i params) = checkIdentifier True i >> checkParams params
 checkParams VoidParameter = return ()
 checkParams (Parameters ps) = unless (nub is == is) idError
  where is = map getI ps
-       idError = unexpected $ "repeated identifier in function parameters '" ++ show ps ++ "'"
+       idError = recordError $ "repeated identifier in function parameters '" ++ show ps ++ "'"
        getI (ArrayParam _ i) = i
        getI (ScalarParam _ i) = i
 
@@ -54,7 +55,7 @@ checkParams (Parameters ps) = unless (nub is == is) idError
 checkVariable isGlobal (Array i (LitInt s)) = validateSize >> validateId
  where validateId = checkIdentifier isGlobal i
        validateSize = unless (s > 0) $
-                      unexpected "declaration : array index must be greater than 0"
+                      recordError "declaration : array index must be greater than 0"
 
 checkVariable isGlobal (Scalar i) = checkIdentifier isGlobal i
 
@@ -62,4 +63,4 @@ checkIdentifier isGlobal i = do
   s <- getState
   let sTable = if isGlobal then view globalSymbols s else view localSymbols s
   unless (isNothing $ M.lookup i sTable)
-         (unexpected $ "Identifier '" ++ i ++ "' is already identified in the current scope")
+         (recordError $ "Identifier '" ++ i ++ "' is already identified in the current scope")

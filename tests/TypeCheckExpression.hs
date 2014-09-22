@@ -3,7 +3,7 @@ import Test.HUnit
 import Control.Monad
 import Control.Monad.State
 import Control.Monad.Writer
-import Data.Map.Strict as M
+import qualified Data.Map.Strict as M
 import Text.Parsec
 import Text.Parsec.Error
 
@@ -30,11 +30,11 @@ symbolList = [ ("a", TInt), ("b", TChar), ("none", TInt)
 fcnList = [("none", []), ("one", [TInt]), ("two", [TInt, TChar])]
 
 
-a |~?= b = readE "" ~?= Right b
- where readE = fst . runWriter . runParserT (typeOf a) initialState ""
+a |~?= b = readE "" ~?= (Right b, [])
+ where readE = runWriter . runParserT (typeOf a) initialState ""
 
-bad a = TestCase (unless (isLeft res) (assertFailure ("expected bad parse\ngot: " ++ show res)))
- where res = fst . runWriter . runParserT (typeOf a) initialState "" $ ""
+bad a = TestCase (when (null errs) (assertFailure ("expected bad parse\ngot: " ++ show res)))
+ where (res, errs) = runWriter . runParserT (typeOf a) initialState "" $ ""
        isLeft (Right a) = False
        isLeft (Left a) = True
 

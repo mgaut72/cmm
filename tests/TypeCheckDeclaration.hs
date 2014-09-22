@@ -4,7 +4,7 @@ import Control.Monad
 import Control.Monad.State
 import Control.Monad.Writer
 import Control.Lens
-import Data.Map.Strict as M
+import qualified Data.Map.Strict as M
 import Text.Parsec
 import Text.Parsec.Error
 
@@ -17,20 +17,15 @@ main = do
      then exitFailure
      else exitSuccess
 
-readD ds = fst . runWriter . runParserT p initialTables "" $ ""
+readD ds = runWriter . runParserT p initialTables "" $ ""
  where p = mapM_ (typeCheckDeclaration False) ds >> getState
 
-as |~?= b = readD as ~?= Right b
+as |~?= b = fst (readD as) ~?= Right b
 
-bad a = TestCase (unless (isLeft res) (assertFailure ("expected bad parse\ngot: " ++ show res)))
- where res = readD a
+bad a = TestCase (when (null errs) (assertFailure ("expected bad parse\ngot: " ++ show res)))
+ where (res, errs) = readD a
        isLeft (Right _) = False
        isLeft (Left _) = True
---
--- good a = TestCase (unless (isRight res) (assertFailure ("expected good parse\ngot: " ++ show res)))
---  where res = runParser (typeCheckAssignment a) initialTables "" ""
---        isRight (Right a) = True
---        isRight (Left a) = False
 
 instance (Eq ParseError) where
   a == b = errorMessages a == errorMessages b
