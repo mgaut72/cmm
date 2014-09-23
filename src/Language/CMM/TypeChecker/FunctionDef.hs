@@ -1,22 +1,33 @@
-module Langauge.CMM.TypeChecker.FunctionDef where
+module Language.CMM.TypeChecker.FunctionDef where
+
+import Control.Lens
+import Control.Monad
+import qualified Data.Map.Strict as M
+import Data.Maybe
+import Text.Parsec.Prim
 
 import Language.CMM.AST
 import Language.CMM.Error
-import Lanugauge.CMM.TypeChecker.Declaration
+import Language.CMM.TypeChecker.Declaration
 
-typeCheckFunctionDef f@(t i p vs ss) = checkSignature t i p
+typeCheckFunctionDef f@(FunctionDef t i p vs ss) = checkSignature t i p
+                                                >> checkVarDecls vs
+                                                >> return f
+
+
+checkVarDecls = mapM_ (typeCheckDeclaration False . VariableDecl)
 
 checkSignature t i p = do
   s <- getState
   let sTable = view globalSymbols s
-  if isNothing (m.lookup i sTable)
+  if isNothing (M.lookup i sTable)
     then addPrototype t i p
     else checkExisting t i p
 
 addPrototype t i p = addFcnIdentifier t fs >> addFcnPrototype fs
- where fs = FuncStud i p
+ where fs = FuncStub i p
 
-checkExisting t i p = checkReturnType t i >> checkParamers i p
+checkExisting t i p = checkReturnType t i >> checkParameters i p
 
 checkReturnType t i = do
   s <- getState
@@ -37,9 +48,11 @@ checkParameters i ps = do
                          ++ " variable but is now being used as a function"
        err2 = recordError $ "Function '" ++ i ++ "' declaration has different "
                          ++ "parameter types than the declared prototype"
-       getI (ArrayParam _ i) = i
-       getI (ScalarParam _ i) = i
-       ts = map getI ps
+       getT (ArrayParam t _) = t
+       getT (ScalarParam t _) = t
+       ts = case ps of
+              Parameters ps -> map getT ps
+              VoidParameter -> []
 
 
 

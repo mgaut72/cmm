@@ -6,9 +6,11 @@ module Language.CMM.Parser.Base where
 --    * functionDefP    in terms of baseFunctionDefP
 --    * funcP           in terms of baseFuncP
 --    * progDataP       in terms of baseProgDataP
+--    * declarationP    in terms of baseDeclarationP
 --    * programP        in terms of baseProgramP
 
 import Control.Monad
+import Control.Lens
 import Text.Parsec
 import Text.Parsec.Language
 import Text.Parsec.Expr
@@ -165,21 +167,21 @@ identifierFollowedBy c = do
 -- Statement Parser
 --
 
-baseStatementP :: MyParser Expression -> MyParser Statement
-baseStatementP eP = try validP <|> recoverableP
+baseStatementP :: MyParser Expression -> MyParser Statement -> MyParser Statement
+baseStatementP eP sP = try validP <|> recoverableP
  where validP = returnP eP
-            <|> ifP eP
+            <|> ifP eP sP
             <|> procedureCallP eP
             <|> assignP eP
-            <|> forP eP
-            <|> whileP eP
-            <|> bracketedP eP
+            <|> forP eP sP
+            <|> whileP eP sP
+            <|> bracketedP sP
             <|> noneP
-       recoverableP = ifErrorP eP
+       recoverableP = ifErrorP eP sP
                   <|> returnErrorP
-                  <|> try (forError1P eP)
-                  <|> forError2P eP
-                  <|> whileErrorP eP
+                  <|> try (forError1P eP sP)
+                  <|> forError2P eP sP
+                  <|> whileErrorP eP sP
                   <|> assignErrorP eP
                   <|> procedureCallErrorP eP
 
@@ -193,27 +195,27 @@ returnP eP = do
   semi
   return $ Return e
 
-ifP :: MyParser Expression -> MyParser Statement
-ifP eP = do
+ifP :: MyParser Expression -> MyParser Statement -> MyParser Statement
+ifP eP sP = do
   reserved "if"
   e <- parens eP
-  ifOrIfElse e eP
+  ifOrIfElse e eP sP
 
 
-ifOrIfElse e eP = do
-  ifS <- baseStatementP eP
+ifOrIfElse e eP sP = do
+  ifS <- sP
   mElse <- optionMaybe $ reserved "else"
   case mElse of
        Nothing -> return $ If e ifS
-       Just _  -> do elseS <- baseStatementP eP
+       Just _  -> do elseS <- sP
                      return $ IfElse e ifS elseS
 
 
-whileP :: MyParser Expression -> MyParser Statement
-whileP eP = do
+whileP :: MyParser Expression -> MyParser Statement -> MyParser Statement
+whileP eP sP = do
   reserved "while"
   e <- parens eP
-  s <- baseStatementP eP
+  s <- sP
   return $ While e s
 
 assignP :: MyParser Expression -> MyParser Statement
@@ -229,8 +231,8 @@ assignmentP eP = do
   e <- eP
   return $ Assignment var e
 
-forP :: MyParser Expression -> MyParser Statement
-forP eP = do
+forP :: MyParser Expression -> MyParser Statement -> MyParser Statement
+forP eP sP = do
   reserved "for"
   symbol "("
   a1 <- optionMaybe $ assignmentP eP
@@ -239,12 +241,12 @@ forP eP = do
   semi
   a2 <- optionMaybe $ assignmentP eP
   symbol ")"
-  s <- baseStatementP eP
+  s <- sP
   return $ For a1 e a2 s
 
-bracketedP :: MyParser Expression -> MyParser Statement
-bracketedP eP = do
-  statements <- braces $ many (baseStatementP eP)
+bracketedP :: MyParser Statement -> MyParser Statement
+bracketedP sP = do
+  statements <- braces $ many sP
   return $ Bracketed statements
 
 procedureCallP :: MyParser Expression -> MyParser Statement
@@ -296,14 +298,15 @@ nonVoidTypeP = (reserved "char" >> return TChar)
 typeP :: MyParser TType
 typeP = nonVoidTypeP <|> (reserved "void" >> return TVoid)
 
-baseFunctionDefP :: MyParser Expression -> MyParser FunctionDef
-baseFunctionDefP eP = do
+baseFunctionDefP :: MyParser Statement -> MyParser FunctionDef
+baseFunctionDefP sP = do
   t <- typeP
+  modifyState $ currentFunctionType .~ t
   i <- identifier
   p <- parens parametersP
   symbol "{"
   varDecls <- many varDeclP
-  ss <- many $ baseStatementP eP
+  ss <- many sP
   symbol "}"
   return $ FunctionDef t i p varDecls ss
 
@@ -314,10 +317,10 @@ funcStubP = liftM2 FuncStub identifier (parens parametersP)
 -- Declaration
 --
 
-declarationP :: MyParser Declaration
-declarationP = try functionDeclP
-           <|> variableDeclP
-           <?> "declaration"
+baseDeclarationP :: MyParser Declaration
+baseDeclarationP = try functionDeclP
+               <|> variableDeclP
+               <?> "declaration"
 
 variableDeclP :: MyParser Declaration
 variableDeclP = liftM VariableDecl varDeclP
@@ -336,17 +339,17 @@ isExtP = option False (reserved "extern" >> return True)
 -- ProgramData
 --
 
-baseProgDataP :: MyParser Expression -> MyParser ProgData
-baseProgDataP eP = try (baseFuncP eP) <|> declP
+baseProgDataP :: MyParser FunctionDef -> MyParser Declaration -> MyParser ProgData
+baseProgDataP fP dP = try (baseFuncP fP) <|> declP dP
 
-declP :: MyParser ProgData
-declP = liftM Decl declarationP
+declP :: MyParser Declaration -> MyParser ProgData
+declP = liftM Decl
 
-baseFuncP :: MyParser Expression -> MyParser ProgData
-baseFuncP eP = liftM Func (baseFunctionDefP eP)
+baseFuncP :: MyParser FunctionDef -> MyParser ProgData
+baseFuncP = liftM Func
 
-baseProgramP :: MyParser Expression -> MyParser Program
-baseProgramP eP = liftM Program (many $ baseProgDataP eP)
+baseProgramP :: MyParser ProgData -> MyParser Program
+baseProgramP pdP = liftM Program $ many pdP
 
 --
 -- Error Recover
@@ -354,14 +357,14 @@ baseProgramP eP = liftM Program (many $ baseProgDataP eP)
 
 errorUntil e p = manyTill anyChar (try $ lookAhead p) >> return e
 
-ifErrorP :: MyParser Expression -> MyParser Statement
-ifErrorP eP = do
+ifErrorP :: MyParser Expression -> MyParser Statement -> MyParser Statement
+ifErrorP eP sP = do
   reserved "if"
   symbol "("
   recordError "bad expression in the conditional of the if statement"
   e <- errorUntil ErrorE $ char ')'
   symbol ")"
-  ifOrIfElse e eP
+  ifOrIfElse e eP sP
 
 returnErrorP :: MyParser Statement
 returnErrorP = do
@@ -371,7 +374,7 @@ returnErrorP = do
   semi
   return $ Return (Just e)
 
-forError1P eP = do
+forError1P eP sP = do
   reserved "for"
   symbol "("
   a1 <- try (optionMaybe (assignmentP eP)) <|> err1
@@ -380,30 +383,30 @@ forError1P eP = do
   semi
   a2 <- try (optionMaybe (assignmentP eP)) <|> err3
   symbol ")"
-  s <- baseStatementP eP
+  s <- sP
   return $ For a1 e a2 s
  where
    err1 = recordError "Bad first assignment in for statement" >> errorUntil (Just ErrorA) semi
    err2 = recordError "Bad expression expression in for statement" >> errorUntil (Just ErrorE) semi
    err3 = recordError "bad last assignment in for statement" >> errorUntil (Just ErrorA) (char ')')
 
-forError2P eP = do
+forError2P eP sP = do
   reserved "for"
   symbol "("
   errorUntil (Just ErrorA) (char ')')
   recordError "Bad for statement: unknown error inside the parens"
   symbol ")"
-  s <- baseStatementP eP
+  s <- sP
   return $ For (Just ErrorA) (Just ErrorE) (Just ErrorA) s
 
-whileErrorP :: MyParser Expression -> MyParser Statement
-whileErrorP eP = do
+whileErrorP :: MyParser Expression -> MyParser Statement -> MyParser Statement
+whileErrorP eP sP = do
   reserved "while"
   symbol "("
   recordError "bad expression in the conditional of the while statement"
   e <- errorUntil ErrorE $ char ')'
   symbol ")"
-  s <- baseStatementP eP
+  s <- sP
   return $ While e s
 
 assignErrorP eP = do

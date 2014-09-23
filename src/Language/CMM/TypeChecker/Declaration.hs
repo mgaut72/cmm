@@ -5,7 +5,6 @@ import Control.Lens
 import Data.Maybe
 import Data.List (nub)
 import qualified Data.Map.Strict as M
-import Text.ParserCombinators.Parsec
 import Text.Parsec.Prim
 
 import Language.CMM.AST

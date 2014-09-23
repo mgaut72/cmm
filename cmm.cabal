@@ -26,6 +26,8 @@ library
     Language.CMM.TypeChecker.Statement
     Language.CMM.TypeChecker.Assignment
     Language.CMM.TypeChecker.Declaration
+    Language.CMM.TypeChecker.FunctionDef
+    Language.CMM.TypeChecker
     Language.CMM.Compiler
   -- other-modules:
   -- other-extensions:
