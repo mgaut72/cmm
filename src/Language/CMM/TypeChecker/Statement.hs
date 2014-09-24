@@ -12,16 +12,12 @@ import Language.CMM.Error
 typeCheckStatement :: Statement -> MyParser Statement
 
 typeCheckStatement x@(If e s) = compatibleWith e TBool
-                             >> typeCheckStatement s
                              >> return x
 
 typeCheckStatement x@(IfElse e s1 s2) = compatibleWith e TBool
-                                     >> typeCheckStatement s1
-                                     >> typeCheckStatement s2
                                      >> return x
 
 typeCheckStatement x@(While e s) = compatibleWith e TBool
-                                >> typeCheckStatement s
                                 >> return x
 
 typeCheckStatement x@(For ma1 me ma2 s) = do
@@ -34,7 +30,6 @@ typeCheckStatement x@(For ma1 me ma2 s) = do
   case ma2 of
     Just a2 -> void $ typeCheckAssignment a2
     _       -> return ()
-  typeCheckStatement s
   return x
 
 
@@ -55,8 +50,11 @@ typeCheckStatement x@(Return (Just e)) = do
           ++ show t1 ++ "' but return statement has type '"
           ++ show t2 ++ "'"
 
+typeCheckStatement x@(ProcedureCall f) = typeCheckExpression (FunctionCall f)
+                                      >> return x
+
 typeCheckStatement None = return None
 
 typeCheckStatement x@(Assign a) = typeCheckAssignment a >> return x
 
-typeCheckStatement x@(Bracketed ss) = mapM_ typeCheckStatement ss >> return x
+typeCheckStatement x@(Bracketed ss) = return x

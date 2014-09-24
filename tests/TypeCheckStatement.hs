@@ -95,14 +95,4 @@ tests = test
                     (Just (Relative Leq (Var (Scalar "j")) (LitInt 5)))
                     (Just (Assignment (Scalar "j") (Binary Plus (Var (Scalar "i")) (LitInt 1)))) -- j does not exist
                     None
-  , "bracketed" ~: good $ Bracketed [ None ]
-  , "bracketed" ~: good $ Bracketed [ None, None ]
-  , "bracketed" ~: bad  $ Bracketed [ None
-                                    , While (Binary Plus (LitChar '1') (LitInt 2)) None
-                                    , None
-                                    ]
-  , "bracketed" ~: good $ Bracketed [ None
-                                    , If (Relative Leq (LitChar '1') (LitInt 2)) None
-                                    , None
-                                    ]
   ]

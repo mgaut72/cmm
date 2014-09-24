@@ -259,8 +259,8 @@ procedureCallP eP = do
 -- Function Parsing
 --
 
-varDeclP :: MyParser VarDecl
-varDeclP = do
+baseVarDeclP :: MyParser VarDecl
+baseVarDeclP = do
   t <- nonVoidTypeP
   vars <- commaSep1 $ arrayDeclP <|> scalarP
   semi
@@ -298,14 +298,14 @@ nonVoidTypeP = (reserved "char" >> return TChar)
 typeP :: MyParser TType
 typeP = nonVoidTypeP <|> (reserved "void" >> return TVoid)
 
-baseFunctionDefP :: MyParser Statement -> MyParser FunctionDef
-baseFunctionDefP sP = do
+baseFunctionDefP :: MyParser VarDecl -> MyParser Statement -> MyParser FunctionDef
+baseFunctionDefP vP sP = do
   t <- typeP
   modifyState $ currentFunctionType .~ t
   i <- identifier
   p <- parens parametersP
   symbol "{"
-  varDecls <- many varDeclP
+  varDecls <- many vP
   ss <- many sP
   symbol "}"
   return $ FunctionDef t i p varDecls ss
@@ -323,7 +323,7 @@ baseDeclarationP = try functionDeclP
                <?> "declaration"
 
 variableDeclP :: MyParser Declaration
-variableDeclP = liftM VariableDecl varDeclP
+variableDeclP = liftM VariableDecl baseVarDeclP
 
 functionDeclP :: MyParser Declaration
 functionDeclP = do

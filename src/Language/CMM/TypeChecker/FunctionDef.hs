@@ -10,12 +10,12 @@ import Language.CMM.AST
 import Language.CMM.Error
 import Language.CMM.TypeChecker.Declaration
 
+-- we rely on the declarations and statements having already been
+-- typechecked when they were parsed
 typeCheckFunctionDef f@(FunctionDef t i p vs ss) = checkSignature t i p
-                                                >> checkVarDecls vs
+                                                >> addParameters p
                                                 >> return f
 
-
-checkVarDecls = mapM_ (typeCheckDeclaration False . VariableDecl)
 
 checkSignature t i p = do
   s <- getState
@@ -23,6 +23,7 @@ checkSignature t i p = do
   if isNothing (M.lookup i sTable)
     then addPrototype t i p
     else checkExisting t i p
+  addParameters p
 
 addPrototype t i p = addFcnIdentifier t fs >> addFcnPrototype fs
  where fs = FuncStub i p
@@ -48,11 +49,19 @@ checkParameters i ps = do
                          ++ " variable but is now being used as a function"
        err2 = recordError $ "Function '" ++ i ++ "' declaration has different "
                          ++ "parameter types than the declared prototype"
-       getT (ArrayParam t _) = t
+       getT (ArrayParam t _) = TArray t
        getT (ScalarParam t _) = t
        ts = case ps of
               Parameters ps -> map getT ps
               VoidParameter -> []
+
+addParameters VoidParameter = return ()
+addParameters (Parameters ps) = mapM_ addP ps
+ where addP p = modifyState (localSymbols %~ M.insert (getI p) (getT p))
+       getI (ArrayParam _ i) = i
+       getI (ScalarParam _ i) = i
+       getT (ArrayParam t _) = TArray t
+       getT (ScalarParam t _) = t
 
 
 

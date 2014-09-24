@@ -30,16 +30,18 @@ addFcnPrototype (FuncStub i p) = modifyState $ functions %~ M.insert i pTypes
  where pTypes = case p of
                   VoidParameter -> []
                   Parameters ps -> map getT ps
-       getT (ArrayParam t _) = t
+       getT (ArrayParam t _) = TArray t
        getT (ScalarParam t _) = t
 
 addVarIdentifier :: Bool -> TType -> Variable -> MyParser ()
 addVarIdentifier isGlobal t v = checkVariable isGlobal v
-                             >> modifyState (table %~ M.insert i t)
+                             >> modifyState (table %~ M.insert i (getT v t))
  where i = getI v
        table = if isGlobal then globalSymbols else localSymbols
-       getI (Array i (LitInt s)) = i
+       getI (Array i _) = i
        getI (Scalar i) = i
+       getT (Array _ _) = TArray
+       getT (Scalar _) = id
 
 checkStub (FuncStub i params) = checkIdentifier True i >> checkParams params
 
