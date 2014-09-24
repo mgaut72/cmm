@@ -17,6 +17,7 @@ import Text.Parsec.Expr
 import qualified Text.Parsec.Token as Token
 import Data.Char (isPrint)
 import System.IO
+import qualified Data.Map.Strict as M
 
 import Language.CMM.AST
 import Language.CMM.Error
@@ -301,9 +302,10 @@ typeP = nonVoidTypeP <|> (reserved "void" >> return TVoid)
 baseFunctionDefP :: MyParser VarDecl -> MyParser Statement -> MyParser FunctionDef
 baseFunctionDefP vP sP = do
   t <- typeP
-  modifyState $ currentFunctionType .~ t
   i <- identifier
   p <- parens parametersP
+  modifyState $ currentFunctionType .~ t
+  modifyState $ localSymbols .~ M.empty
   symbol "{"
   varDecls <- many vP
   ss <- many sP
