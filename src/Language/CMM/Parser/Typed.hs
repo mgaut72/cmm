@@ -5,7 +5,7 @@ import Language.CMM.AST
 import Language.CMM.TypeChecker
 
 expressionP   = baseExpressionP expressionP >>= typeCheckExpression
-statementP    = baseStatementP expressionP (statementP >>= typeCheckStatement)
+statementP    = baseStatementP expressionP statementP >>= typeCheckStatement
 localVarDeclp = baseVarDeclP >>= typeCheckDeclaration False . VariableDecl >>= (\(VariableDecl (VarDecl x y)) -> return $ VarDecl x y)
 functionDefP  = baseFunctionDefP localVarDeclp statementP >>= typeCheckFunctionDef
 declarationP  = baseDeclarationP >>= typeCheckDeclaration True
