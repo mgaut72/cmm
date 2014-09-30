@@ -41,15 +41,13 @@ readS a = runWriter . runParserT p initialTables "" $ a
 
 a |~?= b = readS a ~?= (Right b, [])
 
-bad a = TestCase (when (null errs) (assertFailure ("expected bad parse\ngot: " ++ show res)))
- where (res, errs) = readS a
-       isLeft (Right a) = False
-       isLeft (Left a) = True
+bad a = TestCase (when (isGood a) (assertFailure ("expected bad parse\ngot: " ++ show (readS a))))
 
-good a = TestCase (unless (null errs) (assertFailure ("expected good parse\ngot: " ++ show (res,errs))))
- where (res, errs) = readS a
-       isRight (Right a) = True
-       isRight (Left a) = False
+isGood a = case readS a of
+            (Right _, []) -> True
+            otherwise     -> False
+
+good a = TestCase (unless (isGood a) (assertFailure ("expected good parse\ngot: " ++ show (readS a))))
 
 instance (Eq ParseError) where
   a == b = errorMessages a == errorMessages b
@@ -75,6 +73,13 @@ tests = TestList [ TestLabel "goodArraySize" goodArraySize
                  , TestLabel "returnGood" returnGood
                  , TestLabel "returnBad" returnBad
                  , TestLabel "prototypeAfterDef" prototypeAfterDef
+                 , TestLabel "prototypeAfterDef2" prototypeAfterDef2
+                 , TestLabel "identifierTwiceInPrototype" identifierTwiceInPrototype
+                 , TestLabel "identifierTwiceInDef" identifierTwiceInDef
+                 , TestLabel "badNoParamters" badNoParamters
+                 , TestLabel "goodNoParamters" goodNoParamters
+                 , TestLabel "goodExternFunction" goodExternFunction
+                 , TestLabel "badExternFunction" badExternFunction
                  ]
 
 
@@ -114,4 +119,13 @@ returnBad = bad "int main(void) { return \"asdf\"; }"
 -- how this needs to be handled
 
 prototypeAfterDef = bad "int main(void) {return 1;} int main(void);"
+prototypeAfterDef2 = bad "int main(void) {return 1;}\nint main(void);"
 
+identifierTwiceInPrototype = bad "int main(int a, int a);"
+identifierTwiceInDef = bad "int main(int a, int a) {return 1;}"
+
+badNoParamters = bad "int main(){return 1;}"
+goodNoParamters = good "int main(void){return 1;}"
+
+badExternFunction = bad "extern int foo(void); int foo(void){return 1;}"
+goodExternFunction = good "extern int foo(void); int main(void){return 1;}"

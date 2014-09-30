@@ -24,10 +24,13 @@ tbl = initialTables
 
 as |~?= b = readD as ~?= (Right b, [])
 
-bad a = TestCase (when (null errs) (assertFailure ("expected bad parse\ngot: " ++ show res)))
- where (res, errs) = readD a
-       isLeft (Right _) = False
-       isLeft (Left _) = True
+isGood a = case readD a of
+             (Right _, []) -> True
+             otherwise     -> False
+
+bad a = TestCase (when (isGood a) (assertFailure ("expected bad parse\ngot: " ++ show (readD a))))
+
+good a = TestCase (unless (isGood a) (assertFailure ("expected good parse\ngot: " ++ show (readD a))))
 
 instance (Eq ParseError) where
   a == b = errorMessages a == errorMessages b
@@ -72,4 +75,17 @@ tests = test
        |~?= ( (globalSymbols %~ M.insert "main" TVoid)
             . (functions %~ M.insert "main" [])
             $ tbl )
+
+  -- cant return expression from a void function
+  , "voidFunctionReturn" ~: bad $ FunctionDef TVoid "main" VoidParameter []
+                              [ Return (Just (LitInt 1)) ]
+  , "voidFunctionReturn" ~: good $ FunctionDef TVoid "main" VoidParameter []
+                              [ Return Nothing ]
+  , "functionReturn" ~: bad $ FunctionDef TInt "main" VoidParameter []
+                              [ Return Nothing ]
+  , "functionReturn" ~: good $ FunctionDef TInt "main" VoidParameter []
+                               [ IfElse (Relative Eq (LitInt 1) (LitInt 2))
+                                        (Return (Just (LitInt 1)))
+                                        None
+                               ]
   ]
