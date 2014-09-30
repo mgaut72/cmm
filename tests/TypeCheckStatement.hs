@@ -34,13 +34,13 @@ readS a = runWriter . runParserT (typeCheckStatement a) initialState "" $ ""
 
 a |~?= b = readS a ~?= (Right b, [])
 
-bad a = TestCase (when (null errs) (assertFailure ("expected bad parse\ngot: " ++ show res)))
- where (res, errs) = readS a
+bad a = TestCase (when (null errs) (assertFailure ("expected bad parse\ngot: " ++ show x)))
+ where x@(res, errs) = readS a
        isLeft (Right a) = False
        isLeft (Left a) = True
 
-good a = TestCase (unless (null errs) (assertFailure ("expected good parse\ngot: " ++ show res)))
- where (res, errs) = readS a
+good a = TestCase (unless (null errs) (assertFailure ("expected good parse\ngot: " ++ show x)))
+ where x@(res, errs) = readS a
        isRight (Right a) = True
        isRight (Left a) = False
 

@@ -33,8 +33,8 @@ fcnList = [("none", []), ("one", [TInt]), ("two", [TInt, TChar])]
 a |~?= b = readE "" ~?= (Right b, [])
  where readE = runWriter . runParserT (typeOf a) initialState ""
 
-bad a = TestCase (when (null errs) (assertFailure ("expected bad parse\ngot: " ++ show res)))
- where (res, errs) = runWriter . runParserT (typeOf a) initialState "" $ ""
+bad a = TestCase (when (null errs) (assertFailure ("expected bad parse\ngot: " ++ show x)))
+ where x@(res, errs) = runWriter . runParserT (typeOf a) initialState "" $ ""
        isLeft (Right a) = False
        isLeft (Left a) = True
 

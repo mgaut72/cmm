@@ -197,16 +197,16 @@ data TType = TBool
            | TVoid
            | TArray TType
            | TError
+           deriving (Eq)
 
-instance Eq TType where
-  TBool == TBool = True
-  TChar == TChar = True
-  TInt  == TInt  = True
-  TVoid == TVoid = True
-  TChar == TInt  = True
-  TInt  == TChar = True
-  TArray t1 == TArray t2 = t1 == t2
-  (==) _ _ = False
+compatible TBool TBool = True
+compatible TChar TChar = True
+compatible TInt  TInt  = True
+compatible TVoid TVoid = True
+compatible TChar TInt  = True
+compatible TInt  TChar = True
+compatible (TArray t1) (TArray t2) = compatible t1 t2
+compatible _ _ = False
 
 instance Show TType where
   show (TArray t) = show t ++ "[]"

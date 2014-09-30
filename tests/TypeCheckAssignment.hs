@@ -32,13 +32,13 @@ fcnList = [("none", []), ("one", [TInt]), ("two", [TInt, TChar])]
 
 readA a = runWriter . runParserT (typeCheckAssignment a) initialState "" $ ""
 
-bad a = TestCase (when (null errs) (assertFailure ("expected bad parse\ngot: " ++ show res)))
- where (res, errs) = readA a
+bad a = TestCase (when (null errs) (assertFailure ("expected bad parse\ngot: " ++ show x)))
+ where x@(res, errs) = readA a
        isLeft (Right _) = False
        isLeft (Left _) = True
 
-good a = TestCase (unless (null errs) (assertFailure ("expected good parse\ngot: " ++ show res)))
- where (res, errs) = readA a
+good a = TestCase (unless (null errs) (assertFailure ("expected good parse\ngot: " ++ show x)))
+ where x@(res, errs) = readA a
        isRight (Right _) = True
        isRight (Left _) = False
 

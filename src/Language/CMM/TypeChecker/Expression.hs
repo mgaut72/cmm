@@ -35,7 +35,7 @@ lookUpSymb i = do
 compatibleWith :: Expression -> TType -> MyParser TType
 compatibleWith e t = do
   et <- typeOf e
-  if t == et
+  if t `compatible` et
     then return t
     else err $ "type error: '" ++ show e ++ "' is not compatible with type '" ++ show t ++ "'"
 
@@ -63,8 +63,9 @@ typeOf (Logical _ e1 e2) = allCompatibleWith [e1,e2] TBool >> return TBool
 typeOf (FunctionCall (Function i es)) = do
   expectedTypes <- lookUpArgs i
   actualTypes <- mapM typeOf es
-  unless (expectedTypes == actualTypes) $ void $ err "type error : Function arguments have incorrect type"
+  unless (allEqual expectedTypes actualTypes) $ void $ err "type error : Function arguments have incorrect type"
   lookUpSymb i
+ where allEqual t1 t2 = length t1 == length t2 && and (zipWith compatible t1 t2)
 
 typeOf (Var (Scalar i)) = lookUpSymb i
 

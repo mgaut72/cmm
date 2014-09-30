@@ -11,6 +11,6 @@ typeCheckAssignment :: Assignment -> MyParser Assignment
 typeCheckAssignment a@(Assignment v e) = do
   tvar <- typeOf $ Var v
   te   <- typeOf e
-  unless (tvar == TChar) (recordError $ "cannot assign to type '" ++ show tvar ++ "'")
-  unless (tvar == te) (recordError $ "type error: variable and expression have incompatible types in assignment : " ++ show a)
+  unless (tvar `compatible` TChar) (recordError $ "cannot assign to type '" ++ show tvar ++ "'")
+  unless (tvar `compatible` te) (recordError $ "type error: variable and expression have incompatible types in assignment : " ++ show a)
   return a
