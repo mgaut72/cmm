@@ -1,7 +1,7 @@
 CABAL=/home/mgaut72/.cabal/bin/cabal --config-file=/home/mgaut72/.cabal/config
 
 compile:
-	${CABAL} sandbox init && ${CABAL} install
+	${CABAL} install --bindir=${PWD}
 
 clean:
-	${CABAL} clean
+	${CABAL} clean; rm -f compile
