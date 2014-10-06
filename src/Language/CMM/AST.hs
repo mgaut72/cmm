@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Language.CMM.AST where
 
-import qualified Data.Map.Strict as M
+import qualified Data.Map as M
 import Data.List
 import Control.Lens
 import Control.Monad.Writer

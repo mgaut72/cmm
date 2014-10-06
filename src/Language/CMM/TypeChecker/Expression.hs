@@ -1,6 +1,6 @@
 module Language.CMM.TypeChecker.Expression where
 
-import Data.Map.Strict as M
+import qualified Data.Map as M
 import Control.Monad
 import Control.Lens
 import Text.Parsec.Prim

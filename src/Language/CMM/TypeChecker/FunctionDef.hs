@@ -2,7 +2,7 @@ module Language.CMM.TypeChecker.FunctionDef where
 
 import Control.Lens
 import Control.Monad
-import qualified Data.Map.Strict as M
+import qualified Data.Map as M
 import Data.Maybe
 import Text.Parsec.Prim
 

@@ -17,7 +17,7 @@ import Text.Parsec.Expr
 import qualified Text.Parsec.Token as Token
 import Data.Char (isPrint)
 import System.IO
-import qualified Data.Map.Strict as M
+import qualified Data.Map as M
 
 import Language.CMM.AST
 import Language.CMM.Error
