@@ -53,6 +53,7 @@ tests = test
   , "testNegative5" ~: bad "- ( - 5 6 )"
   , "testNegative6" ~: bad "-'56"
   , "testNot1" ~: "!1" |~?= Not (LitInt 1)
+  , "testNot1" ~: "!!1" |~?= Not (Not (LitInt 1))
   , "testNot1" ~: "! 1 " |~?= Not (LitInt 1)
   , "testNot2" ~: "!'a'" |~?= Not (LitChar 'a')
   , "testNot3" ~: bad "!-2"
@@ -86,6 +87,7 @@ tests = test
   , "tVar1" ~: "ident\n" |~?= Var (Scalar "ident")
   , "tVar2" ~: bad "1dent"
   , "tComplex1" ~: "f(x,y) + 1" |~?= Binary Plus (FunctionCall (Function "f" [Var (Scalar "x"), Var (Scalar "y")])) (LitInt 1)
+  , "tComplex1" ~: "1+-2" |~?= Binary Plus ((LitInt 1) (Negative (LitInt 2)))
   , "tComplex1" ~: "f ( x , y  )+   1" |~?= Binary Plus (FunctionCall (Function "f" [Var (Scalar "x"), Var (Scalar "y")])) (LitInt 1)
   , "tComplex2" ~: "f(x,y + 1)" |~?= FunctionCall (Function "f" [Var (Scalar "x"), Binary Plus (Var (Scalar "y")) (LitInt 1)])
   , "tComplex3" ~: "f(x,(y + 1) * 3)" |~?= FunctionCall (Function "f" [Var (Scalar "x"), Binary Times (Binary Plus (Var (Scalar "y")) (LitInt 1)) (LitInt 3)])
