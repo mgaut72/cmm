@@ -21,6 +21,7 @@ library
     Language.CMM.Parser.UnTyped,
     Language.CMM.Parser.Typed,
     Language.CMM.AST,
+    Language.CMM.AST.PrettyPrint
     Language.CMM.Error,
     Language.CMM.TypeChecker.Expression
     Language.CMM.TypeChecker.Statement

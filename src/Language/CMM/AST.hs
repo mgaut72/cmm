@@ -3,45 +3,26 @@ module Language.CMM.AST where
 
 import qualified Data.Map as M
 import qualified Data.Set as S
-import Data.List
 import Control.Lens
 import Control.Monad.Writer
 import Text.Parsec.Prim (ParsecT)
 
+
 -- Parser type
 type MyParser a = ParsecT String Tables (Writer [String]) a
 
-
 -- Language tree types
-
-data Program = Program [ProgData] deriving (Eq)
-
-instance Show Program where
-  show (Program ps) = concatMap show ps
+data Program = Program [ProgData] deriving (Show, Eq)
 
 data ProgData = Decl Declaration
               | Func FunctionDef
-              deriving (Eq)
-
-instance Show ProgData where
-  show (Decl d) = show d
-  show (Func f) = show f
+              deriving (Show, Eq)
 
 data Declaration = VariableDecl     VarDecl
                  | FunctionDecl     IsExtern TType [FuncStub]
-                 deriving (Eq)
+                 deriving (Show, Eq)
 
-instance Show Declaration where
-  show (VariableDecl v) = show v
-  show (FunctionDecl b t fs)
-    | b     = "extern " ++ fd
-    | not b = fd
-   where fd = show t ++ " " ++ (intercalate ", " . map show $ fs) ++ ";\n"
-
-data FuncStub = FuncStub Identifier Parameters deriving (Eq)
-
-instance Show FuncStub where
-  show (FuncStub i p) = i ++ "(" ++ show p ++ ")"
+data FuncStub = FuncStub Identifier Parameters deriving (Show, Eq)
 
 type IsExtern = Bool
 
@@ -56,51 +37,21 @@ data Expression = Negative      Expression
                 | FunctionCall  Function
                 | Var           Variable
                 | ErrorE
-                deriving (Eq)
-
-instance Show Expression where
-  show (Negative e)       = "-" ++ show e
-  show (Not e)            = "!" ++ show e
-  show (LitInt i)         = show i
-  show (LitChar c)        = show c
-  show (LitString s)      = show s
-  show (Binary o e1 e2)   = "(" ++ show e1 ++ " " ++ show o ++ " " ++ show e2 ++ ")"
-  show (Relative o e1 e2) = "(" ++ show e1 ++ " " ++ show o ++ " " ++ show e2 ++ ")"
-  show (Logical o e1 e2)  = "(" ++ show e1 ++ " " ++ show o ++ " " ++ show e2 ++ ")"
-  show (FunctionCall f)   = show f
-  show (Var v)            = show v
-  show ErrorE             = "<ERROR>"
+                deriving (Show, Eq)
 
 
 data FunctionDef = FunctionDef TType Identifier Parameters [VarDecl] [Statement]
-                 deriving (Eq)
-
-instance Show FunctionDef where
-  show (FunctionDef t i ps vds ss) = heading ++ decls ++ "\n" ++ stmts ++ "}\n"
-   where heading = show t ++ " " ++ i ++ "(" ++ show ps ++ "){\n"
-         decls = indent $ concatMap show vds
-         stmts = indent $ concatMap show ss
+                 deriving (Show, Eq)
 
 data Parameters = VoidParameter
                 | Parameters [Parameter]
-                deriving (Eq)
-
-instance Show Parameters where
-  show VoidParameter   = "void"
-  show (Parameters ps) = intercalate ", " . map show $ ps
+                deriving (Show, Eq)
 
 data Parameter = ScalarParam TType Identifier
                | ArrayParam  TType Identifier
-               deriving (Eq)
+               deriving (Show, Eq)
 
-instance Show Parameter where
-  show (ScalarParam t i) = show t ++ " " ++ i
-  show (ArrayParam  t i) = show t ++ "[] " ++ i
-
-data VarDecl = VarDecl TType [Variable] deriving (Eq)
-
-instance Show VarDecl where
-  show (VarDecl t vs) = show t ++ " " ++ (intercalate ", " . map show $ vs) ++ ";\n"
+data VarDecl = VarDecl TType [Variable] deriving (Show, Eq)
 
 data Statement = If Expression Statement
                | IfElse Expression Statement Statement
@@ -112,7 +63,7 @@ data Statement = If Expression Statement
                | Bracketed [Statement]
                | None
                | ErrorS
-               deriving (Eq)
+               deriving (Show, Eq)
 
 foldStatement f init [] = init
 foldStatement f init (s:ss) = case s of
@@ -126,83 +77,23 @@ foldStatement f init (s:ss) = case s of
 mapStatement :: (Statement -> a) -> [Statement] -> [a]
 mapStatement f = foldStatement (\bs s -> f s:bs) []
 
-instance Show Statement where
-  show (If e s@(Bracketed ss)) = "if(" ++ show e ++ ")" ++ show s
-  show (If e s) = "if(" ++ show e ++ ")\n" ++ indent (show s)
-  show (IfElse e s1 s@(Bracketed ss)) = show (If e s1) ++ "else" ++ show s
-  show (IfElse e s1 s) = show (If e s1) ++ "else\n" ++ indent (show s)
-  show (While e s@(Bracketed ss)) = "while(" ++ show e ++ ")" ++ show s
-  show (While e s) = "while(" ++ show e ++ ")\n" ++ indent (show s)
-  show (For ma1 me ma2 s@(Bracketed ss)) = "for(" ++ showM ma1 ++ "; "
-                                        ++ showM me ++ "; " ++ showM ma2 ++ ")"
-                                        ++ show s
-  show (For ma1 me ma2 s) = "for(" ++ showM ma1 ++ "; "
-                                   ++ showM me ++ "; " ++ showM ma2 ++ ")"
-                                   ++ indent (show s)
-  show (Return me) = "return " ++ showM me ++ ";" ++ "\n"
-  show (Assign a) = show a ++ ";" ++ "\n"
-  show (Bracketed ss) = "{\n" ++ indent (concatMap show ss) ++ "}" ++ "\n"
-  show None = ";" ++ "\n"
-  show (ProcedureCall f) = show f ++ ";" ++ "\n"
-  show ErrorS = "<ERROR>"
-
-showM Nothing = ""
-showM (Just a) = show a
-
-indent a = unlines . map (\s -> "    " ++ s) . lines $ a
-
-
 data Variable = Scalar Identifier
               | Array Identifier Expression
-              deriving (Eq)
+              deriving (Show, Eq)
 
-instance Show Variable where
-  show (Scalar i) = i
-  show (Array i e) = i ++ "[" ++ show e ++ "]"
-
-data Function = Function Identifier [Expression] deriving (Eq)
-
-instance Show Function where
-  show (Function i es) = i ++ "(" ++ (intercalate ", " . map show $ es) ++ ")"
+data Function = Function Identifier [Expression] deriving (Show, Eq)
 
 data Assignment = Assignment Variable Expression
                 | ErrorA
-                deriving (Eq)
-
-instance Show Assignment where
-  show (Assignment v e) = show v ++ " = " ++ show e
-  show ErrorA = "<ERROR>"
+                deriving (Show, Eq)
 
 type Identifier = String
 
-data LogicalOp  = And | Or deriving (Eq)
+data LogicalOp  = And | Or deriving (Show, Eq)
 
-instance Show LogicalOp where
-  show And = "&&"
-  show Or  = "||"
+data RelativeOp = Eq | Neq | Leq | Less | Geq | Greater deriving (Show, Eq)
 
-data RelativeOp = Eq | Neq | Leq | Less | Geq | Greater deriving (Eq)
-
-instance Show RelativeOp where
-  show Eq = "=="
-  show Neq = "!="
-  show Leq = "<="
-  show Geq = ">="
-  show Less = "<"
-  show Greater = ">"
-
-data BinaryOp = Plus | Minus | Times | Divide  deriving (Eq)
-
-instance Show BinaryOp where
-  show Plus = "+"
-  show Minus = "-"
-  show Times = "*"
-  show Divide = "/"
-
-
-
--- Other AST related structures
-
+data BinaryOp = Plus | Minus | Times | Divide  deriving (Show, Eq)
 
 data TType = TBool
            | TChar
@@ -210,7 +101,7 @@ data TType = TBool
            | TVoid
            | TArray TType
            | TError
-           deriving (Eq)
+           deriving (Show, Eq)
 
 compatible TBool TBool = True
 compatible TChar TChar = True
@@ -221,14 +112,9 @@ compatible TInt  TChar = True
 compatible (TArray t1) (TArray t2) = compatible t1 t2
 compatible _ _ = False
 
-instance Show TType where
-  show (TArray t) = show t ++ "[]"
-  show TBool = "bool"
-  show TInt  = "int"
-  show TChar = "char"
-  show TVoid = "void"
-  show TError = "<ERROR>"
-
+--
+-- Other AST related structures
+--
 
 type SymbolTable = M.Map Identifier TType
 type FunctionArgumentTable = M.Map Identifier [TType]
