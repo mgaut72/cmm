@@ -5,6 +5,7 @@ import Control.Lens
 import Data.Maybe
 import Data.List (nub)
 import qualified Data.Map as M
+import qualified Data.Set as S
 import Text.Parsec.Prim
 
 import Language.CMM.AST
@@ -17,7 +18,11 @@ typeCheckDeclaration isGlobal d = case d of
                                 >> return d
   FunctionDecl isExtern t stubs -> mapM_ (addFcnIdentifier t) stubs
                                 >> mapM_ addFcnPrototype stubs
+                                >> when isExtern (mapM_ addExtern stubs)
                                 >> return d
+
+addExtern :: FuncStub -> MyParser ()
+addExtern (FuncStub ident _) = modifyState $ externFunctions %~ S.insert ident
 
 addFcnIdentifier :: TType -> FuncStub -> MyParser ()
 addFcnIdentifier t f = checkStub f

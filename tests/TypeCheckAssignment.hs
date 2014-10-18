@@ -17,11 +17,9 @@ main = do
      else exitSuccess
 
 initialState :: Tables
-initialState = Tables { _globalSymbols = M.fromList symbolList
-                      , _localSymbols = M.empty
-                      , _functions = M.fromList fcnList
-                      , _currentFunctionType = TVoid
-                      }
+initialState = initialTables { _globalSymbols = M.fromList symbolList
+                             , _functions = M.fromList fcnList
+                             }
 
 symbolList = [ ("a", TInt), ("b", TChar), ("none", TInt)
              , ("one", TInt), ("two", TInt), ("aa", TArray TInt)

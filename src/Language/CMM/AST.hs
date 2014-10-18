@@ -2,6 +2,7 @@
 module Language.CMM.AST where
 
 import qualified Data.Map as M
+import qualified Data.Set as S
 import Data.List
 import Control.Lens
 import Control.Monad.Writer
@@ -234,6 +235,7 @@ type FunctionArgumentTable = M.Map Identifier [TType]
 
 data Tables = Tables { _globalSymbols       :: SymbolTable
                      , _localSymbols        :: SymbolTable
+                     , _externFunctions     :: S.Set Identifier
                      , _functions           :: FunctionArgumentTable
                      , _currentFunctionType :: TType
                      } deriving (Show, Eq)
@@ -242,6 +244,7 @@ makeLenses ''Tables
 
 initialTables = Tables { _globalSymbols       = M.empty
                        , _localSymbols        = M.empty
+                       , _externFunctions     = S.empty
                        , _functions           = M.empty
                        , _currentFunctionType = TVoid
                        }

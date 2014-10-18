@@ -18,20 +18,6 @@ main = do
      then exitFailure
      else exitSuccess
 
-initialState :: Tables
-initialState = Tables { _globalSymbols = M.fromList symbolList
-                      , _localSymbols = M.empty
-                      , _functions = M.fromList fcnList
-                      , _currentFunctionType = TVoid
-                      }
-
-symbolList = [ ("a", TInt), ("b", TChar), ("none", TInt)
-             , ("one", TInt), ("two", TInt), ("aa", TArray TInt)
-             , ("bb", TArray TChar), ("i", TInt)
-             ]
-fcnList = [("none", []), ("one", [TInt]), ("two", [TInt, TChar])]
-
-
 readS a = runWriter . runParserT p initialTables "" $ a
  where p = do
          whiteSpace

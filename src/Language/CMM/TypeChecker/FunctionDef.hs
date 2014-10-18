@@ -3,6 +3,7 @@ module Language.CMM.TypeChecker.FunctionDef where
 import Control.Lens
 import Control.Monad
 import qualified Data.Map as M
+import qualified Data.Set as S
 import Data.Maybe
 import Text.Parsec.Prim
 
@@ -21,6 +22,8 @@ typeCheckFunctionDef f@(FunctionDef t i p vs ss) = checkSignature t i p
 checkSignature t i p = do
   s <- getState
   let sTable = view globalSymbols s
+  let eSet   = view externFunctions s
+  when (S.member i eSet) $ recordError $ "'" ++ i ++ "' is declared to be an extern function, but has a corresponding definition"
   if isNothing (M.lookup i sTable)
     then addPrototype t i p
     else checkExisting t i p
