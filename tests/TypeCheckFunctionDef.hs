@@ -39,7 +39,7 @@ instance (Eq ParseError) where
 tests = test
   [ "1" ~: FunctionDef TInt "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"])
                      []
-                     []
+                     [Return (Just (LitInt 1))]
        |~?= ( (globalSymbols %~ M.insert "main" TInt)
             . (localSymbols %~ M.insert "argc" TInt)
             . (localSymbols %~ M.insert "argv" (TArray TChar))
@@ -48,14 +48,14 @@ tests = test
 
   , "2" ~: FunctionDef TInt "main" VoidParameter
                      []
-                     [ None ]
+                     [Return (Just (LitInt 1))]
        |~?= ( (globalSymbols %~ M.insert "main" TInt)
             . (functions %~ M.insert "main" [])
             $ tbl )
 
   , "3" ~: FunctionDef TInt "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"])
                      []
-                     []
+                     [Return (Just (LitInt 1))]
        |~?= ( (globalSymbols %~ M.insert "main" TInt )
             . (functions %~ M.insert "main" [TInt, TArray TChar])
             . (localSymbols %~ M.insert "argc" TInt)
@@ -64,7 +64,7 @@ tests = test
 
   , "4" ~: FunctionDef TInt "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"])
                      []
-                     []
+                     [Return (Just (LitInt 1))]
        |~?= ( (globalSymbols %~ M.insert "main" TInt )
             . (functions %~ M.insert "main" [TInt, TArray TChar])
             . (localSymbols %~ M.insert "argc" TInt)
