@@ -12,5 +12,8 @@ typeCheckAssignment a@(Assignment v e) = do
   tvar <- typeOf $ Var v
   te   <- typeOf e
   unless (tvar `compatible` TChar) (recordError $ "cannot assign to type '" ++ show tvar ++ "'")
-  unless (tvar `compatible` te) (recordError $ "type error: variable and expression have incompatible types in assignment : " ++ show a)
+  unless (tvar `compatible` te) (recordError $ "type error: variable type '"
+                                 ++ show tvar ++ "' and expression type '"
+                                 ++ show te ++ "' have incompatible types in assignment : "
+                                 ++ show a)
   return a
