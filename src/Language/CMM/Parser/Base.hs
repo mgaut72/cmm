@@ -10,6 +10,7 @@ module Language.CMM.Parser.Base where
 --    * programP        in terms of baseProgramP
 
 import Control.Monad
+import Control.Applicative ((<*))
 import Control.Lens
 import Text.Parsec
 import Text.Parsec.Language
@@ -85,21 +86,18 @@ litIntP :: MyParser Expression
 litIntP = liftM LitInt integer
 
 litCharP :: MyParser Expression
-litCharP = do
-  char '\''
-  c <- satisfy f <|> try (string "\\0" >> return '\0') <|> (string "\\n" >> return '\n')
-  symbol "'"
-  return $ LitChar c
- where f c = isPrint c && c /= '\'' && c /= '\\'
+litCharP = liftM LitChar $ char '\'' >> charInternal <* symbol "'"
+ where charInternal = satisfy f <|> try nullChar <|> newlineChar
+       f c = isPrint c && c /= '\'' && c /= '\\'
+       nullChar = string "\\0" >> return '\0'
 
 
 litStringP :: MyParser Expression
-litStringP = do
-  char '"'
-  s <- many $ (string "\\n" >> return '\n') <|> satisfy f
-  symbol "\""
-  return $ LitString s
- where f c = isPrint c && c /= '"'
+litStringP = liftM LitString $ char '"' >> strInternal <* symbol "\""
+ where strInternal = many $ newlineChar <|> satisfy f
+       f c = isPrint c && c /= '"'
+
+newlineChar = string "\\n" >> return '\n'
 
 operationP :: MyParser Expression -> MyParser Expression
 operationP eP = buildExpressionParser operators (terms eP)
@@ -208,8 +206,7 @@ ifOrIfElse e eP sP = do
   mElse <- optionMaybe $ reserved "else"
   case mElse of
        Nothing -> return $ If e ifS
-       Just _  -> do elseS <- sP
-                     return $ IfElse e ifS elseS
+       Just _  -> liftM (IfElse e ifS) sP
 
 
 whileP :: MyParser Expression -> MyParser Statement -> MyParser Statement
@@ -287,7 +284,7 @@ paramP :: MyParser Parameter
 paramP = do
   t <- nonVoidTypeP
   i <- identifier
-  mArr <- optionMaybe (symbol "[" >> symbol "]")
+  mArr <- optionMaybe $ symbol "[" >> symbol "]"
   case mArr of
        Nothing -> return $ ScalarParam t i
        Just _  -> return $ ArrayParam  t i
