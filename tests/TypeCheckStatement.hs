@@ -93,4 +93,5 @@ tests = test
                     (Just (Relative Leq (Var (Scalar "j")) (LitInt 5)))
                     (Just (Assignment (Scalar "j") (Binary Plus (Var (Scalar "i")) (LitInt 1)))) -- j does not exist
                     None
+  , "non-void function statement" ~: bad $ ProcedureCall $ Function "none" []
   ]

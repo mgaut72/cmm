@@ -24,8 +24,11 @@ initialState = initialTables { _globalSymbols = M.fromList symbolList
 symbolList = [ ("a", TInt), ("b", TChar), ("none", TInt)
              , ("one", TInt), ("two", TInt), ("aa", TArray TInt)
              , ("bb", TArray TChar)
+             , ("voidF", TVoid)
              ]
-fcnList = [("none", []), ("one", [TInt]), ("two", [TInt, TChar])]
+fcnList = [ ("none", []), ("voidF", []), ("one", [TInt])
+          , ("two", [TInt, TChar])
+          ]
 
 
 a |~?= b = readE "" ~?= (Right b, [])
@@ -78,4 +81,7 @@ tests = test
   , "tFcn" ~: FunctionCall (Function "two" [LitInt 1, LitChar '2']) |~?= TInt
   , "tFcn" ~: bad $ FunctionCall (Function "two" [LitChar '2'])
   , "tFcn" ~: bad $ FunctionCall (Function "two" [LitString "1", LitChar '2'])
+
+  -- function called from withinn an expression must not have void return type
+  , "tFcn" ~: bad $ FunctionCall (Function "voidF" [])
   ]
