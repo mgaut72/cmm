@@ -51,7 +51,11 @@ typeCheckStatement x@(Return (Just e)) = do
           ++ show t2 ++ "'"
 
 typeCheckStatement x@(ProcedureCall f) = typeCheckExpression (FunctionCall f)
+                                      >> typeOf (FunctionCall f)
+                                     >>= (\a -> unless (a == TVoid) err)
                                       >> return x
+ where err = recordError $ "Cannot call non-void function '" ++ i ++ "' in a statement context"
+       i = case f of Function ident _ -> i
 
 typeCheckStatement None = return None
 
