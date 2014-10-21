@@ -26,4 +26,5 @@ data ThreeAddress = Global Identifier TType
                   | Call Identifier Integer -- Integer is num arguments
                   | Ret (Maybe Value)
                   | Retrieve Identifier
+                  | Convert Identifier TType
                   deriving (Show, Eq)
