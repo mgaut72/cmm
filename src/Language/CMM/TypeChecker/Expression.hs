@@ -63,8 +63,10 @@ typeOf (Logical _ e1 e2) = allCompatibleWith [e1,e2] TBool >> return TBool
 typeOf (FunctionCall (Function i es)) = do
   expectedTypes <- lookUpArgs i
   actualTypes <- mapM typeOf es
-  unless (allEqual expectedTypes actualTypes) $ void $ err "type error : Function arguments have incorrect type"
-  lookUpSymb i
+  unless (allEqual expectedTypes actualTypes) $ void $ err $ "type error : Function arguments for function '" ++ i ++ "' have incorrect type"
+  retType <- lookUpSymb i
+  when (retType == TVoid) $ void $ err $ "Cannot call void function '" ++ i ++ "' from an expression context"
+  return retType
  where allEqual t1 t2 = length t1 == length t2 && and (zipWith compatible t1 t2)
 
 typeOf (Var (Scalar i)) = lookUpSymb i
