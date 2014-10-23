@@ -301,8 +301,8 @@ baseFunctionDefP vP sP = do
   t <- typeP
   i <- identifier
   p <- parens parametersP
-  modifyState $ currentFunctionType .~ t
-  modifyState $ localSymbols .~ M.empty
+  modifyState $ currFunction .~ i
+  modifyState $ localSymbols %~ M.insert i (t, M.empty)
   symbol "{"
   varDecls <- many vP
   ss <- many sP

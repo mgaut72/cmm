@@ -4,12 +4,14 @@ module Language.CMM.AST where
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Control.Lens
+import Control.Applicative
 import Control.Monad.Writer
-import Text.Parsec.Prim (ParsecT)
+import Text.Parsec
 
 
 -- Parser type
 type MyParser a = ParsecT String Tables (Writer [String]) a
+
 
 -- Language tree types
 data Program = Program [ProgData] deriving (Show, Eq)
@@ -113,17 +115,17 @@ compatible (TArray t1) (TArray t2) = compatible t1 t2
 compatible _ _ = False
 
 --
--- Other AST related structures
+-- Symbol Table
 --
 
 type SymbolTable = M.Map Identifier TType
 type FunctionArgumentTable = M.Map Identifier [TType]
 
 data Tables = Tables { _globalSymbols       :: SymbolTable
-                     , _localSymbols        :: SymbolTable
+                     , _localSymbols        :: M.Map Identifier (TType, SymbolTable)
                      , _externFunctions     :: S.Set Identifier
                      , _functions           :: FunctionArgumentTable
-                     , _currentFunctionType :: TType
+                     , _currFunction        :: Identifier
                      } deriving (Show, Eq)
 
 makeLenses ''Tables
@@ -132,5 +134,15 @@ initialTables = Tables { _globalSymbols       = M.empty
                        , _localSymbols        = M.empty
                        , _externFunctions     = S.empty
                        , _functions           = M.empty
-                       , _currentFunctionType = TVoid
+                       , _currFunction        = ""
                        }
+
+lTable :: Applicative f => MyParser ((SymbolTable -> f SymbolTable) -> Tables -> f Tables)
+lTable = do
+  s <- getState
+  let currF = s ^. currFunction
+  let localTableLens = localSymbols . ix currF . _2
+  return localTableLens
+
+gTable :: Applicative f => MyParser ((SymbolTable -> f SymbolTable) -> Tables -> f Tables)
+gTable = return globalSymbols

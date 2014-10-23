@@ -35,14 +35,14 @@ good a = TestCase (unless (isGood a) (assertFailure ("expected good parse\ngot: 
 instance (Eq ParseError) where
   a == b = errorMessages a == errorMessages b
 
+ls = localSymbols . ix "" . _2
 
 tests = test
   [ "1" ~: FunctionDef TInt "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"])
                      []
                      [Return (Just (LitInt 1))]
        |~?= ( (globalSymbols %~ M.insert "main" TInt)
-            . (localSymbols %~ M.insert "argc" TInt)
-            . (localSymbols %~ M.insert "argv" (TArray TChar))
+            . (ls %~ M.insert "argc" TInt) . (ls %~ M.insert "argv" (TArray TChar))
             . (functions %~ M.insert "main" [TInt, TArray TChar])
             $ tbl )
 
@@ -58,8 +58,8 @@ tests = test
                      [Return (Just (LitInt 1))]
        |~?= ( (globalSymbols %~ M.insert "main" TInt )
             . (functions %~ M.insert "main" [TInt, TArray TChar])
-            . (localSymbols %~ M.insert "argc" TInt)
-            . (localSymbols %~ M.insert "argv" (TArray TChar))
+            . (ls %~ M.insert "argc" TInt)
+            . (ls %~ M.insert "argv" (TArray TChar))
             $ tbl )
 
   , "4" ~: FunctionDef TInt "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"])
@@ -67,14 +67,18 @@ tests = test
                      [Return (Just (LitInt 1))]
        |~?= ( (globalSymbols %~ M.insert "main" TInt )
             . (functions %~ M.insert "main" [TInt, TArray TChar])
-            . (localSymbols %~ M.insert "argc" TInt)
-            . (localSymbols %~ M.insert "argv" (TArray TChar))
+            . (ls %~ M.insert "argc" TInt)
+            . (ls %~ M.insert "argv" (TArray TChar))
             $ tbl )
 
   , "5" ~: FunctionDef TVoid "main" VoidParameter [] []
        |~?= ( (globalSymbols %~ M.insert "main" TVoid)
             . (functions %~ M.insert "main" [])
             $ tbl )
+
+  -- can't have the same parameter identifier in a function
+  , "doubleParam" ~: bad $ FunctionDef TVoid "main" (Parameters [ScalarParam TInt "a", ScalarParam TInt "a"]) []
+                              [ Return Nothing ]
 
   -- cant return expression from a void function
   , "voidFunctionReturn" ~: bad $ FunctionDef TVoid "main" VoidParameter []

@@ -79,7 +79,11 @@ checkParameters i ps = do
 
 addParameters VoidParameter = return ()
 addParameters (Parameters ps) = mapM_ addP ps
- where addP p = modifyState (localSymbols %~ M.insert (getI p) (getT p))
+ where addP p = do
+         s <- getState
+         let fn = s ^. currFunction
+         let table = localSymbols . ix fn . _2
+         modifyState (table %~ M.insert (getI p) (getT p))
        getI (ArrayParam _ i) = i
        getI (ScalarParam _ i) = i
        getT (ArrayParam t _) = TArray t

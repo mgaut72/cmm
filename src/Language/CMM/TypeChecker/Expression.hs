@@ -1,6 +1,7 @@
 module Language.CMM.TypeChecker.Expression where
 
 import qualified Data.Map as M
+import Data.Maybe
 import Control.Monad
 import Control.Lens
 import Text.Parsec.Prim
@@ -25,8 +26,10 @@ lookUpArgs i = do
 lookUpSymb :: Identifier -> MyParser TType
 lookUpSymb i = do
   s <- getState
-  let tloc = M.lookup i (view localSymbols s)
-  let tglo = M.lookup i (view globalSymbols s)
+  let currF = s ^. currFunction
+  let locTab = s ^. localSymbols . ix currF . _2
+  let tloc = M.lookup i locTab
+  let tglo = M.lookup i $ s ^. globalSymbols
   case (tloc, tglo) of
       (Just t, _)  -> return t
       (_, Just t)  -> return t
