@@ -16,7 +16,8 @@ compatibleWith e t = do
   et <- typeOf e
   if t `compatible` et
     then return t
-    else err $ "type error: '" ++ show e ++ "' is not compatible with type '" ++ show t ++ "'"
+    else err $ "type error: '" ++ show e ++
+               "' is not compatible with type '" ++ show t ++ "'"
 
 allCompatibleWith :: [Expression] -> TType -> MyParser TType
 allCompatibleWith es t = mapM_ (`compatibleWith` t) es >> return t
@@ -74,7 +75,7 @@ lookUpSymb i = do
   case (tloc, tglo) of
       (Just t, _)  -> return t
       (_, Just t)  -> return t
-      _            -> err $ "Identifier " ++ i ++ " not found in scope"
+      _            -> err $ "Identifier '" ++ i ++ "' not found in scope"
 
 typeOfFunction :: Bool -> Function -> MyParser TType
 typeOfFunction isExpression (Function i es) = do
