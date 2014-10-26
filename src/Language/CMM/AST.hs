@@ -67,14 +67,14 @@ data Statement = If Expression Statement
                | ErrorS
                deriving (Show, Eq)
 
-foldStatement f init [] = init
+foldStatement _ init [] = init
 foldStatement f init (s:ss) = case s of
   If _ s'         -> foldStatement f init (s':ss)
   IfElse _ s' s'' -> foldStatement f init (s':s'':ss)
   While _ s'      -> foldStatement f init (s':ss)
   For _ _ _ s'    -> foldStatement f init (s':ss)
   Bracketed ss'   -> foldStatement f init (ss' ++ ss)
-  otherwise       -> foldStatement f (f init s) ss
+  _               -> foldStatement f (f init s) ss
 
 mapStatement :: (Statement -> a) -> [Statement] -> [a]
 mapStatement f = foldStatement (\bs s -> f s:bs) []

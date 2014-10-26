@@ -16,13 +16,16 @@ import Language.CMM.Error
 typeCheckStatement :: Statement -> MyParser Statement
 typeCheckStatement = tcs
 
-tcs x@(If e s) = compatibleWith e TBool >> return x
+tcs ErrorS = return ErrorS
 
-tcs x@(IfElse e s1 s2) = compatibleWith e TBool >> return x
+-- we don't need to recursively call tcs since this happens during the parse
+tcs x@(If e _) = compatibleWith e TBool >> return x
 
-tcs x@(While e s) = compatibleWith e TBool >> return x
+tcs x@(IfElse e _ _) = compatibleWith e TBool >> return x
 
-tcs x@(For ma1 me ma2 s) = checkA ma1 >> checkE me >> checkA ma2 >> return x
+tcs x@(While e _) = compatibleWith e TBool >> return x
+
+tcs x@(For ma1 me ma2 _) = checkA ma1 >> checkE me >> checkA ma2 >> return x
  where checkA a = F.forM_ a (void . typeCheckAssignment)
        checkE e = F.forM_ e (void . typeCheckExpression)
 
@@ -48,13 +51,13 @@ tcs x@(ProcedureCall f) = typeOfFunction False f
                        >> return x
  where err = recordError $ "Cannot call non-void function '" ++
                            i ++ "' in a statement context"
-       i = case f of Function ident _ -> i
+       i = case f of Function ident _ -> ident
 
 tcs None = return None
 
 tcs x@(Assign a) = typeCheckAssignment a >> return x
 
-tcs x@(Bracketed ss) = return x
+tcs x@(Bracketed _) = return x
 
 getExpectedType = do
   s <- getState
