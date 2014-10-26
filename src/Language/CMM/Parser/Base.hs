@@ -22,10 +22,12 @@ import qualified Data.Map as M
 
 import Language.CMM.AST
 import Language.CMM.Error
+import Language.CMM.TypeChecker
 
 {-# ANN module "HLint: ignore Reduce duplication" #-}
 
 type TypeChecked = Bool
+type IsGlobal    = Bool
 
 languageDef = Token.LanguageDef
   { Token.commentStart    = "/*"
@@ -75,7 +77,7 @@ symbol     = Token.symbol     lexer
 --
 
 baseExpressionP :: TypeChecked -> MyParser Expression
-baseExpressionP b = untypedExpressionP
+baseExpressionP b = untypedExpressionP >>= typeCheck b typeCheckExpression
  where untypedExpressionP = operationP b
                         <|> functionCallP b
                         <|> varExpressionP b
@@ -169,7 +171,7 @@ identifierFollowedBy c = do
 --
 
 baseStatementP :: TypeChecked -> MyParser Statement
-baseStatementP b = try validP <|> recoverableP
+baseStatementP b = (try validP <|> recoverableP) >>= tc
  where validP = returnP b
             <|> ifP b
             <|> procedureCallP b
@@ -185,6 +187,7 @@ baseStatementP b = try validP <|> recoverableP
                   <|> whileErrorP b
                   <|> assignErrorP b
                   <|> procedureCallErrorP b
+       tc = typeCheck b typeCheckStatement
 
 noneP :: MyParser Statement
 noneP = semi >> return None
@@ -259,11 +262,12 @@ procedureCallP b = do
 -- Function Parsing
 --
 
-baseVarDeclP :: TypeChecked -> MyParser VarDecl
-baseVarDeclP b = do
+baseVarDeclP :: IsGlobal -> TypeChecked -> MyParser VarDecl
+baseVarDeclP g b = do
   t <- nonVoidTypeP
   vars <- commaSep1 $ arrayDeclP b <|> scalarP b
   semi
+  when b (void $ typeCheckDeclaration g $ VariableDecl (VarDecl t vars))
   return $ VarDecl t vars
 
 arrayDeclP :: TypeChecked -> MyParser Variable
@@ -305,14 +309,16 @@ baseFunctionDefP b = do
   p <- parens parametersP
   modifyState $ currFunction .~ i
   modifyState $ localSymbols %~ M.insert i (t, M.empty)
+  when b $ checkSignature t i p >> addParameters p
   symbol "{"
-  varDecls <- many $ baseVarDeclP b
+  varDecls <- many $ baseVarDeclP False b
   ss <- many $ baseStatementP b
+  when b $ checkReturnInStatements i t ss
   symbol "}"
   return $ FunctionDef t i p varDecls ss
 
 funcStubP :: TypeChecked -> MyParser FuncStub
-funcStubP b = liftM2 FuncStub identifier (parens $ parametersP)
+funcStubP b = liftM2 FuncStub identifier (parens parametersP)
 
 --
 -- Declaration
@@ -320,11 +326,11 @@ funcStubP b = liftM2 FuncStub identifier (parens $ parametersP)
 
 baseDeclarationP :: TypeChecked -> MyParser Declaration
 baseDeclarationP b = try (functionDeclP b)
-               <|> variableDeclP b
-               <?> "declaration"
+                 <|> variableDeclP b
+                 <?> "declaration"
 
 variableDeclP :: TypeChecked -> MyParser Declaration
-variableDeclP b = liftM VariableDecl $ baseVarDeclP b
+variableDeclP b = liftM VariableDecl $ baseVarDeclP True b
 
 functionDeclP :: TypeChecked ->  MyParser Declaration
 functionDeclP b = do
@@ -332,7 +338,7 @@ functionDeclP b = do
   t <- typeP
   stubs <- commaSep1 $ funcStubP b
   semi
-  return $ FunctionDecl ext t stubs
+  typeCheck b (typeCheckDeclaration True) (FunctionDecl ext t stubs)
 
 isExtP = option False (reserved "extern" >> return True)
 
