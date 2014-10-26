@@ -9,6 +9,5 @@ main = do
   program <- getContents
   case compileCMM program of
        (Right a, []) -> return ()
-       (Right a, es) -> hPutStr stderr $ errorMessages es
-       (Left  a, es) -> hPutStrLn stderr $ errorMessages es ++ show a
- where errorMessages = unlines . nub
+       (Right a, es) -> hPutStr stderr es
+       (Left  a, es) -> hPutStrLn stderr $ es ++ show a

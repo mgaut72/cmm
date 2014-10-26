@@ -10,7 +10,7 @@ import Text.Parsec
 
 
 -- Parser type
-type MyParser a = ParsecT String Tables (Writer [String]) a
+type MyParser a = ParsecT String Tables (Writer [(SourcePos, String)]) a
 
 
 -- Language tree types
