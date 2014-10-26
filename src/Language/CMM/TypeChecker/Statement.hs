@@ -30,25 +30,24 @@ tcs x@(Return Nothing) = do
   (expectedT,currF) <- getExpectedType
   unless (expectedT == TVoid) $ err currF
   return x
- where err i = recordError $ "function '" ++ i
-                        ++ "' is non-void but there is a void return statement"
+ where err i = recordError $ "function '" ++ i ++
+                             "' is non-void but has a void return statement"
 
 tcs x@(Return (Just e)) = do
   (expectedT,currF) <- getExpectedType
   t <- typeOf e
   unless (expectedT == t) $ err currF expectedT t
   return x
- where err i t1 t2 = recordError $ "function '" ++ i ++ "' has type '"
-                                ++ show t1
-                                ++ "' but return statement has type '"
-                                ++ show t2 ++ "'"
+ where err i t1 t2 = recordError $ "function '" ++ i ++ "' has type '" ++
+                                   show t1 ++
+                                   "' but return statement has type '" ++
+                                   show t2 ++ "'"
 
-
-tcs x@(ProcedureCall f) = typeCheckExpression (FunctionCall f)
-                       >> typeOf (FunctionCall f)
+tcs x@(ProcedureCall f) = typeOfFunction False f
                       >>= (\a -> unless (a == TVoid) err)
                        >> return x
- where err = recordError $ "Cannot call non-void function '" ++ i ++ "' in a statement context"
+ where err = recordError $ "Cannot call non-void function '" ++
+                           i ++ "' in a statement context"
        i = case f of Function ident _ -> i
 
 tcs None = return None

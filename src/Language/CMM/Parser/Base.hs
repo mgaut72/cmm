@@ -13,11 +13,9 @@ import Control.Monad
 import Control.Applicative ((<*))
 import Control.Lens
 import Text.Parsec
-import Text.Parsec.Language
 import Text.Parsec.Expr
 import qualified Text.Parsec.Token as Token
 import Data.Char (isPrint)
-import System.IO
 import qualified Data.Map as M
 
 import Language.CMM.AST
@@ -313,7 +311,7 @@ baseFunctionDefP b = do
   symbol "{"
   varDecls <- many $ baseVarDeclP False b
   ss <- many $ baseStatementP b
-  when b $ checkReturnInStatements i t ss
+  when b $ checkReturns i t ss
   symbol "}"
   return $ FunctionDef t i p varDecls ss
 
