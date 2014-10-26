@@ -25,6 +25,8 @@ import Language.CMM.Error
 
 {-# ANN module "HLint: ignore Reduce duplication" #-}
 
+type TypeChecked = Bool
+
 languageDef = Token.LanguageDef
   { Token.commentStart    = "/*"
   , Token.commentEnd      = "*/"
@@ -72,11 +74,11 @@ symbol     = Token.symbol     lexer
 -- Expression Parsing
 --
 
-baseExpressionP :: MyParser Expression -> MyParser Expression
-baseExpressionP eP = untypedExpressionP
- where untypedExpressionP = operationP eP
-                        <|> functionCallP eP
-                        <|> varExpressionP eP
+baseExpressionP :: TypeChecked -> MyParser Expression
+baseExpressionP b = untypedExpressionP
+ where untypedExpressionP = operationP b
+                        <|> functionCallP b
+                        <|> varExpressionP b
                         <|> litIntP
                         <|> litCharP
                         <|> litStringP
@@ -99,8 +101,8 @@ litStringP = liftM LitString $ char '"' >> strInternal <* symbol "\""
 
 newlineChar = string "\\n" >> return '\n'
 
-operationP :: MyParser Expression -> MyParser Expression
-operationP eP = buildExpressionParser operators (terms eP)
+operationP :: TypeChecked -> MyParser Expression
+operationP b = buildExpressionParser operators (terms b)
 
 operators = [ [ Prefix (reservedOp "-" >> return Negative)
               , Prefix (reservedOp "!" >> return Not)
@@ -124,34 +126,34 @@ operators = [ [ Prefix (reservedOp "-" >> return Negative)
               ]
             ]
 
-terms eP = parens eP
-    <|> functionCallP eP
-    <|> varExpressionP eP
+terms b = parens (baseExpressionP b)
+    <|> functionCallP b
+    <|> varExpressionP b
     <|> litIntP
     <|> litCharP
     <|> litStringP
     <?> "expression term"
 
 
-functionCallP :: MyParser Expression -> MyParser Expression
-functionCallP eP = do
+functionCallP :: TypeChecked -> MyParser Expression
+functionCallP b = do
   ident <- try $ identifierFollowedBy '('
-  params <- commaSep eP
+  params <- commaSep $ baseExpressionP b
   symbol ")"
   return $ FunctionCall $ Function ident params
 
-varExpressionP :: MyParser Expression -> MyParser Expression
-varExpressionP eP = liftM Var (varP eP)
+varExpressionP :: TypeChecked -> MyParser Expression
+varExpressionP b = liftM Var (varP b)
 
-varP eP = arrayP eP <|> scalarP
+varP b = arrayP b <|> scalarP b
 
-scalarP :: MyParser Variable
-scalarP = liftM Scalar identifier
+scalarP :: TypeChecked -> MyParser Variable
+scalarP b = liftM Scalar identifier
 
-arrayP :: MyParser Expression -> MyParser Variable
-arrayP eP = do
+arrayP :: TypeChecked -> MyParser Variable
+arrayP b = do
   ident <- try $ identifierFollowedBy '['
-  idx <- eP
+  idx <- baseExpressionP b
   symbol "]"
   return $ Array ident idx
 
@@ -166,90 +168,90 @@ identifierFollowedBy c = do
 -- Statement Parser
 --
 
-baseStatementP :: MyParser Expression -> MyParser Statement -> MyParser Statement
-baseStatementP eP sP = try validP <|> recoverableP
- where validP = returnP eP
-            <|> ifP eP sP
-            <|> procedureCallP eP
-            <|> assignP eP
-            <|> forP eP sP
-            <|> whileP eP sP
-            <|> bracketedP sP
+baseStatementP :: TypeChecked -> MyParser Statement
+baseStatementP b = try validP <|> recoverableP
+ where validP = returnP b
+            <|> ifP b
+            <|> procedureCallP b
+            <|> assignP b
+            <|> forP b
+            <|> whileP b
+            <|> bracketedP b
             <|> noneP
-       recoverableP = ifErrorP eP sP
-                  <|> returnErrorP
-                  <|> try (forError1P eP sP)
-                  <|> forError2P eP sP
-                  <|> whileErrorP eP sP
-                  <|> assignErrorP eP
-                  <|> procedureCallErrorP eP
+       recoverableP = ifErrorP b
+                  <|> returnErrorP b
+                  <|> try (forError1P b)
+                  <|> forError2P b
+                  <|> whileErrorP b
+                  <|> assignErrorP b
+                  <|> procedureCallErrorP b
 
 noneP :: MyParser Statement
 noneP = semi >> return None
 
-returnP :: MyParser Expression -> MyParser Statement
-returnP eP = do
+returnP :: TypeChecked -> MyParser Statement
+returnP b = do
   reserved "return"
-  e <- optionMaybe eP
+  e <- optionMaybe $ baseExpressionP b
   semi
   return $ Return e
 
-ifP :: MyParser Expression -> MyParser Statement -> MyParser Statement
-ifP eP sP = do
+ifP :: TypeChecked -> MyParser Statement
+ifP b = do
   reserved "if"
-  e <- parens eP
-  ifOrIfElse e eP sP
+  e <- parens $ baseExpressionP b
+  ifOrIfElse b e
 
 
-ifOrIfElse e eP sP = do
-  ifS <- sP
+ifOrIfElse b e = do
+  ifS <- baseStatementP b
   mElse <- optionMaybe $ reserved "else"
   case mElse of
        Nothing -> return $ If e ifS
-       Just _  -> liftM (IfElse e ifS) sP
+       Just _  -> liftM (IfElse e ifS) (baseStatementP b)
 
 
-whileP :: MyParser Expression -> MyParser Statement -> MyParser Statement
-whileP eP sP = do
+whileP :: TypeChecked -> MyParser Statement
+whileP b = do
   reserved "while"
-  e <- parens eP
-  s <- sP
+  e <- parens $ baseExpressionP b
+  s <- baseStatementP b
   return $ While e s
 
-assignP :: MyParser Expression -> MyParser Statement
-assignP eP = do
-  a <- assignmentP eP
+assignP :: TypeChecked -> MyParser Statement
+assignP b = do
+  a <- assignmentP b
   semi
   return $ Assign a
 
-assignmentP :: MyParser Expression -> MyParser Assignment
-assignmentP eP = do
-  var <- varP eP
+assignmentP :: TypeChecked -> MyParser Assignment
+assignmentP b = do
+  var <- varP b
   symbol "="
-  e <- eP
+  e <- baseExpressionP b
   return $ Assignment var e
 
-forP :: MyParser Expression -> MyParser Statement -> MyParser Statement
-forP eP sP = do
+forP :: TypeChecked -> MyParser Statement
+forP b = do
   reserved "for"
   symbol "("
-  a1 <- optionMaybe $ assignmentP eP
+  a1 <- optionMaybe $ assignmentP b
   semi
-  e <- optionMaybe eP
+  e <- optionMaybe $ baseExpressionP b
   semi
-  a2 <- optionMaybe $ assignmentP eP
+  a2 <- optionMaybe $ assignmentP b
   symbol ")"
-  s <- sP
+  s <- baseStatementP b
   return $ For a1 e a2 s
 
-bracketedP :: MyParser Statement -> MyParser Statement
-bracketedP sP = do
-  statements <- braces $ many sP
+bracketedP :: TypeChecked -> MyParser Statement
+bracketedP b = do
+  statements <- braces $ many (baseStatementP b)
   return $ Bracketed statements
 
-procedureCallP :: MyParser Expression -> MyParser Statement
-procedureCallP eP = do
-  FunctionCall f <- functionCallP eP
+procedureCallP :: TypeChecked -> MyParser Statement
+procedureCallP b = do
+  FunctionCall f <- functionCallP b
   semi
   return $ ProcedureCall f
 
@@ -257,15 +259,15 @@ procedureCallP eP = do
 -- Function Parsing
 --
 
-baseVarDeclP :: MyParser VarDecl
-baseVarDeclP = do
+baseVarDeclP :: TypeChecked -> MyParser VarDecl
+baseVarDeclP b = do
   t <- nonVoidTypeP
-  vars <- commaSep1 $ arrayDeclP <|> scalarP
+  vars <- commaSep1 $ arrayDeclP b <|> scalarP b
   semi
   return $ VarDecl t vars
 
-arrayDeclP :: MyParser Variable
-arrayDeclP = do
+arrayDeclP :: TypeChecked -> MyParser Variable
+arrayDeclP b = do
   ident <- try $ identifierFollowedBy '['
   size <- litIntP
   symbol "]"
@@ -296,39 +298,39 @@ nonVoidTypeP = (reserved "char" >> return TChar)
 typeP :: MyParser TType
 typeP = nonVoidTypeP <|> (reserved "void" >> return TVoid)
 
-baseFunctionDefP :: MyParser VarDecl -> MyParser Statement -> MyParser FunctionDef
-baseFunctionDefP vP sP = do
+baseFunctionDefP :: TypeChecked -> MyParser FunctionDef
+baseFunctionDefP b = do
   t <- typeP
   i <- identifier
   p <- parens parametersP
   modifyState $ currFunction .~ i
   modifyState $ localSymbols %~ M.insert i (t, M.empty)
   symbol "{"
-  varDecls <- many vP
-  ss <- many sP
+  varDecls <- many $ baseVarDeclP b
+  ss <- many $ baseStatementP b
   symbol "}"
   return $ FunctionDef t i p varDecls ss
 
-funcStubP :: MyParser FuncStub
-funcStubP = liftM2 FuncStub identifier (parens parametersP)
+funcStubP :: TypeChecked -> MyParser FuncStub
+funcStubP b = liftM2 FuncStub identifier (parens $ parametersP)
 
 --
 -- Declaration
 --
 
-baseDeclarationP :: MyParser Declaration
-baseDeclarationP = try functionDeclP
-               <|> variableDeclP
+baseDeclarationP :: TypeChecked -> MyParser Declaration
+baseDeclarationP b = try (functionDeclP b)
+               <|> variableDeclP b
                <?> "declaration"
 
-variableDeclP :: MyParser Declaration
-variableDeclP = liftM VariableDecl baseVarDeclP
+variableDeclP :: TypeChecked -> MyParser Declaration
+variableDeclP b = liftM VariableDecl $ baseVarDeclP b
 
-functionDeclP :: MyParser Declaration
-functionDeclP = do
+functionDeclP :: TypeChecked ->  MyParser Declaration
+functionDeclP b = do
   ext <- isExtP
   t <- typeP
-  stubs <- commaSep1 funcStubP
+  stubs <- commaSep1 $ funcStubP b
   semi
   return $ FunctionDecl ext t stubs
 
@@ -338,17 +340,17 @@ isExtP = option False (reserved "extern" >> return True)
 -- ProgramData
 --
 
-baseProgDataP :: MyParser FunctionDef -> MyParser Declaration -> MyParser ProgData
-baseProgDataP fP dP = try (baseFuncP fP) <|> declP dP
+baseProgDataP :: TypeChecked -> MyParser ProgData
+baseProgDataP b = try (baseFuncP b) <|> declP b
 
-declP :: MyParser Declaration -> MyParser ProgData
-declP = liftM Decl
+declP :: TypeChecked -> MyParser ProgData
+declP b = liftM Decl (baseDeclarationP b)
 
-baseFuncP :: MyParser FunctionDef -> MyParser ProgData
-baseFuncP = liftM Func
+baseFuncP :: TypeChecked -> MyParser ProgData
+baseFuncP b = liftM Func $ baseFunctionDefP b
 
-baseProgramP :: MyParser ProgData -> MyParser Program
-baseProgramP pdP = liftM Program $ many pdP
+baseProgramP :: TypeChecked -> MyParser Program
+baseProgramP b = liftM Program $ many (baseProgDataP b)
 
 --
 -- Error Recover
@@ -356,67 +358,67 @@ baseProgramP pdP = liftM Program $ many pdP
 
 errorUntil e p = manyTill anyChar (try $ lookAhead p) >> return e
 
-ifErrorP :: MyParser Expression -> MyParser Statement -> MyParser Statement
-ifErrorP eP sP = do
+ifErrorP :: TypeChecked -> MyParser Statement
+ifErrorP b = do
   reserved "if"
   symbol "("
   recordError "bad expression in the conditional of the if statement"
   e <- errorUntil ErrorE $ char ')'
   symbol ")"
-  ifOrIfElse e eP sP
+  ifOrIfElse b e
 
-returnErrorP :: MyParser Statement
-returnErrorP = do
+returnErrorP :: TypeChecked -> MyParser Statement
+returnErrorP b = do
   reserved "return"
   recordError "bad return value expression"
   e <- errorUntil ErrorE $ char ';'
   semi
   return $ Return (Just e)
 
-forError1P eP sP = do
+forError1P b = do
   reserved "for"
   symbol "("
-  a1 <- try (optionMaybe (assignmentP eP)) <|> err1
+  a1 <- try (optionMaybe (assignmentP b)) <|> err1
   semi
-  e <- try (optionMaybe eP) <|> err2
+  e <- try (optionMaybe $ baseExpressionP b) <|> err2
   semi
-  a2 <- try (optionMaybe (assignmentP eP)) <|> err3
+  a2 <- try (optionMaybe (assignmentP b)) <|> err3
   symbol ")"
-  s <- sP
+  s <- baseStatementP b
   return $ For a1 e a2 s
  where
    err1 = recordError "Bad first assignment in for statement" >> errorUntil (Just ErrorA) semi
-   err2 = recordError "Bad expression expression in for statement" >> errorUntil (Just ErrorE) semi
+   err2 = recordError "Bad expression in for statement" >> errorUntil (Just ErrorE) semi
    err3 = recordError "bad last assignment in for statement" >> errorUntil (Just ErrorA) (char ')')
 
-forError2P eP sP = do
+forError2P b = do
   reserved "for"
   symbol "("
   errorUntil (Just ErrorA) (char ')')
   recordError "Bad for statement: unknown error inside the parens"
   symbol ")"
-  s <- sP
+  s <- baseStatementP b
   return $ For (Just ErrorA) (Just ErrorE) (Just ErrorA) s
 
-whileErrorP :: MyParser Expression -> MyParser Statement -> MyParser Statement
-whileErrorP eP sP = do
+whileErrorP :: TypeChecked -> MyParser Statement
+whileErrorP b = do
   reserved "while"
   symbol "("
   recordError "bad expression in the conditional of the while statement"
   e <- errorUntil ErrorE $ char ')'
   symbol ")"
-  s <- sP
+  s <- baseStatementP b
   return $ While e s
 
-assignErrorP eP = do
-  var <- varP eP
+assignErrorP b = do
+  var <- varP b
   symbol "="
   recordError "bad assignment in the expression being assigned"
   e <- errorUntil ErrorE semi
   semi
   return $ Assign $ Assignment var e
 
-procedureCallErrorP eP = do
+procedureCallErrorP b = do
   ident <- try $ identifierFollowedBy '('
   recordError "bad parameters to procedure call"
   params <- errorUntil [ErrorE] $ char ')'

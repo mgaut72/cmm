@@ -8,7 +8,7 @@ import qualified Data.Map as M
 import Control.Monad.Writer
 
 import Language.CMM.AST
-import Language.CMM.Parser.UnTyped
+import Language.CMM.Parser.Typed
 import Language.CMM.Parser.Base
 
 compileCMM inp = runWriter (runParserT p initialTables "compile" inp)
@@ -16,4 +16,5 @@ compileCMM inp = runWriter (runParserT p initialTables "compile" inp)
          whiteSpace
          prog <- programP
          eof
-         return prog
+         s <- getState
+         return (prog, s)
