@@ -78,12 +78,16 @@ lookUpSymb i = do
 
 typeOfFunction :: Bool -> Function -> MyParser TType
 typeOfFunction isExpression (Function i es) = do
-  expectedTypes <- lookUpArgs i
-  actualTypes <- mapM typeOf es
-  unless (allEqual expectedTypes actualTypes) err1
   retType <- lookUpSymb i
-  when (isExpression && retType == TVoid) err2
-  return retType
+  case retType of
+    TError -> return TError
+    _      -> do expectedTs <- lookUpArgs i
+                 case expectedTs of
+                   [TError] -> return TError
+                   _        -> do actualTs <- mapM typeOf es
+                                  unless (allEqual expectedTs actualTs) err1
+                                  when (isExpression && retType == TVoid) err2
+                                  return retType
  where allEqual t t' = length t == length t' && and (zipWith compatible t t')
        err1 = recordError $ "type error : Function arguments for function '" ++
                             i ++ "' have incorrect type"
