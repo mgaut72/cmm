@@ -4,7 +4,7 @@ import Text.Parsec
 import Text.Parsec.Error
 import Control.Monad
 import Control.Monad.Writer
-import Data.Map.Strict as M
+import Data.Map as M
 
 import Language.CMM.AST
 import Language.CMM.Parser.Base

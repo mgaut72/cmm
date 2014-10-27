@@ -3,7 +3,7 @@ import Test.HUnit
 import Control.Monad
 import Control.Monad.State
 import Control.Monad.Writer
-import qualified Data.Map.Strict as M
+import qualified Data.Map as M
 import Text.Parsec
 import Text.Parsec.Error
 
