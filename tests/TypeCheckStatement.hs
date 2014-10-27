@@ -19,6 +19,7 @@ main = do
 initialState :: Tables
 initialState = initialTables { _globalSymbols = M.fromList symbolList
                              , _functions = M.fromList fcnList
+                             , _localSymbols = M.singleton "" (TVoid, M.empty)
                              }
 
 symbolList = [ ("a", TInt), ("b", TChar), ("none", TInt)

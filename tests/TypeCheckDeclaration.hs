@@ -17,12 +17,14 @@ main = do
      then exitFailure
      else exitSuccess
 
-readD ds = runWriter . runParserT p initialTables "" $ ""
+initialState = initialTables { _localSymbols = M.singleton "" (TVoid, M.empty)}
+
+readD ds = runWriter . runParserT p initialState "" $ ""
  where p = mapM_ (typeCheckDeclaration False) ds >> getState
 
 as |~?= b = fst (readD as) ~?= Right b
 
-bad a = TestCase (when (null errs) (assertFailure ("expected bad parse\ngot: " ++ show res)))
+bad a = TestCase (when (null errs) (assertFailure ("expected bad parse\ngot: " ++ show (res, errs))))
  where (res, errs) = readD a
        isLeft (Right _) = False
        isLeft (Left _) = True
@@ -30,33 +32,34 @@ bad a = TestCase (when (null errs) (assertFailure ("expected bad parse\ngot: " +
 instance (Eq ParseError) where
   a == b = errorMessages a == errorMessages b
 
+ls = localSymbols . singular (ix "") . _2
 
 tests = test
   [ "vd" ~: [ VariableDecl (VarDecl TInt [Scalar "i"]) ] |~?=
-            ( localSymbols %~ M.insert "i" TInt  $ initialTables )
+            ( ls %~ M.insert "i" TInt  $ initialState )
   , "vd" ~: [ VariableDecl (VarDecl TInt [Scalar "i", Scalar "j"]) ] |~?=
-            ( (localSymbols %~ M.insert "i" TInt)
-            . (localSymbols %~ M.insert "j" TInt)
-            $ initialTables )
+            ( (ls %~ M.insert "i" TInt)
+            . (ls %~ M.insert "j" TInt)
+            $ initialState )
   , "vd" ~: [ VariableDecl (VarDecl TInt [Scalar "i"])
             , VariableDecl (VarDecl TInt [Scalar "j"])
             ] |~?=
-            ( (localSymbols %~ M.insert "i" TInt)
-            . (localSymbols %~ M.insert "j" TInt)
-            $ initialTables )
+            ( (ls %~ M.insert "i" TInt)
+            . (ls %~ M.insert "j" TInt)
+            $ initialState )
   , "vd" ~: [ VariableDecl (VarDecl TInt [Scalar "i", Scalar "j"])
             , FunctionDecl False TVoid [FuncStub "f" VoidParameter]
             ] |~?=
-            ( (localSymbols %~ M.insert "i" TInt)
-            . (localSymbols %~ M.insert "j" TInt)
+            ( (ls %~ M.insert "i" TInt)
+            . (ls %~ M.insert "j" TInt)
             . (globalSymbols %~ M.insert "f" TVoid)
             . (functions  %~ M.insert "f" [])
-            $ initialTables )
+            $ initialState )
   -- Same Var declared twice
-  , "vd" ~: bad [ VariableDecl (VarDecl TInt [Scalar "i"])
+  , "vd4" ~: bad [ VariableDecl (VarDecl TInt [Scalar "i"])
                 , VariableDecl (VarDecl TInt [Scalar "i"])
                 ]
-  , "vd" ~: bad [ VariableDecl (VarDecl TInt [Scalar "i", Scalar "i"]) ]
+  , "vd5" ~: bad [ VariableDecl (VarDecl TInt [Scalar "i", Scalar "i"]) ]
   , "vd" ~: bad [ VariableDecl (VarDecl TInt [Scalar "i", Scalar "j"])
                 , FunctionDecl False TVoid [ FuncStub "f" VoidParameter
                                            , FuncStub "f" VoidParameter

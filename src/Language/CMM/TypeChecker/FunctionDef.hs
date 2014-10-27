@@ -13,52 +13,66 @@ import Language.CMM.TypeChecker.Declaration
 
 -- we rely on the declarations and statements having already been
 -- typechecked when they were parsed
-typeCheckFunctionDef f@(FunctionDef t i p vs ss) = checkSignature t i p
-                                                >> addParameters p
-                                                >> checkReturnInStatements i t ss
-                                                >> return f
+typeCheckFunctionDef :: FunctionDef -> MyParser FunctionDef
+typeCheckFunctionDef f@(FunctionDef t i p _ ss) = checkSignature t i p
+                                               >> addParameters p
+                                               >> checkReturns i t ss
+                                               >> return f
 
 
+checkSignature :: TType -> Identifier -> Parameters -> MyParser ()
 checkSignature t i p = do
   s <- getState
   let sTable = view globalSymbols s
   let eSet   = view externFunctions s
-  when (S.member i eSet) $ recordError $ "'" ++ i ++ "' is declared to be an extern function, but has a corresponding definition"
+  when (S.member i eSet) err1
   if isNothing (M.lookup i sTable)
     then addPrototype t i p
     else checkExisting t i p
   addParameters p
+ where err1 = recordError $ "'" ++ i ++
+                            "' is declared to be an extern function, " ++
+                            "but has a corresponding definition"
 
+addPrototype :: TType -> Identifier -> Parameters -> MyParser ()
 addPrototype t i p = addFcnIdentifier t fs >> addFcnPrototype fs
  where fs = FuncStub i p
 
+checkExisting :: TType -> Identifier -> Parameters -> MyParser ()
 checkExisting t i p = checkReturnType t i >> checkParameters i p
 
+checkReturnType :: TType -> Identifier -> MyParser ()
 checkReturnType t i = do
   s <- getState
   let sTable = view globalSymbols s
   unless (Just t == M.lookup i sTable) err
- where err = recordError $ "Function '" ++ i ++ "' declaration has different "
-                        ++ "return type than the declared prototype"
+ where err = recordError $ "Function '" ++ i ++
+                           "' declaration has different " ++
+                           "return type than the declared prototype"
 
-checkReturnInStatements i t ss
+checkReturns :: Identifier -> TType -> [Statement] -> MyParser ()
+checkReturns i t ss
   | t == TVoid = unless voidCase errVoid
-  | otherwise  = unless exprCase1 errExpr1 >> unless exprCase2 errExpr2
+  | otherwise  = unless exprCase1 errE1 >> unless exprCase2 errE2
  where voidCase = not hasReturnExpr
        exprCase1 = hasReturnExpr
        exprCase2 = not hasReturnNothing
-       hasReturnExpr = or $ mapStatement f1 ss
-       hasReturnNothing = or $ mapStatement f2 ss
-       f1 s = case s of
+       hasReturnExpr = or $ mapStatement isReturnExpr ss
+       hasReturnNothing = or $ mapStatement isReturnNone ss
+       isReturnExpr s = case s of
          Return (Just _) -> True
-         otherwise       -> False
-       f2 s = case s of
+         _               -> False
+       isReturnNone s = case s of
          Return Nothing -> True
-         otherwise      -> False
-       errVoid =  recordError $ "Function '" ++ i ++ "' is declared void but returns an expression"
-       errExpr1 =  recordError $ "Function '" ++ i ++ "' is non-void, but does not return an expression"
-       errExpr2 =  recordError $ "Function '" ++ i ++ "' is non-void, but has a statement 'return;'"
+         _              -> False
+       errVoid = recordError $ "Function '" ++ i ++
+                               "' is declared void but returns an expression"
+       errE1 = recordError $ "Function '" ++ i ++
+                             "' is non-void, but does not return an expression"
+       errE2 = recordError $ "Function '" ++ i ++
+                             "' is non-void, but has a statement 'return;'"
 
+checkParameters :: Identifier -> Parameters -> MyParser ()
 checkParameters i ps = do
   s <- getState
   let fTable = view functions s
@@ -67,19 +81,24 @@ checkParameters i ps = do
     Just expectedTs
       | ts == expectedTs -> return ()
       | otherwise        -> err2
- where err1 = recordError $ "'" ++ i ++ "' was previously declared as a global"
-                         ++ " variable but is now being used as a function"
-       err2 = recordError $ "Function '" ++ i ++ "' declaration has different "
-                         ++ "parameter types than the declared prototype"
+ where err1 = recordError $ "'" ++ i ++
+                            "' was previously declared as a global" ++
+                            " variable but is now being used as a function"
+       err2 = recordError $ "Function '" ++ i ++
+                            "' declaration has different " ++
+                            "parameter types than the declared prototype"
        getT (ArrayParam t _) = TArray t
        getT (ScalarParam t _) = t
        ts = case ps of
-              Parameters ps -> map getT ps
-              VoidParameter -> []
+              Parameters ps' -> map getT ps'
+              VoidParameter  -> []
 
+addParameters :: Parameters -> MyParser ()
 addParameters VoidParameter = return ()
 addParameters (Parameters ps) = mapM_ addP ps
- where addP p = modifyState (localSymbols %~ M.insert (getI p) (getT p))
+ where addP p = do
+         table <- lTable
+         modifyState (table %~ M.insert (getI p) (getT p))
        getI (ArrayParam _ i) = i
        getI (ScalarParam _ i) = i
        getT (ArrayParam t _) = TArray t

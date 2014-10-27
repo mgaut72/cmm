@@ -4,7 +4,7 @@ import Control.Monad
 import Control.Lens
 import Data.Maybe
 import Data.List (nub)
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import Text.Parsec.Prim
 
@@ -12,7 +12,6 @@ import Language.CMM.AST
 import Language.CMM.Error
 
 typeCheckDeclaration :: Bool -> Declaration -> MyParser Declaration
-
 typeCheckDeclaration isGlobal d = case d of
   VariableDecl (VarDecl t vs)   -> mapM_ (addVarIdentifier isGlobal t) vs
                                 >> return d
@@ -39,10 +38,11 @@ addFcnPrototype (FuncStub i p) = modifyState $ functions %~ M.insert i pTypes
        getT (ScalarParam t _) = t
 
 addVarIdentifier :: Bool -> TType -> Variable -> MyParser ()
-addVarIdentifier isGlobal t v = checkVariable isGlobal v
-                             >> modifyState (table %~ M.insert i (getT v t))
+addVarIdentifier isGlobal t v = do
+  checkVariable isGlobal v
+  table <- if isGlobal then gTable else lTable
+  modifyState (table %~ M.insert i (getT v t))
  where i = getI v
-       table = if isGlobal then globalSymbols else localSymbols
        getI (Array i _) = i
        getI (Scalar i) = i
        getT (Array _ _) = TArray
@@ -67,6 +67,6 @@ checkVariable isGlobal (Scalar i) = checkIdentifier isGlobal i
 
 checkIdentifier isGlobal i = do
   s <- getState
-  let sTable = if isGlobal then view globalSymbols s else view localSymbols s
-  unless (isNothing $ M.lookup i sTable)
+  table <- if isGlobal then gTable else lTable
+  unless (isNothing $ M.lookup i $ s ^. table)
          (recordError $ "Identifier '" ++ i ++ "' is already identified in the current scope")
