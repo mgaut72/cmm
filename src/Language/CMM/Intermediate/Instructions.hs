@@ -1,8 +1,12 @@
 module Language.CMM.Intermediate.Instructions where
 
+import Control.Monad.State
+import Control.Lens
+
 import Language.CMM.AST
 
 data Value = IConst Integer     -- TODO: or any other literal
+           | CConst Char
            | IVar   Identifier
            deriving (Show, Eq)
 
@@ -11,6 +15,7 @@ type LabelName = String
 data ThreeAddress = Global Identifier TType
                   | AssignBinary Identifier BinaryOp Value Value
                   | AssignMinus Identifier Value
+                  | AssignNot Identifier Value
                   | Copy Identifier Value
                   | Goto LabelName
                   | IIf Identifier RelativeOp Value LabelName
@@ -28,3 +33,14 @@ data ThreeAddress = Global Identifier TType
                   | Retrieve Identifier
                   | Convert Identifier TType
                   deriving (Show, Eq)
+
+type TACGen = State Tables
+
+getTmp :: TACGen Identifier
+getTmp = do
+  int <- use tempNum
+  tempNum += 1
+  return $ '_' : show int
+
+
+

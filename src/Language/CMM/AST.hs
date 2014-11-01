@@ -126,6 +126,7 @@ data Tables = Tables { _globalSymbols       :: SymbolTable
                      , _externFunctions     :: S.Set Identifier
                      , _functions           :: FunctionArgumentTable
                      , _currFunction        :: Identifier
+                     , _tempNum             :: Integer
                      } deriving (Show, Eq)
 
 makeLenses ''Tables
@@ -135,6 +136,7 @@ initialTables = Tables { _globalSymbols       = M.empty
                        , _externFunctions     = S.empty
                        , _functions           = M.empty
                        , _currFunction        = ""
+                       , _tempNum             = 0
                        }
 
 lTable :: Applicative f => MyParser ((SymbolTable -> f SymbolTable) -> Tables -> f Tables)
