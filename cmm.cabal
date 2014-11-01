@@ -18,6 +18,7 @@ cabal-version:       >=1.10
 library
   exposed-modules:
     Language.CMM.Intermediate.Instructions
+    Language.CMM.Intermediate.Expression
     Language.CMM.Parser.Base,
     Language.CMM.Parser.UnTyped,
     Language.CMM.Parser.Typed,
