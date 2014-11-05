@@ -55,13 +55,13 @@ instance Pretty VarDecl where
   pretty (VarDecl t vs) = pretty t ++ " " ++ (intercalate ", " . map pretty $ vs) ++ ";\n"
 
 instance Pretty Statement where
-  pretty (If e s@(Bracketed ss)) = "if(" ++ pretty e ++ ")" ++ pretty s
+  pretty (If e s@(Bracketed _)) = "if(" ++ pretty e ++ ")" ++ pretty s
   pretty (If e s) = "if(" ++ pretty e ++ ")\n" ++ indent (pretty s)
-  pretty (IfElse e s1 s@(Bracketed ss)) = pretty (If e s1) ++ "else" ++ pretty s
+  pretty (IfElse e s1 s@(Bracketed _)) = pretty (If e s1) ++ "else" ++ pretty s
   pretty (IfElse e s1 s) = pretty (If e s1) ++ "else\n" ++ indent (pretty s)
-  pretty (While e s@(Bracketed ss)) = "while(" ++ pretty e ++ ")" ++ pretty s
+  pretty (While e s@(Bracketed _)) = "while(" ++ pretty e ++ ")" ++ pretty s
   pretty (While e s) = "while(" ++ pretty e ++ ")\n" ++ indent (pretty s)
-  pretty (For ma1 me ma2 s@(Bracketed ss)) = "for(" ++ prettyM ma1 ++ "; "
+  pretty (For ma1 me ma2 s@(Bracketed _)) = "for(" ++ prettyM ma1 ++ "; "
                                         ++ prettyM me ++ "; " ++ prettyM ma2 ++ ")"
                                         ++ pretty s
   pretty (For ma1 me ma2 s) = "for(" ++ prettyM ma1 ++ "; "

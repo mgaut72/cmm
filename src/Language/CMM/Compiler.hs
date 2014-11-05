@@ -4,7 +4,6 @@ module Language.CMM.Compiler (
 where
 
 import Text.Parsec
-import qualified Data.Map as M
 import Data.List
 import Control.Monad.Writer
 
