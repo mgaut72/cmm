@@ -63,14 +63,12 @@ makeLenses ''Symbols
 
 getTmp :: TACGen Identifier
 getTmp = do
-  int <- use tempNum
-  tempNum += 1
+  int <- tempNum <+= 1
   return $ "_tmp_" ++ show int
 
 getLabel :: TACGen LabelName
 getLabel = do
-  int <- use tempNum
-  tempNum += 1
+  int <- tempNum <+= 1
   return $ "_label_" ++ show int
 
 typeOf :: Expression -> TACGen TType
@@ -110,8 +108,8 @@ lookupSymb i = do
     (_, Just t) -> return t
     _           -> error "unexpected symbol"
 
-recordIdentifier :: Identifier -> TType -> TACGen ()
-recordIdentifier i t = locals %= M.insert i t
+recordIdentifier :: TType -> Identifier -> TACGen Identifier
+recordIdentifier t i = locals %= M.insert i t >> return i
 
 convertTo :: TType -> (Identifier, [ThreeAddress]) -> TACGen (Identifier, [ThreeAddress])
 convertTo t (i, code) = do

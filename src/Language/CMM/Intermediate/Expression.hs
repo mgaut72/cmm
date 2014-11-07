@@ -4,6 +4,7 @@ import Control.Lens
 import Control.Monad
 
 import Data.Monoid
+import Data.Maybe
 import qualified Data.Map as M
 
 import Language.CMM.AST
@@ -16,29 +17,19 @@ genE :: Expression -> TACGen (Identifier, [ThreeAddress])
 
 genE (Negative e) = do
   (iE, tacE) <- genE e >>= convertTo TInt
-  tmp <- getTmp
-  recordIdentifier tmp TInt
+  tmp <- getTmp >>= recordIdentifier TInt
   return (tmp, tacE <> [AssignMinus tmp (IVar iE)])
-
--- assumes e was appropriately generated as a boolean type
-genE (Not e) = do
-  (iE, tacE) <- genE e
-  tmp <- getTmp
-  recordIdentifier tmp TBool
-  return (tmp, tacE <> [AssignNot tmp (IVar iE)])
 
 -- I feel bad about this, storing a literal into a variable, but it
 -- generalizes better.
 -- If I want to keep doing this, I can make all operations except assigns
 -- and copies work only on IVars
 genE (LitInt i) = do
-  tmp <- getTmp
-  recordIdentifier tmp TInt
+  tmp <- getTmp >>= recordIdentifier TInt
   return (tmp, [Copy tmp (IConst i)])
 
 genE (LitChar c) = do
-  tmp <- getTmp
-  recordIdentifier tmp TChar
+  tmp <- getTmp >>= recordIdentifier TChar
   return (tmp, [Copy tmp (CConst c)])
 
 -- TODO: something about a pointer bla bla
@@ -47,8 +38,7 @@ genE (LitString s) = undefined
 genE (Binary op e1 e2) = do
   (iE1, tacE1) <- genE e1 >>= convertTo TInt
   (iE2, tacE2) <- genE e2 >>= convertTo TInt
-  tmp <- getTmp
-  recordIdentifier tmp TInt
+  tmp <- getTmp >>= recordIdentifier TInt
   return (tmp, tacE1 <> tacE2 <> [AssignBinary tmp op (IVar iE1) (IVar iE2)])
 
 genE (FunctionCall (Function i es)) = do
@@ -98,10 +88,3 @@ genBooleanE (Not e) = do
   trueL <- getLabel
   falseL <- getLabel
   return (trueL, falseL, tacE <> [Label tL, GoTo falseL, Label fL, GoTo trueL])
-
-
-
-
-
-
-
