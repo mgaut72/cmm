@@ -15,14 +15,16 @@ import Language.CMM.Intermediate.Instructions
 genE :: Expression -> TACGen (Identifier, [ThreeAddress])
 
 genE (Negative e) = do
-  (iE, tacE) <- genE e
+  (iE, tacE) <- genE e >>= convertTo TInt
   tmp <- getTmp
+  recordIdentifier tmp TInt
   return (tmp, tacE <> [AssignMinus tmp (IVar iE)])
 
 -- assumes e was appropriately generated as a boolean type
 genE (Not e) = do
   (iE, tacE) <- genE e
   tmp <- getTmp
+  recordIdentifier tmp TBool
   return (tmp, tacE <> [AssignNot tmp (IVar iE)])
 
 -- I feel bad about this, storing a literal into a variable, but it
@@ -31,30 +33,75 @@ genE (Not e) = do
 -- and copies work only on IVars
 genE (LitInt i) = do
   tmp <- getTmp
+  recordIdentifier tmp TInt
   return (tmp, [Copy tmp (IConst i)])
 
 genE (LitChar c) = do
   tmp <- getTmp
+  recordIdentifier tmp TChar
   return (tmp, [Copy tmp (CConst c)])
 
 -- TODO: something about a pointer bla bla
 genE (LitString s) = undefined
 
 genE (Binary op e1 e2) = do
-  (iE1, tacE1) <- genE e1
-  (iE2, tacE2) <- genE e2
-  -- TODO: check to see if we need to convert the types
+  (iE1, tacE1) <- genE e1 >>= convertTo TInt
+  (iE2, tacE2) <- genE e2 >>= convertTo TInt
   tmp <- getTmp
-  return (tmp, tacE1 <> tacE2 <> [AssignBinary tmp Plus (IVar iE1) (IVar iE2)])
+  recordIdentifier tmp TInt
+  return (tmp, tacE1 <> tacE2 <> [AssignBinary tmp op (IVar iE1) (IVar iE2)])
 
-genE (Relative op e1 e2) = do
-  (iE1, tacE1) <- genE e1
-  (iE2, tacE2) <- genE e2
-  -- TODO: check to see if we need to convert the types
-  t <- getTmp
-  code <- case op of
-    Eq  -> return [AssignBinary t Plus (IVar iE1) (IVar iE2)]
-    Neq -> do
-      (i, tac) <- genE (Relative Eq e1 e2)
-      return $ tac <> [AssignNot t (IVar i)]
-  return (t, tacE1 <> tacE2 <> code)
+genE (FunctionCall (Function i es)) = do
+
+
+
+
+-- Booleans are special cases where we jump all over the place, so they get
+-- their own generator functions
+
+genBooleanE :: Expression -> TACGen (LabelName, LabelName, [ThreeAddress])
+
+genBooleanE (Relative op e1 e2) = do
+  (iE1, tacE1) <- genE e1 >>= convertTo TInt
+  (iE2, tacE2) <- genE e2 >>= convertTo TInt
+  trueL <- getLabel
+  falseL <- getLabel
+  let newCode = [IIf iE1 op iE2 trueL falseL]
+  return (trueL, falseL, tacE1 <> tacE2 <> newCode)
+
+genBooleanE (Logical Or e1 e2) = do
+  (tL1, fL1, tacE1) <- genBooleanE e1
+  (tL2, fL2, tacE2) <- genBooleanE e2
+  trueL <- getLabel
+  falseL <- getLabel
+  let true1 = [Label tL1, GoTo trueL] -- short circuit
+  let false1 = Label fL1 : tacE2      -- fall through to check second one
+  let true2 = [Label tL2, GoTo trueL]
+  let false2 = [Label fL2, GoTo falseL]
+  let newCode = tacE1 <> true1 <> false1 <> true2 <> false2
+  return (trueL, falseL, newCode)
+
+genBooleanE (Logical And e1 e2) = do
+  (tL1, fL1, tacE1) <- genBooleanE e1
+  (tL2, fL2, tacE2) <- genBooleanE e2
+  trueL <- getLabel
+  falseL <- getLabel
+  let false1 = [Label fL1, GoTo falseL] -- short circuit
+  let true1 = Label tL1 : tacE2         -- case: have to eval the 2nd one
+  let true2 = [Label tL2, GoTo trueL]
+  let false2 = [Label fL2, GoTo falseL]
+  let newCode = tacE1 <> false1 <> true1 <> true2 <> false2
+  return (trueL, falseL, newCode)
+
+genBooleanE (Not e) = do
+  (tL, fL, tacE) <- genBooleanE e
+  trueL <- getLabel
+  falseL <- getLabel
+  return (trueL, falseL, tacE <> [Label tL, GoTo falseL, Label fL, GoTo trueL])
+
+
+
+
+
+
+

@@ -22,8 +22,8 @@ data ThreeAddress = Global Identifier TType
                   | AssignMinus Identifier Value
                   | AssignNot Identifier Value
                   | Copy Identifier Value
-                  | Goto LabelName
-                  | IIf Identifier RelativeOp Value LabelName
+                  | GoTo LabelName
+                  | IIf Identifier RelativeOp Identifier LabelName LabelName
                   | Label LabelName
                   | AssignFromArr Identifier Identifier Integer -- should the second identifier be Value
                   | AssignToArr Identifier Integer Value
@@ -37,6 +37,7 @@ data ThreeAddress = Global Identifier TType
                   | Ret (Maybe Value)
                   | Retrieve Identifier
                   | Convert Identifier TType
+                  | NoOp
                   deriving (Show, Eq)
 
 data Symbols = Symbols { _globals      :: SymbolTable
@@ -64,8 +65,13 @@ getTmp :: TACGen Identifier
 getTmp = do
   int <- use tempNum
   tempNum += 1
-  return $ '_' : show int
+  return $ "_tmp_" ++ show int
 
+getLabel :: TACGen LabelName
+getLabel = do
+  int <- use tempNum
+  tempNum += 1
+  return $ "_label_" ++ show int
 
 typeOf :: Expression -> TACGen TType
 
@@ -100,7 +106,26 @@ lookupSymb i = do
   let tglo = M.lookup i gloTab
   let tloc = M.lookup i locTab
   case (tloc, tglo) of
-                 (Just t, _) -> return t
-                 (_, Just t) -> return t
-                 _           -> error "unexpected symbol"
+    (Just t, _) -> return t
+    (_, Just t) -> return t
+    _           -> error "unexpected symbol"
 
+recordIdentifier :: Identifier -> TType -> TACGen ()
+recordIdentifier i t = locals %= M.insert i t
+
+convertTo :: TType -> (Identifier, [ThreeAddress]) -> TACGen (Identifier, [ThreeAddress])
+convertTo t (i, code) = do
+  currT <- lookupSymb i
+  if currT == t
+    then return (i, code)
+    else case (currT, t) of
+           (TInt, TChar) -> convertIntToChar (i,code)
+           (TChar, TInt) -> convertCharToInt (i,code)
+
+-- TODO
+convertCharToInt :: (Identifier, [ThreeAddress]) -> TACGen (Identifier, [ThreeAddress])
+convertCharToInt = return
+
+-- TODO
+convertIntToChar :: (Identifier, [ThreeAddress]) -> TACGen (Identifier, [ThreeAddress])
+convertIntToChar = return
