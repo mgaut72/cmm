@@ -9,7 +9,7 @@ import qualified Data.Map as M
 
 import Language.CMM.AST
 import Language.CMM.Intermediate.Instructions
-import Language.CMM.Intermediate.Function
+import {-# SOURCE #-} Language.CMM.Intermediate.Function
 
 -- returns the ( temp identifier that the expression result is in
 --             , the three address code necessary to get there

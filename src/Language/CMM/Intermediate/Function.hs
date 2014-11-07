@@ -1,6 +1,11 @@
 module Language.CMM.Intermediate.Function where
 
+import Control.Monad
+import Control.Lens
+
 import Data.Monoid
+import Data.Maybe
+import qualified Data.Map as M
 
 import Language.CMM.AST
 import Language.CMM.Intermediate.Instructions
