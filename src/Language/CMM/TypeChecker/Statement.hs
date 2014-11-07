@@ -9,6 +9,7 @@ import qualified Data.Foldable as F
 
 
 import Language.CMM.TypeChecker.Expression
+import Language.CMM.TypeChecker.Function
 import Language.CMM.TypeChecker.Assignment
 import Language.CMM.AST
 import Language.CMM.Error
