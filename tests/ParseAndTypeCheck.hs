@@ -100,9 +100,8 @@ prototypeReturnNoMatch2 = bad "int main(int a); char main(int b){ return; }"
 prototypeParamNoMatch = bad "int main(int a); int main(char b){ return 1; }"
 
 returnGood = good "int main(void) { return 1; }"
+returnGood2 = good "int main(void) { return 'c'; }" -- conversion is allowed
 returnBad = bad "int main(void) { return \"asdf\"; }"
--- returnBad2 = good $ "int main(void) { return 'c'; }" -- currently not sure
--- how this needs to be handled
 
 prototypeAfterDef = bad "int main(void) {return 1;} int main(void);"
 prototypeAfterDef2 = bad "int main(void) {return 1;}\nint main(void);"
