@@ -21,9 +21,16 @@ genS (While e s) = undefined
 
 genS (For ma1 me ma2 s) = undefined
 
-genS (Return Nothing) = liftM (pure . Leave) (use currFcn)
+genS (Return Nothing) = do
+  l <- leave
+  return $ l <> pure (Ret Nothing)
 
-genS (Return (Just e)) = undefined
+genS (Return (Just e)) = do
+  f <- use currFcn
+  retType <- lookupSymb f
+  (tE, codeE) <- genE e >>= convertTo retType
+  l <- leave
+  return $ codeE <> l <> pure (Ret (Just (IVar tE)))
 
 genS (ProcedureCall f) = genFCall f
 
@@ -37,3 +44,5 @@ genS (Assign (Assignment (Scalar i) e)) = do
 genS (Assign (Assignment (Array i idx) e)) = undefined
 
 genS (Bracketed ss) = undefined
+
+leave = liftM (pure . Leave) (use currFcn)
