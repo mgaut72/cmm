@@ -42,9 +42,14 @@ genE (Binary op e1 e2) = do
   return (tmp, tacE1 <> tacE2 <> [AssignBinary tmp op (IVar iE1) (IVar iE2)])
 
 genE (FunctionCall (Function i es)) = do
-
-
-
+  paramCodes <- mapM genE es
+  argTypes <- use functionArgs >>= return . fromJust . M.lookup i
+  convertedParams <- zipWithM convertTo argTypes paramCodes
+  let paramsCode = foldl codeAndParams [] convertedParams
+  retType <- lookupSymb i
+  tmp <- getTmp >>= recordIdentifier retType
+  return (tmp, paramsCode <> [Call i (toInteger . length $ es), Retrieve tmp])
+ where codeAndParams codes (ident,code) = codes <> code <> [Param (IVar ident)]
 
 -- Booleans are special cases where we jump all over the place, so they get
 -- their own generator functions
