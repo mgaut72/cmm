@@ -21,7 +21,7 @@ genS (While e s) = undefined
 
 genS (For ma1 me ma2 s) = undefined
 
-genS x@(Return Nothing) = undefined
+genS (Return Nothing) = liftM (pure . Leave) (use currFcn)
 
 genS (Return (Just e)) = undefined
 
