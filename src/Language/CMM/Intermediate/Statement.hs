@@ -4,7 +4,7 @@ import Data.Monoid
 
 import Language.CMM.AST
 import Language.CMM.Intermediate.Instructions
-import Language.CMM.Intermediate.Function
+import Language.CMM.Intermediate.FunctionCall
 import Language.CMM.Intermediate.Expression
 
 genS :: Statement -> TACGen [ThreeAddress]
@@ -21,7 +21,7 @@ genS x@(Return Nothing) = undefined
 
 genS x@(Return (Just e)) = undefined
 
-genS (ProcedureCall f) = genF f
+genS (ProcedureCall f) = genFCall f
 
 genS None = undefined
 

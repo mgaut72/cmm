@@ -1,4 +1,4 @@
-module Language.CMM.Intermediate.Function where
+module Language.CMM.Intermediate.FunctionCall where
 
 import Control.Monad
 import Control.Lens
@@ -11,8 +11,8 @@ import Language.CMM.AST
 import Language.CMM.Intermediate.Instructions
 import Language.CMM.Intermediate.Expression
 
-genF :: Function -> TACGen [ThreeAddress]
-genF (Function  i es) = do
+genFCall :: Function -> TACGen [ThreeAddress]
+genFCall (Function  i es) = do
   paramCodes <- mapM genE es -- :: [(Identifier, [ThreeAddress])]
   argTypes <- use functionArgs >>= return . fromJust . M.lookup i -- :: [TType]
   convertedParams <- zipWithM convertTo argTypes paramCodes

@@ -9,7 +9,7 @@ import qualified Data.Map as M
 
 import Language.CMM.AST
 import Language.CMM.Intermediate.Instructions
-import {-# SOURCE #-} Language.CMM.Intermediate.Function
+import {-# SOURCE #-} Language.CMM.Intermediate.FunctionCall
 
 -- returns the ( temp identifier that the expression result is in
 --             , the three address code necessary to get there
@@ -43,7 +43,7 @@ genE (Binary op e1 e2) = do
   return (tmp, tacE1 <> tacE2 <> [AssignBinary tmp op (IVar iE1) (IVar iE2)])
 
 genE (FunctionCall f@(Function i es)) = do
-  fCode <- genF f
+  fCode <- genFCall f
   retType <- lookupSymb i
   tmp <- getTmp >>= recordIdentifier retType
   return (tmp, fCode <> [Retrieve tmp])

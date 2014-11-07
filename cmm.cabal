@@ -20,7 +20,7 @@ library
     Language.CMM.Intermediate.Instructions
     Language.CMM.Intermediate.Expression
     Language.CMM.Intermediate.Statement
-    Language.CMM.Intermediate.Function
+    Language.CMM.Intermediate.FunctionCall
     Language.CMM.Parser.Base,
     Language.CMM.Parser.UnTyped,
     Language.CMM.Parser.Typed,
