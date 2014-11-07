@@ -1,6 +1,11 @@
 module Language.CMM.Intermediate.Statement where
 
+import Data.Monoid
+
+import Language.CMM.AST
+import Language.CMM.Intermediate.Instructions
 import Language.CMM.Intermediate.Function
+import Language.CMM.Intermediate.Expression
 
 genS :: Statement -> TACGen [ThreeAddress]
 
