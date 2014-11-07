@@ -1,6 +1,10 @@
 module Language.CMM.Intermediate.Expression where
 
+import Control.Lens
+import Control.Monad
+
 import Data.Monoid
+import qualified Data.Map as M
 
 import Language.CMM.AST
 import Language.CMM.Intermediate.Instructions

@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Language.CMM.Intermediate.Instructions where
 
 import Control.Monad.State
@@ -5,6 +6,7 @@ import Control.Applicative
 import Control.Lens
 
 import qualified Data.Map as M
+import qualified Data.Set as S
 
 import Language.CMM.AST
 
@@ -37,15 +39,26 @@ data ThreeAddress = Global Identifier TType
                   | Convert Identifier TType
                   deriving (Show, Eq)
 
-type TACGen = State Tables
+data Symbols = Symbols { _globals      :: SymbolTable
+                       , _locals       :: SymbolTable
+                       , _externs      :: S.Set Identifier
+                       , _functionArgs :: FunctionArgumentTable
+                       , _tempNum      :: Integer
+                       } deriving (Show, Eq)
 
-localTable :: Applicative f => TACGen ((SymbolTable -> f SymbolTable) -> Tables -> f Tables)
-localTable = do
-  currF <- use currFunction
-  return $ localSymbols . ix currF . _2
+initialSymbols = Symbols M.empty M.empty S.empty M.empty 0
 
-globalTable :: Applicative f => TACGen ((SymbolTable -> f SymbolTable) -> Tables -> f Tables)
-globalTable = return globalSymbols
+type TACGen = State Symbols
+
+tablesToSymbols :: Tables -> Identifier -> Symbols
+tablesToSymbols t i = Symbols { _globals = t ^. globalSymbols
+                              , _locals = snd $ (t ^. localSymbols) M.! i
+                              , _externs = t ^. externFunctions
+                              , _functionArgs = t ^. functions
+                              , _tempNum = 0
+                              }
+
+makeLenses ''Symbols
 
 getTmp :: TACGen Identifier
 getTmp = do
@@ -82,11 +95,10 @@ typeOf (Var (Array i e)) = lookupSymb i >>= (\(TArray t) -> return t)
 
 lookupSymb :: Identifier -> TACGen TType
 lookupSymb i = do
-  currF <- use currFunction
-  locTab <- use $ localSymbols . ix currF . _2
-  let tloc = M.lookup i locTab
-  gloTab <- use globalSymbols
+  gloTab <- use globals
+  locTab <- use locals
   let tglo = M.lookup i gloTab
+  let tloc = M.lookup i locTab
   case (tloc, tglo) of
                  (Just t, _) -> return t
                  (_, Just t) -> return t
