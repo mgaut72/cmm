@@ -9,6 +9,7 @@ import qualified Data.Map as M
 
 import Language.CMM.AST
 import Language.CMM.Intermediate.Instructions
+import Language.CMM.Intermediate.Function
 
 -- returns the ( temp identifier that the expression result is in
 --             , the three address code necessary to get there
@@ -41,15 +42,11 @@ genE (Binary op e1 e2) = do
   tmp <- getTmp >>= recordIdentifier TInt
   return (tmp, tacE1 <> tacE2 <> [AssignBinary tmp op (IVar iE1) (IVar iE2)])
 
-genE (FunctionCall (Function i es)) = do
-  paramCodes <- mapM genE es
-  argTypes <- use functionArgs >>= return . fromJust . M.lookup i
-  convertedParams <- zipWithM convertTo argTypes paramCodes
-  let paramsCode = foldl codeAndParams [] convertedParams
+genE (FunctionCall f@(Function i es)) = do
+  fCode <- genF f
   retType <- lookupSymb i
   tmp <- getTmp >>= recordIdentifier retType
-  return (tmp, paramsCode <> [Call i (toInteger . length $ es), Retrieve tmp])
- where codeAndParams codes (ident,code) = codes <> code <> [Param (IVar ident)]
+  return (tmp, fCode <> [Retrieve tmp])
 
 -- Booleans are special cases where we jump all over the place, so they get
 -- their own generator functions
