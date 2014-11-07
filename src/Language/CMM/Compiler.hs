@@ -5,6 +5,7 @@ where
 
 import Text.Parsec
 import Data.List
+import Data.Function (on)
 import Control.Monad.Writer
 
 import Language.CMM.AST
@@ -20,7 +21,7 @@ compileCMM = makeMessages . runWriter . runParserT p initialTables "compile"
          return (prog, s)
 
 makeMessages (a, w) = (a, msgs)
- where msgs = unlines . map outputToMsg . nubBy (\a b -> snd a == snd b) $ w
+ where msgs = unlines . map outputToMsg . nubBy ((==) `on` snd) $ w
        outputToMsg (p, m) = "Error near line " ++ show (sourceLine p) ++
                             ", column " ++ show (sourceColumn p) ++
                             ":\n\t" ++ m ++ "\n\n"

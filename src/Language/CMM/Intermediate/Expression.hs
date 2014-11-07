@@ -11,6 +11,8 @@ import Language.CMM.AST
 import Language.CMM.Intermediate.Instructions
 import {-# SOURCE #-} Language.CMM.Intermediate.FunctionCall
 
+{-# ANN module "HLint: ignore Reduce duplication" #-}
+
 -- returns the ( temp identifier that the expression result is in
 --             , the three address code necessary to get there
 --             )

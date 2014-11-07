@@ -75,21 +75,21 @@ typeOf :: Expression -> TACGen TType
 
 typeOf ErrorE = return TError
 
-typeOf (LitInt _) = return TInt
+typeOf LitInt{} = return TInt
 
-typeOf (LitChar _) = return TChar
+typeOf LitChar{} = return TChar
 
-typeOf (LitString _) = return (TArray TChar)
+typeOf LitString{} = return (TArray TChar)
 
-typeOf (Negative _) = return TInt
+typeOf Negative{} = return TInt
 
-typeOf (Not _) = return TBool
+typeOf Not{} = return TBool
 
-typeOf (Binary _ _ _) = return TInt
+typeOf Binary{} = return TInt
 
-typeOf (Relative _ _ _) = return TBool
+typeOf Relative{} = return TBool
 
-typeOf (Logical _ _ _) = return TBool
+typeOf Logical{} = return TBool
 
 typeOf (FunctionCall (Function i es)) = lookupSymb i
 
