@@ -12,7 +12,13 @@ import Language.CMM.AST
 import Language.CMM.Parser.Typed
 import Language.CMM.Parser.Base
 
-compileCMM = makeMessages . runWriter . runParserT p initialTables "compile"
+compileCMM :: String -> Either String String -- error or output
+compileCMM srcTxt = case parseCMM srcTxt of
+       (Right a, []) -> Right $ show a
+       (Right _, es) -> Left es
+       (Left  a, es) -> Left $ es ++ show a
+
+parseCMM = makeMessages . runWriter . runParserT p initialTables "compile"
  where p = do
          whiteSpace
          prog <- programP

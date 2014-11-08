@@ -21,6 +21,8 @@ library
     Language.CMM.Intermediate.Expression
     Language.CMM.Intermediate.Statement
     Language.CMM.Intermediate.FunctionCall
+    Language.CMM.Intermediate.FunctionDef
+    Language.CMM.Intermediate.Program
     Language.CMM.Parser.Base,
     Language.CMM.Parser.UnTyped,
     Language.CMM.Parser.Typed,

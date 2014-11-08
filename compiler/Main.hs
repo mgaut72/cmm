@@ -1,6 +1,7 @@
 module Main where
 
 import System.IO
+import System.Exit
 import Data.List
 
 import Language.CMM.Compiler
@@ -8,6 +9,5 @@ import Language.CMM.Compiler
 main = do
   program <- getContents
   case compileCMM program of
-       (Right a, []) -> return ()
-       (Right a, es) -> hPutStr stderr es
-       (Left  a, es) -> hPutStrLn stderr $ es ++ show a
+       Right a -> putStrLn a
+       Left er -> hPutStrLn stderr er >> exitFailure
