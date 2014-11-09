@@ -101,7 +101,7 @@ data TType = TBool
            | TChar
            | TInt
            | TVoid
-           | TArray TType
+           | TArray TType (Maybe Integer) -- declared size
            | TError
            deriving (Show, Eq)
 
@@ -111,7 +111,7 @@ compatible TInt  TInt  = True
 compatible TVoid TVoid = True
 compatible TChar TInt  = True
 compatible TInt  TChar = True
-compatible (TArray t1) (TArray t2) = compatible t1 t2
+compatible (TArray t1 _) (TArray t2 _) = compatible t1 t2
 compatible _ _ = False
 
 --

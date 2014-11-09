@@ -22,8 +22,8 @@ initialState = initialTables { _globalSymbols = M.fromList symbolList
                              }
 
 symbolList = [ ("a", TInt), ("b", TChar), ("none", TInt)
-             , ("one", TInt), ("two", TInt), ("aa", TArray TInt)
-             , ("bb", TArray TChar)
+             , ("one", TInt), ("two", TInt), ("aa", TArray TInt (Just 2))
+             , ("bb", TArray TChar (Just 2))
              ]
 fcnList = [("none", []), ("one", [TInt]), ("two", [TInt, TChar])]
 

@@ -22,8 +22,8 @@ initialState = initialTables { _globalSymbols = M.fromList symbolList
                              }
 
 symbolList = [ ("a", TInt), ("b", TChar), ("none", TInt)
-             , ("one", TInt), ("two", TInt), ("aa", TArray TInt)
-             , ("bb", TArray TChar)
+             , ("one", TInt), ("two", TInt), ("aa", TArray TInt (Just 2))
+             , ("bb", TArray TChar (Just 2))
              , ("voidF", TVoid)
              ]
 fcnList = [ ("none", []), ("voidF", []), ("one", [TInt])
@@ -46,7 +46,7 @@ instance (Eq ParseError) where
 tests = test
   [ "tChar1" ~: LitChar 'a' |~?= TChar
   , "tChar2" ~: LitChar '\0' |~?= TChar
-  , "tStr1" ~: LitString "ac" |~?= TArray TChar
+  , "tStr1" ~: LitString "ac" |~?= TArray TChar Nothing
   , "tNeg" ~: bad $ Negative (LitString "ac")
   , "tNeg" ~: Negative (LitInt 1) |~?= TInt
   , "tNeg" ~: Negative (LitChar 'a') |~?= TInt

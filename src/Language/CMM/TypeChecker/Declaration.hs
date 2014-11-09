@@ -34,7 +34,7 @@ addFcnPrototype (FuncStub i p) = modifyState $ functions %~ M.insert i pTypes
  where pTypes = case p of
                   VoidParameter -> []
                   Parameters ps -> map getT ps
-       getT (ArrayParam t _) = TArray t
+       getT (ArrayParam t _) = TArray t Nothing
        getT (ScalarParam t _) = t
 
 addVarIdentifier :: Bool -> TType -> Variable -> MyParser ()
@@ -45,8 +45,8 @@ addVarIdentifier isGlobal t v = do
  where i = getI v
        getI (Array i _) = i
        getI (Scalar i) = i
-       getT (Array _ _) = TArray
-       getT (Scalar _) = id
+       getT (Array _ (LitInt x)) t = TArray t (Just x)
+       getT (Scalar _) t = t
 
 checkStub (FuncStub i params) = checkIdentifier True i >> checkParams params
 

@@ -81,7 +81,7 @@ typeOf LitInt{} = return TInt
 
 typeOf LitChar{} = return TChar
 
-typeOf LitString{} = return (TArray TChar)
+typeOf LitString{} = return (TArray TChar Nothing)
 
 typeOf Negative{} = return TInt
 
@@ -97,7 +97,7 @@ typeOf (FunctionCall (Function i es)) = lookupSymb i
 
 typeOf (Var (Scalar i)) = lookupSymb i
 
-typeOf (Var (Array i e)) = lookupSymb i >>= (\(TArray t) -> return t)
+typeOf (Var (Array i e)) = lookupSymb i >>= (\(TArray t _) -> return t)
 
 lookupSymb :: Identifier -> TACGen TType
 lookupSymb i = do

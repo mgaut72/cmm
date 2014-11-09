@@ -109,7 +109,7 @@ instance Pretty BinaryOp where
   pretty Divide = "/"
 
 instance Pretty TType where
-  pretty (TArray t) = pretty t ++ "[]"
+  pretty (TArray t _) = pretty t ++ "[]"
   pretty TBool = "bool"
   pretty TInt  = "int"
   pretty TChar = "char"

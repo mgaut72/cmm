@@ -87,7 +87,7 @@ checkParameters i ps = do
        err2 = recordError $ "Function '" ++ i ++
                             "' declaration has different " ++
                             "parameter types than the declared prototype"
-       getT (ArrayParam t _) = TArray t
+       getT (ArrayParam t _) = TArray t Nothing
        getT (ScalarParam t _) = t
        ts = case ps of
               Parameters ps' -> map getT ps'
@@ -101,5 +101,5 @@ addParameters (Parameters ps) = mapM_ addP ps
          modifyState (table %~ M.insert (getI p) (getT p))
        getI (ArrayParam _ i) = i
        getI (ScalarParam _ i) = i
-       getT (ArrayParam t _) = TArray t
+       getT (ArrayParam t _) = TArray t Nothing
        getT (ScalarParam t _) = t

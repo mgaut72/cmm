@@ -42,8 +42,8 @@ tests = test
                      []
                      [Return (Just (LitInt 1))]
        |~?= ( (globalSymbols %~ M.insert "main" TInt)
-            . (ls %~ M.insert "argc" TInt) . (ls %~ M.insert "argv" (TArray TChar))
-            . (functions %~ M.insert "main" [TInt, TArray TChar])
+            . (ls %~ M.insert "argc" TInt) . (ls %~ M.insert "argv" (TArray TChar Nothing))
+            . (functions %~ M.insert "main" [TInt, TArray TChar Nothing])
             $ tbl )
 
   , "2" ~: FunctionDef TInt "main" VoidParameter
@@ -57,18 +57,18 @@ tests = test
                      []
                      [Return (Just (LitInt 1))]
        |~?= ( (globalSymbols %~ M.insert "main" TInt )
-            . (functions %~ M.insert "main" [TInt, TArray TChar])
+            . (functions %~ M.insert "main" [TInt, TArray TChar Nothing])
             . (ls %~ M.insert "argc" TInt)
-            . (ls %~ M.insert "argv" (TArray TChar))
+            . (ls %~ M.insert "argv" (TArray TChar Nothing))
             $ tbl )
 
   , "4" ~: FunctionDef TInt "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"])
                      []
                      [Return (Just (LitInt 1))]
        |~?= ( (globalSymbols %~ M.insert "main" TInt )
-            . (functions %~ M.insert "main" [TInt, TArray TChar])
+            . (functions %~ M.insert "main" [TInt, TArray TChar Nothing])
             . (ls %~ M.insert "argc" TInt)
-            . (ls %~ M.insert "argv" (TArray TChar))
+            . (ls %~ M.insert "argv" (TArray TChar Nothing))
             $ tbl )
 
   , "5" ~: FunctionDef TVoid "main" VoidParameter [] []

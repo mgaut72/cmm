@@ -31,7 +31,7 @@ typeOf (LitInt _) = return TInt
 
 typeOf (LitChar _) = return TChar
 
-typeOf (LitString _) = return (TArray TChar)
+typeOf (LitString _) = return (TArray TChar Nothing)
 
 typeOf (Negative e) = compatibleWith e TInt >> return TInt
 
@@ -51,7 +51,7 @@ typeOf (Var (Array i e)) = do
   compatibleWith e TInt
   t <- lookUpSymb i
   case t of
-    (TArray t') -> return t'
+    (TArray t' _) -> return t'
     _ -> recordError "Array index performed on non-array variable" >> return t
 
 
