@@ -18,9 +18,9 @@ data Value = IConst Integer     -- TODO: or any other literal
 type LabelName = String
 
 data ThreeAddress = Global Identifier TType
-                  | AssignBinary Identifier BinaryOp Value Value
-                  | AssignMinus Identifier Value
-                  | AssignNot Identifier Value
+                  | AssignBinary Identifier BinaryOp Identifier Identifier
+                  | AssignMinus Identifier Identifier
+                  | AssignNot Identifier Identifier
                   | Copy Identifier Value
                   | GoTo LabelName
                   | IIf Identifier RelativeOp Identifier LabelName LabelName
@@ -70,8 +70,9 @@ getTmp = do
 
 getLabel :: TACGen LabelName
 getLabel = do
+  f <- use currFcn
   int <- tempNum <+= 1
-  return $ "_label_" ++ show int
+  return $ "_label_" ++ f ++ "_" ++ show int
 
 typeOf :: Expression -> TACGen TType
 
