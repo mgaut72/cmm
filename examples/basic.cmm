@@ -1,0 +1,5 @@
+extern void print_int(int x);
+
+void main( void ) {
+      print_int(12345);
+}

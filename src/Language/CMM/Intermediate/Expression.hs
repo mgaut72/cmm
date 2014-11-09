@@ -50,6 +50,10 @@ genE (FunctionCall f@(Function i es)) = do
   tmp <- getTmp >>= recordIdentifier retType
   return (tmp, fCode <> [Retrieve tmp])
 
+genE (Var (Scalar i)) = return $ (i, [])
+
+genE e = error $ "expression: " ++ show e
+
 -- Booleans are special cases where we jump all over the place, so they get
 -- their own generator functions
 

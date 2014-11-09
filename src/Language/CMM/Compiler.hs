@@ -12,9 +12,11 @@ import Language.CMM.AST
 import Language.CMM.Parser.Typed
 import Language.CMM.Parser.Base
 
+import Language.CMM.Intermediate.Program
+
 compileCMM :: String -> Either String String -- error or output
 compileCMM srcTxt = case parseCMM srcTxt of
-       (Right a, []) -> Right $ show a
+       (Right a, []) -> Right . show $ genP a
        (Right _, es) -> Left es
        (Left  a, es) -> Left $ es ++ show a
 

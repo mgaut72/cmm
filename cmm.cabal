@@ -17,6 +17,7 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:
+    Language.CMM.MIPS.Generate
     Language.CMM.Intermediate.Instructions
     Language.CMM.Intermediate.Expression
     Language.CMM.Intermediate.Statement

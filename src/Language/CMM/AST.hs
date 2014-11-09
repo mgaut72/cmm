@@ -14,6 +14,7 @@ type MyParser a = ParsecT String Tables (Writer [(SourcePos, String)]) a
 
 
 -- Language tree types
+
 data Program = Program [ProgData] deriving (Show, Eq)
 
 data ProgData = Decl Declaration

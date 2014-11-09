@@ -9,9 +9,7 @@ import Language.CMM.Intermediate.Instructions
 import Language.CMM.Intermediate.FunctionDef
 
 genP :: (Program, Tables) -> [([ThreeAddress], Symbols)]
-genP (Program ps, t) = map fromJust 
-                        . filter isJust 
-                        . map (genPData t) $ ps
+genP (Program ps, t) = map fromJust . filter isJust . map (genPData t) $ ps
 
 
 genPData _ (Decl _) = Nothing
