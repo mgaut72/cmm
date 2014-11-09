@@ -35,7 +35,7 @@ good a = TestCase (unless (isGood a) (assertFailure ("expected good parse\ngot: 
 instance (Eq ParseError) where
   a == b = errorMessages a == errorMessages b
 
-ls = localSymbols . ix "" . _2
+ls = localSymbols . ix "main" . _2
 
 tests = test
   [ "1" ~: FunctionDef TInt "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"])
@@ -44,6 +44,8 @@ tests = test
        |~?= ( (globalSymbols %~ M.insert "main" TInt)
             . (ls %~ M.insert "argc" TInt) . (ls %~ M.insert "argv" (TArray TChar Nothing))
             . (functions %~ M.insert "main" [TInt, TArray TChar Nothing])
+            . (localParameters %~ M.insert "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"]))
+            . (currFunction .~ "main")
             $ tbl )
 
   , "2" ~: FunctionDef TInt "main" VoidParameter
@@ -51,6 +53,8 @@ tests = test
                      [Return (Just (LitInt 1))]
        |~?= ( (globalSymbols %~ M.insert "main" TInt)
             . (functions %~ M.insert "main" [])
+            . (localParameters %~ M.insert "main" VoidParameter)
+            . (currFunction .~ "main")
             $ tbl )
 
   , "3" ~: FunctionDef TInt "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"])
@@ -60,6 +64,8 @@ tests = test
             . (functions %~ M.insert "main" [TInt, TArray TChar Nothing])
             . (ls %~ M.insert "argc" TInt)
             . (ls %~ M.insert "argv" (TArray TChar Nothing))
+            . (localParameters %~ M.insert "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"]))
+            . (currFunction .~ "main")
             $ tbl )
 
   , "4" ~: FunctionDef TInt "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"])
@@ -69,11 +75,15 @@ tests = test
             . (functions %~ M.insert "main" [TInt, TArray TChar Nothing])
             . (ls %~ M.insert "argc" TInt)
             . (ls %~ M.insert "argv" (TArray TChar Nothing))
+            . (localParameters %~ M.insert "main" (Parameters [ScalarParam TInt "argc", ArrayParam TChar "argv"]))
+            . (currFunction .~ "main")
             $ tbl )
 
   , "5" ~: FunctionDef TVoid "main" VoidParameter [] []
        |~?= ( (globalSymbols %~ M.insert "main" TVoid)
             . (functions %~ M.insert "main" [])
+            . (localParameters %~ M.insert "main" VoidParameter)
+            . (currFunction .~ "main")
             $ tbl )
 
   -- can't have the same parameter identifier in a function

@@ -14,10 +14,13 @@ import Language.CMM.TypeChecker.Declaration
 -- we rely on the declarations and statements having already been
 -- typechecked when they were parsed
 typeCheckFunctionDef :: FunctionDef -> MyParser FunctionDef
-typeCheckFunctionDef f@(FunctionDef t i p _ ss) = checkSignature t i p
-                                               >> addParameters p
-                                               >> checkReturns i t ss
-                                               >> return f
+typeCheckFunctionDef f@(FunctionDef t i p _ ss)
+  = modifyState (currFunction .~ i)
+ >> checkSignature t i p
+ >> addParameters p
+ >> checkReturns i t ss
+ >> modifyState (localParameters %~ M.insert i p)
+ >> return f
 
 
 checkSignature :: TType -> Identifier -> Parameters -> MyParser ()
@@ -29,7 +32,6 @@ checkSignature t i p = do
   if isNothing (M.lookup i sTable)
     then addPrototype t i p
     else checkExisting t i p
-  addParameters p
  where err1 = recordError $ "'" ++ i ++
                             "' is declared to be an extern function, " ++
                             "but has a corresponding definition"

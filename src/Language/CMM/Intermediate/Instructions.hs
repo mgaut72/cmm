@@ -42,24 +42,32 @@ data ThreeAddress = Global Identifier TType
 
 data Symbols = Symbols { _globals      :: SymbolTable
                        , _locals       :: SymbolTable
+                       , _parameters   :: [Identifier]
                        , _externs      :: S.Set Identifier
                        , _functionArgs :: FunctionArgumentTable
                        , _tempNum      :: Integer
                        , _currFcn      :: Identifier
                        } deriving (Show, Eq)
 
-initialSymbols = Symbols M.empty M.empty S.empty M.empty 0 ""
+initialSymbols = Symbols M.empty M.empty [] S.empty M.empty 0 ""
 
 type TACGen = State Symbols
 
 tablesToSymbols :: Tables -> Identifier -> Symbols
 tablesToSymbols t i = Symbols { _globals = t ^. globalSymbols
                               , _locals = snd $ (t ^. localSymbols) M.! i
+                              , _parameters = getPs $ (t ^. localParameters) M.! i
                               , _externs = t ^. externFunctions
                               , _functionArgs = t ^. functions
                               , _tempNum = 0
                               , _currFcn = t ^. currFunction
                               }
+
+
+getPs VoidParameter = []
+getPs (Parameters ps) = map getI ps
+ where getI (ArrayParam _ i) = i
+       getI (ScalarParam _ i) = i
 
 makeLenses ''Symbols
 

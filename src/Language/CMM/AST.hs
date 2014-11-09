@@ -124,6 +124,7 @@ type FunctionArgumentTable = M.Map Identifier [TType]
 
 data Tables = Tables { _globalSymbols       :: SymbolTable
                      , _localSymbols        :: M.Map Identifier (TType, SymbolTable)
+                     , _localParameters     :: M.Map Identifier Parameters
                      , _externFunctions     :: S.Set Identifier
                      , _functions           :: FunctionArgumentTable
                      , _currFunction        :: Identifier
@@ -133,6 +134,7 @@ makeLenses ''Tables
 
 initialTables = Tables { _globalSymbols       = M.empty
                        , _localSymbols        = M.empty
+                       , _localParameters     = M.empty
                        , _externFunctions     = S.empty
                        , _functions           = M.empty
                        , _currFunction        = ""
