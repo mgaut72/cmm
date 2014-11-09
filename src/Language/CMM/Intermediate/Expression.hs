@@ -21,7 +21,7 @@ genE :: Expression -> TACGen (Identifier, [ThreeAddress])
 genE (Negative e) = do
   (iE, tacE) <- genE e >>= convertTo TInt
   tmp <- getTmp >>= recordIdentifier TInt
-  return (tmp, tacE <> [AssignMinus tmp (IVar iE)])
+  return (tmp, tacE <> [AssignMinus tmp iE])
 
 -- I feel bad about this, storing a literal into a variable, but it
 -- generalizes better.
@@ -42,7 +42,7 @@ genE (Binary op e1 e2) = do
   (iE1, tacE1) <- genE e1 >>= convertTo TInt
   (iE2, tacE2) <- genE e2 >>= convertTo TInt
   tmp <- getTmp >>= recordIdentifier TInt
-  return (tmp, tacE1 <> tacE2 <> [AssignBinary tmp op (IVar iE1) (IVar iE2)])
+  return (tmp, tacE1 <> tacE2 <> [AssignBinary tmp op iE1 iE2])
 
 genE (FunctionCall f@(Function i es)) = do
   fCode <- genFCall f
@@ -50,7 +50,7 @@ genE (FunctionCall f@(Function i es)) = do
   tmp <- getTmp >>= recordIdentifier retType
   return (tmp, fCode <> [Retrieve tmp])
 
-genE (Var (Scalar i)) = return $ (i, [])
+genE (Var (Scalar i)) = return (i, [])
 
 genE e = error $ "expression: " ++ show e
 
