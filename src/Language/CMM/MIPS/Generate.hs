@@ -34,10 +34,10 @@ foldMapWithKey f = M.foldlWithKey (\a k b -> a `mappend` f k b) mempty
 
 loadIdentifier :: Identifier -> MIPSGen (Register, [Instruction])
 loadIdentifier i = do
-  glos <- use globs
-  if i `M.member` glos
-    then loadGlobal i
-    else loadLocal i
+  ls <- use locs
+  if i `M.member` ls
+    then loadLocal i
+    else loadGlobal i
 
 loadGlobal :: Identifier -> MIPSGen (Register, [Instruction])
 loadGlobal i = do
@@ -60,10 +60,10 @@ loadLocal i = do
 
 store :: Register -> Identifier -> MIPSGen [Instruction]
 store r i = do
-  glos <- use globs
-  if i `M.member` glos
-    then storeGlobal r i
-    else storeLocal r i
+  ls <- use locs
+  if i `M.member` ls
+    then storeLocal r i
+    else storeGlobal r i
 
 storeGlobal r i = do
   glos <- use globs
