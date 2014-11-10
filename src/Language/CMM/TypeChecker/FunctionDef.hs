@@ -16,10 +16,10 @@ import Language.CMM.TypeChecker.Declaration
 typeCheckFunctionDef :: FunctionDef -> MyParser FunctionDef
 typeCheckFunctionDef f@(FunctionDef t i p _ ss)
   = modifyState (currFunction .~ i)
+ >> modifyState (localParameters %~ M.insert i p)
  >> checkSignature t i p
  >> addParameters p
  >> checkReturns i t ss
- >> modifyState (localParameters %~ M.insert i p)
  >> return f
 
 

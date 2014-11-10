@@ -11,4 +11,4 @@ import Language.CMM.Intermediate.Statement
 genF :: FunctionDef -> TACGen [ThreeAddress]
 genF (FunctionDef t i ps vs ss) = do
   body <- liftM concat . mapM genS $ ss
-  return $ pure (Enter i) <> body <> pure (Leave i)
+  return $ pure (Label i) <> pure (Enter i) <> body <> pure (Leave i)

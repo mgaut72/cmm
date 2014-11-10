@@ -5,46 +5,70 @@ import Control.Lens
 import Control.Monad.State
 
 import qualified Data.Map as M
+import qualified Data.Set as S
 
 import Language.CMM.AST
 import Language.CMM.Intermediate.Instructions
 
 data MIPS = Data [DataDeclaration]
-          | Instr Instruction
+          | Instr [Instruction]
           deriving (Show, Eq)
 
 data DataDeclaration = DataItem String Integer -- location, size
                      | Align Integer
                      deriving (Show, Eq)
 
-data Instruction = LoadWord  Register Identifier
-                 | LoadByte  Register Identifier
-                 | LoadImmed Register Integer
-                 | StoreWord Register Identifier
-                 | StoreByte Register Identifier
-                 | Add       Register Register Register
-                 | Sub       Register Register Register
-                 | Mult      Register Register Register
-                 | Div       Register Register Register
-                 | Neg       Register Register
+data Instruction = LoadWord    Register (Either Identifier (Integer, Register))
+                 | LoadByte    Register (Either Identifier (Integer, Register))
+                 | LoadAddr    Register (Either Identifier (Integer, Register))
+                 | LoadImmed   Register Integer
+                 | StoreWord   Register (Either Identifier (Integer, Register))
+                 | StoreByte   Register (Either Identifier (Integer, Register))
+                 | Add         Register Register Register
+                 | Sub         Register Register Register
+                 | Mult        Register Register Register
+                 | Div         Register Register Register
+                 | Neg         Register Register
+                 | Jump        LabelName
+                 | JumpLink    LabelName
+                 | JumpReturn  Register
+                 | Lab         LabelName
+                 | Move        Register Register
+                 | Comment     String
+                 | SysCall
                  deriving (Show, Eq)
 
 type MIPSGen = State GenTable
 
-type Register = Int
+data Register = Zero
+              | AT
+              | V0 | V1
+              | A0 | A1 | A2 | A3
+              | T0 | T1 | T2 | T3 | T4 | T5 | T6 | T7
+              | S0 | S1 | S2 | S3 | S4 | S5 | S6 | S7
+              | T8 | T9
+              | K0 | K1
+              | GP
+              | SP
+              | FP
+              | RA
+              deriving (Show, Eq, Enum)
 
 data GenTable = GenTable { _globs      :: SymbolTable
                          , _locs       :: SymbolTable
-                         , _locOffsets :: M.Map Identifier Int
-                         , _fArgs :: FunctionArgumentTable
-                         , _registers    :: [Register]
+                         , _params     :: [Identifier]
+                         , _locOffsets :: M.Map Identifier (Integer, Register)
+                         , _fNames     :: S.Set Identifier
+                         , _registers  :: [Register]
                          } deriving (Show, Eq)
 
 symbolsToGenTable :: Symbols -> GenTable
 symbolsToGenTable s = GenTable { _globs = s ^. globals
                                , _locs  = s ^. locals
-                               , _fArgs = s ^. functionArgs
-                               , _registers = [8..15]
+                               , _params = s ^. parameters
+                               , _locOffsets = M.empty
+                               , _fNames = S.union (s ^. externs) (S.fromList $ M.keys (s ^. functionArgs))
+                               , _registers = [T0 .. T7] ++ [T8,T9]
                                }
 
 makeLenses ''GenTable
@@ -59,4 +83,3 @@ freeRegister :: Register -> MIPSGen ()
 freeRegister r = do
   regs <- use registers
   registers .= (r:regs)
-

@@ -18,4 +18,5 @@ genFCall (Function  i es) = do
   convertedParams <- zipWithM convertTo argTypes paramCodes
   let allParams = foldl combine [] convertedParams
   return $ allParams <> [Call i (toInteger . length $ es)]
- where combine codes (ident,code) = codes <> code <> [Param (IVar ident)]
+ where combine codes (ident,code) = codes <> code <> [Param ident]
+

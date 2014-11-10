@@ -2,23 +2,33 @@ module Language.CMM.MIPS.Generate where
 
 import Control.Lens
 import Control.Monad
+import Control.Monad.State
 import Control.Applicative
 
 import qualified Data.Map as M
+import qualified Data.Set as S
 import Data.Monoid
+import Data.List (elemIndex)
 import Data.Char (ord)
 
 import Language.CMM.AST
 import Language.CMM.Intermediate.Instructions
 import Language.CMM.MIPS.Instructions
 
+generateLocal :: ([ThreeAddress], Symbols) -> MIPS
+generateLocal (tas, s) = evalState mips gentable
+  where mips = liftM (Instr . concat) . mapM threeAddrToMips $ tas
+        gentable = symbolsToGenTable s
+
+generateGlobal :: ([ThreeAddress], Symbols) -> MIPS
+generateGlobal (_,s) = Data . globalVars . symbolsToGenTable $ s
 
 globalVars :: GenTable -> [DataDeclaration]
 globalVars s = foldMapWithKey mkData $ s ^. globs
- where mkData i (TArray TInt (Just x)) = [DataItem i (4 * x)]
-       mkData i (TArray TChar (Just x)) = [DataItem i x, Align 2]
-       mkData i TInt = [DataItem i 4]
-       mkData i TChar = [DataItem i 1]
+ where mkData i t = if i `S.member` (s ^. fNames)
+                      then []
+                      else [DataItem i (sizeOf t), Align 2]
+ -- align 2 might be overkill, but I think it doesn't hurt anything
 
 foldMapWithKey f = M.foldlWithKey (\a k b -> a `mappend` f k b) mempty
 
@@ -34,11 +44,19 @@ loadGlobal i = do
   glos <- use globs
   r <- getRegister
   case glos M.! i of
-    TInt  -> return (r, [LoadWord r i])
-    TChar -> return (r, [LoadByte r i])
+    TInt  -> return (r, [LoadWord r (Left i)])
+    TChar -> return (r, [LoadByte r (Left i)])
 
 loadLocal :: Identifier -> MIPSGen (Register, [Instruction])
-loadLocal i = undefined
+loadLocal i = do
+  offsets <- use locOffsets
+  ls <- use locs
+  let offset = offsets M.! i
+  r <- getRegister
+  case ls M.! i of
+    TInt -> return (r, [LoadWord r (Right offset)])
+    TChar -> return (r, [LoadByte r (Right offset)])
+
 
 store :: Register -> Identifier -> MIPSGen [Instruction]
 store r i = do
@@ -50,10 +68,16 @@ store r i = do
 storeGlobal r i = do
   glos <- use globs
   case glos M.! i of
-    TInt  -> return [StoreWord r i]
-    TChar -> return [StoreByte r i]
+    TInt  -> return [StoreWord r (Left i)]
+    TChar -> return [StoreByte r (Left i)]
 
-storeLocal r i = undefined
+storeLocal r i = do
+  offsets <- use locOffsets
+  ls <- use locs
+  let offset = offsets M.! i
+  case ls M.! i of
+    TInt  -> return [StoreWord r (Right offset)]
+    TChar -> return [StoreByte r (Right offset)]
 
 
 threeAddrToMips :: ThreeAddress -> MIPSGen [Instruction]
@@ -91,6 +115,77 @@ threeAddrToMips (Copy i val) = case val of
          freeRegister r
          return $ LoadImmed r x : s
 
+threeAddrToMips (GoTo l) = return [Jump l]
+
+threeAddrToMips (Label l) = return [Lab l]
+
+threeAddrToMips (Enter i) = do
+  localSize <- localVars
+  return [saveStack, saveReturn, newFrame, newStack localSize, Comment "End allocating stack for main"]
+  where saveStack  = StoreWord FP (Right (-4, SP))
+        saveReturn = StoreWord RA (Right (-8, SP))
+        newFrame   = LoadAddr  FP (Right (0, SP))
+        newStack x = LoadAddr  SP (Right (-8-x, SP)) -- -8 for FP and RA
+
+threeAddrToMips (Param i) = do
+  (r,code) <- loadIdentifier i
+  return $ code <> [StoreWord r (Right (-4, SP)), LoadAddr SP (Right (-4, SP))]
+
+threeAddrToMips (Call f n) = return code
+ where code = [JumpLink f, LoadAddr SP (Right (4 * n, SP))]
+
+threeAddrToMips (Leave f) = threeAddrToMips (Ret Nothing)
+
+threeAddrToMips (Ret Nothing) = return [resStack, resRet, resFrame, ret]
+ where resStack = LoadAddr SP (Right (0, FP))
+       resRet   = LoadWord RA (Right (-8, SP))
+       resFrame = LoadWord FP (Right (-4, SP))
+       ret      = JumpReturn RA
+
+threeAddrToMips (Ret (Just i)) = do
+  (r,code) <- loadIdentifier i
+  ret <- threeAddrToMips (Ret Nothing)
+  return $ code <> [Move V0 r] <> ret
+
+threeAddrToMips (Retrieve i) = store V0 i
+
+localVars :: MIPSGen Integer
+localVars = use locs >>= \l -> sizeAndOffset 0 $ M.toList l
+ where sizeAndOffset x [] = return x
+       sizeAndOffset currOffset ((i,t):rest) = do
+         ps <- use params
+         case elemIndex i ps of
+           Nothing -> do
+             locOffsets %= M.insert i (currOffset, SP)
+             sizeAndOffset (currOffset + (align . sizeOf) t) rest
+           Just x -> do
+             locOffsets %= M.insert i (toInteger $ x * 4, FP)
+             sizeAndOffset currOffset rest
+
+align x
+  | x `mod` 4 == 0 = x
+  | otherwise      = x + 4 - (x `mod` 4)
+
+sizeOf :: TType -> Integer
+sizeOf TInt = 4
+sizeOf TChar = 1
+sizeOf (TArray TInt (Just x)) = 4 * x
+sizeOf (TArray TChar (Just x)) = x
+sizeOf x = error $ "cannot take the size of " ++ show x
 
 
+-- "extern" functions
 
+externs :: MIPS
+externs = Instr $ [ Lab "print_int"
+                  , LoadImmed V0 1
+                  , LoadWord A0 (Right (0, SP))
+                  , SysCall
+                  , JumpReturn RA
+                  , Comment "\n"
+                  , Lab "print_string"
+                  , LoadImmed V0 4
+                  , LoadWord A0 (Right (0, SP))
+                  , SysCall
+                  , JumpReturn RA
+                  ]

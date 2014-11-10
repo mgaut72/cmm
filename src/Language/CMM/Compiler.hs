@@ -13,12 +13,20 @@ import Language.CMM.Parser.Typed
 import Language.CMM.Parser.Base
 
 import Language.CMM.Intermediate.Program
+import Language.CMM.MIPS.Generate
+import Language.CMM.MIPS.Instructions
+import Language.CMM.MIPS.Instructions.PrettyPrint
 
 compileCMM :: String -> Either String String -- error or output
 compileCMM srcTxt = case parseCMM srcTxt of
-       (Right a, []) -> Right . show $ genP a
+       (Right a, []) -> Right $ concatMap pretty ( generateCMM a)
        (Right _, es) -> Left es
        (Left  a, es) -> Left $ es ++ show a
+
+generateCMM :: (Program, Tables) -> [MIPS]
+generateCMM pt = case genP pt of
+  []     -> []
+  (f:fs) -> externs : generateGlobal f : generateLocal f : map generateLocal fs
 
 parseCMM = makeMessages . runWriter . runParserT p initialTables "compile"
  where p = do

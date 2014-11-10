@@ -307,6 +307,7 @@ baseFunctionDefP b = do
   p <- parens parametersP
   modifyState $ currFunction .~ i
   modifyState $ localSymbols %~ M.insert i (t, M.empty)
+  modifyState $ localParameters %~ M.insert i p
   when b $ checkSignature t i p >> addParameters p
   symbol "{"
   varDecls <- many $ baseVarDeclP False b

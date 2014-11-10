@@ -32,9 +32,9 @@ data ThreeAddress = Global Identifier TType
                   | AssignToPointer Identifier Identifier
                   | Enter Identifier
                   | Leave Identifier
-                  | Param Value
+                  | Param Identifier
                   | Call Identifier Integer -- Integer is num arguments
-                  | Ret (Maybe Value)
+                  | Ret (Maybe Identifier)
                   | Retrieve Identifier
                   | Convert Identifier TType
                   | NoOp
@@ -54,14 +54,15 @@ initialSymbols = Symbols M.empty M.empty [] S.empty M.empty 0 ""
 type TACGen = State Symbols
 
 tablesToSymbols :: Tables -> Identifier -> Symbols
-tablesToSymbols t i = Symbols { _globals = t ^. globalSymbols
-                              , _locals = snd $ (t ^. localSymbols) M.! i
-                              , _parameters = getPs $ (t ^. localParameters) M.! i
-                              , _externs = t ^. externFunctions
-                              , _functionArgs = t ^. functions
-                              , _tempNum = 0
-                              , _currFcn = t ^. currFunction
-                              }
+tablesToSymbols t i = Symbols
+  { _globals = t ^. globalSymbols
+  , _locals = snd $ (t ^. localSymbols) M.! i
+  , _parameters = getPs $ (t ^. localParameters) M.! i
+  , _externs = t ^. externFunctions
+  , _functionArgs = t ^. functions
+  , _tempNum = 0
+  , _currFcn = t ^. currFunction
+  }
 
 
 getPs VoidParameter = []
