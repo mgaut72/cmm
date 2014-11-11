@@ -25,10 +25,12 @@ data Instruction = LoadWord    Register Location
                  | StoreWord   Register Location
                  | StoreByte   Register Location
                  | Add         Register Register Register
+                 | AddImmed    Register Register Integer
                  | Sub         Register Register Register
                  | Mult        Register Register Register
                  | Div         Register Register Register
                  | Neg         Register Register
+                 | ShiftLeft   Register Register Integer
                  | Jump        LabelName
                  | JumpLink    LabelName
                  | JumpReturn  Register

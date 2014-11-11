@@ -19,16 +19,18 @@ pInstr (LoadAddr r o) = "la " ++ pReg r ++ ", " ++ pOffset o
 pInstr (LoadImmed r i) = "li " ++ pReg r ++ ", " ++ show i
 pInstr (StoreWord r o) = "sw " ++ pReg r ++ ", " ++ pOffset o
 pInstr (StoreByte r o) = "sb " ++ pReg r ++ ", " ++ pOffset o
-pInstr (Add r1 r2 r3) = "add " ++ (intercalate ", " . map pReg $ [r1,r2,r3])
-pInstr (Sub r1 r2 r3) = "sub " ++ (intercalate ", " . map pReg $ [r1,r2,r3])
-pInstr (Mult r1 r2 r3) = "mult " ++ (intercalate ", " . map pReg $ [r1,r2,r3])
-pInstr (Div r1 r2 r3) = "div " ++ (intercalate ", " . map pReg $ [r1,r2,r3])
-pInstr (Neg r1 r2) = "neg " ++ (intercalate ", " . map pReg $ [r1,r2])
+pInstr (Add r1 r2 r3) = "add " ++ pRegs [r1,r2,r3]
+pInstr (AddImmed r1 r2 i) = "addi " ++ pRegs [r1,r2] ++ ", " ++ show i
+pInstr (ShiftLeft r1 r2 i) = "sll " ++ pRegs [r1,r2] ++ ", " ++ show i
+pInstr (Sub r1 r2 r3) = "sub " ++ pRegs  [r1,r2,r3]
+pInstr (Mult r1 r2 r3) = "mult " ++ pRegs [r1,r2,r3]
+pInstr (Div r1 r2 r3) = "div " ++ pRegs [r1,r2,r3]
+pInstr (Neg r1 r2) = "neg " ++ pRegs [r1,r2]
 pInstr (Jump l) = "j " ++ l
 pInstr (JumpLink l) = "jal " ++ l
 pInstr (JumpReturn r) = "jr " ++ pReg r
 pInstr (Lab l) = l ++ ":"
-pInstr (Move r1 r2) = "move " ++ (intercalate ", " . map pReg $ [r1,r2])
+pInstr (Move r1 r2) = "move " ++ pRegs [r1,r2]
 pInstr (Comment s) = "# " ++ s ++ "\n"
 pInstr SysCall = "syscall"
 
@@ -38,6 +40,8 @@ pOffset (Right (offset, r)) = show offset ++ "(" ++ pReg r ++ ")"
 
 pReg :: Register -> String
 pReg r = '$' : (map toLower . show $ r)
+
+pRegs = intercalate ", " . map pReg
 
 fmt :: String -> String
 fmt s = "    " ++ s

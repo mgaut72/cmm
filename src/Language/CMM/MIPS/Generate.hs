@@ -47,26 +47,42 @@ loadGeneral l t = do
 
 -- stores whatever is in r into the memory location of variable i
 store :: Register -> Identifier -> MIPSGen [Instruction]
-store r i = locationAndType >>= uncurry (storeGeneral r)
+store r i = locationAndType i >>= uncurry (storeGeneral r)
+
+storeOffset :: Register -> Identifier -> Value -> MIPSGen [Instruction]
+storeOffset r i offset = do
+  (l,t) <- locationAndType i
+  (offsetR,offsetIs) <- getVal offset
+  newLocReg <- getRegister
+  let adjustment = if t == TInt then [ShiftLeft offsetR offsetR 2] else []
+  -- at this point we have converted the index into the byte offset
+  let newLoc = case l of
+                 Left i -> [ LoadAddr newLocReg (Left i)
+                           , Add newLocReg newLocReg offsetR]
+                 Right (n,base) -> [ AddImmed offsetR offsetR n
+                                   , Add newLocReg base offsetR]
+  -- at this point, newLocReg contains the address of the indexed array
+  str <- storeGeneral r (Right (0, newLocReg)) t
+  return $ offsetIs <> adjustment <> newLoc <> str
 
 storeGeneral :: Register -> Location -> TType -> MIPSGen [Instruction]
 storeGeneral r l t = return [(storeInstr t) r l]
  where storeInstr TInt = StoreWord
        storeInstr TChar = StoreByte
 
-locationAndType :: Identifier -> MIPSGen (TType, Location)
+locationAndType :: Identifier -> MIPSGen (Location, TType)
 locationAndType i = do
   ls <- use locs
   offsets <- use locOffsets
   glos <- use globs
   let (location, sTable) = if i `M.member` ls
-    then (Left i, ls)
-    else (Right (offsets M.! i), glos)
+                             then (Left i, ls)
+                             else (Right (offsets M.! i), glos)
   let t = case sTable M.! i of
-    TInt  -> TInt
-    TChar -> TChar
-    x     -> error $ "type of " ++ show x ++ " in locationAndType"
-  return (t,location)
+            TInt  -> TInt
+            TChar -> TChar
+            x     -> error $ "type of " ++ show x ++ " in locationAndType"
+  return (location, t)
 
 -- Conversion functions
 
@@ -96,7 +112,6 @@ threeAddrToMips (Copy i val) = do
   s <- store r i
   freeRegister r
   return $ is <> s
-
 
 threeAddrToMips (GoTo l) = return [Jump l]
 
