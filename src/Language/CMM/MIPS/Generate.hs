@@ -45,6 +45,7 @@ loadGeneral l t = do
              , (loadInstr t) r l])
  where loadInstr TChar = LoadByte
        loadInstr TInt  = LoadWord
+       loadInstr (TArray _ _) = LoadAddr
 
 -- stores whatever is in r into the memory location of variable i
 store :: Register -> Identifier -> MIPSGen [Instruction]
@@ -70,6 +71,8 @@ storeGeneral :: Register -> Location -> TType -> MIPSGen [Instruction]
 storeGeneral r l t = return [(storeInstr t) r l]
  where storeInstr TInt = StoreWord
        storeInstr TChar = StoreByte
+       storeInstr (TArray TChar _) = StoreByte
+       storeInstr (TArray TInt _) = StoreWord
 
 locationAndType :: Identifier -> MIPSGen (Location, TType)
 locationAndType i = do
@@ -79,12 +82,7 @@ locationAndType i = do
   let (location, sTable) = if i `M.member` ls
                              then (Right (offsets M.! i), ls)
                              else (Left i, glos)
-  let t = case sTable M.! i of
-            TInt  -> TInt
-            TChar -> TChar
-            TArray TChar _ -> TChar
-            TArray TInt  _ -> TInt
-            x     -> error $ "type of " ++ show x ++ " in locationAndType"
+  let t = sTable M.! i
   return (location, t)
 
 -- Conversion functions
