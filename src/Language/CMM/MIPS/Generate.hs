@@ -111,19 +111,12 @@ threeAddrToMips (AssignMinus i v) = do
   mapM_ freeRegister [r,srcR]
   return $ srcCode <> [Neg r srcR] <> s
 
-threeAddrToMips (Copy i val) = case val of
-    IConst x -> doConst i x
-    CConst c -> doConst i . toInteger . ord $  c
-    IVar  iv -> do
-      (r1, i1) <- loadIdentifier iv
-      s <- store r1 i
-      freeRegister r1
-      return $ i1 <> s
- where doConst i x = do
-         r <- getRegister
-         s <- store r i
-         freeRegister r
-         return $ LoadImmed r x : s
+threeAddrToMips (Copy i val) = do
+  (r, is) <- getVal val
+  s <- store r i
+  freeRegister r
+  return $ is <> s
+
 
 threeAddrToMips (GoTo l) = return [Jump l]
 
@@ -184,6 +177,13 @@ sizeOf TChar = 1
 sizeOf (TArray TInt (Just x)) = 4 * x
 sizeOf (TArray TChar (Just x)) = x
 sizeOf x = error $ "cannot take the size of " ++ show x
+
+getVal :: Value -> MIPSGen (Register, [Instruction])
+getVal (IConst x) = do
+  r <- getRegister
+  return (r, [LoadImmed r x])
+getVal (CConst c) = getVal (IConst . toInteger . ord $ c)
+getVal (IVar i) = loadIdentifier i
 
 
 -- "extern" functions
