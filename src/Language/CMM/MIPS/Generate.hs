@@ -124,7 +124,11 @@ threeAddrToMips (Label l) = return [Lab l]
 
 threeAddrToMips (Enter i) = do
   localSize <- localVars
-  return [saveStack, saveReturn, newFrame, newStack localSize, Comment "End allocating stack for main"]
+  return [ Comment $ "Start allocating stack for" ++ i
+         , saveStack, saveReturn
+         , newFrame, newStack localSize
+         , Comment $ "End allocating stack for " ++ i
+         ]
   where saveStack  = StoreWord FP (Right (-4, SP))
         saveReturn = StoreWord RA (Right (-8, SP))
         newFrame   = LoadAddr  FP (Right (0, SP))
