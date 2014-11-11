@@ -58,6 +58,7 @@ loadLocal i = do
     TChar -> return (r, [LoadByte r (Right offset)])
 
 
+-- stores whatever is in r into the memory location of variable i
 store :: Register -> Identifier -> MIPSGen [Instruction]
 store r i = do
   ls <- use locs
@@ -78,7 +79,6 @@ storeLocal r i = do
   case ls M.! i of
     TInt  -> return [StoreWord r (Right offset)]
     TChar -> return [StoreByte r (Right offset)]
-
 
 threeAddrToMips :: ThreeAddress -> MIPSGen [Instruction]
 

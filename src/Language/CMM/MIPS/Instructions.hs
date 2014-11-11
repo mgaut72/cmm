@@ -18,12 +18,12 @@ data DataDeclaration = DataItem String Integer -- location, size
                      | Align Integer
                      deriving (Show, Eq)
 
-data Instruction = LoadWord    Register (Either Identifier (Integer, Register))
-                 | LoadByte    Register (Either Identifier (Integer, Register))
-                 | LoadAddr    Register (Either Identifier (Integer, Register))
+data Instruction = LoadWord    Register Location
+                 | LoadByte    Register Location
+                 | LoadAddr    Register Location
                  | LoadImmed   Register Integer
-                 | StoreWord   Register (Either Identifier (Integer, Register))
-                 | StoreByte   Register (Either Identifier (Integer, Register))
+                 | StoreWord   Register Location
+                 | StoreByte   Register Location
                  | Add         Register Register Register
                  | Sub         Register Register Register
                  | Mult        Register Register Register
@@ -53,6 +53,8 @@ data Register = Zero
               | FP
               | RA
               deriving (Show, Eq, Enum)
+
+type Location = Either Identifier (Integer, Register)
 
 data GenTable = GenTable { _globs      :: SymbolTable
                          , _locs       :: SymbolTable
