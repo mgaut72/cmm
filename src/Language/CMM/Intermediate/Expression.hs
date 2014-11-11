@@ -35,8 +35,7 @@ genE (LitChar c) = do
   tmp <- getTmp >>= recordIdentifier TChar
   return (tmp, [Copy tmp (CConst c)])
 
--- TODO: something about a pointer bla bla
-genE (LitString s) = undefined
+genE (LitString s) = error "lit strings"
 
 genE (Binary op e1 e2) = do
   (iE1, tacE1) <- genE e1 >>= convertTo TInt

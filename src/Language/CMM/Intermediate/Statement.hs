@@ -13,13 +13,13 @@ import Language.CMM.Intermediate.Expression
 
 genS :: Statement -> TACGen [ThreeAddress]
 
-genS (If e s) = undefined
+genS (If e s) = error "if not yet supported"
 
-genS (IfElse e s1 s2) = undefined
+genS (IfElse e s1 s2) = error "ifelse not yet supported"
 
-genS (While e s) = undefined
+genS (While e s) = error "while not yet supported"
 
-genS (For ma1 me ma2 s) = undefined
+genS (For ma1 me ma2 s) = error "for not yet supported"
 
 genS (Return Nothing) = do
   l <- leave
@@ -34,15 +34,15 @@ genS (Return (Just e)) = do
 
 genS (ProcedureCall f) = genFCall f
 
-genS None = undefined
+genS None = return []
 
 genS (Assign (Assignment (Scalar i) e)) = do
   varType <- lookupSymb i
   (iE, tacE) <- genE e >>= convertTo varType
   return $ tacE <> pure (Copy i (IVar iE))
 
-genS (Assign (Assignment (Array i idx) e)) = undefined
+genS (Assign (Assignment (Array i idx) e)) = error "assigning to array idx not supported"
 
-genS (Bracketed ss) = undefined
+genS (Bracketed ss) = error "bracketed statements not supported"
 
 leave = liftM (pure . Leave) (use currFcn)
