@@ -41,7 +41,15 @@ genS (Assign (Assignment (Scalar i) e)) = do
   (iE, tacE) <- genE e >>= convertTo varType
   return $ tacE <> pure (Copy i (IVar iE))
 
-genS (Assign (Assignment (Array i idx) e)) = error "assigning to array idx not supported"
+genS (Assign (Assignment (Array i idx) e)) = do
+  varType <- lookupSymb i
+  (iE, tacE) <- genE e >>= convertTo varType
+  (iIdx, tacIdx) <- genE idx >>= convertTo TInt
+  return $ tacE <> tacIdx <> pure (AssignToArr i (IVar iIdx) (IVar iE))
+
+
+
+
 
 genS (Bracketed ss) = error "bracketed statements not supported"
 
