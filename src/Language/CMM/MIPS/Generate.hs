@@ -39,23 +39,28 @@ loadIdentifier i = do
     then loadLocal i
     else loadGlobal i
 
+loadGeneral :: Location -> TType -> MIPSGen (Register, [Instruction])
+loadGeneral l t = do
+  r <- getRegister
+  return (r, [(loadInstr t) r l])
+ where loadInstr TChar = LoadByte
+       loadInstr TInt  = LoadWord
+
 loadGlobal :: Identifier -> MIPSGen (Register, [Instruction])
 loadGlobal i = do
   glos <- use globs
-  r <- getRegister
   case glos M.! i of
-    TInt  -> return (r, [LoadWord r (Left i)])
-    TChar -> return (r, [LoadByte r (Left i)])
+    TInt  -> loadGeneral (Left i) TInt
+    TChar -> loadGeneral (Left i) TChar
 
 loadLocal :: Identifier -> MIPSGen (Register, [Instruction])
 loadLocal i = do
   offsets <- use locOffsets
   ls <- use locs
   let offset = offsets M.! i
-  r <- getRegister
   case ls M.! i of
-    TInt -> return (r, [LoadWord r (Right offset)])
-    TChar -> return (r, [LoadByte r (Right offset)])
+    TInt  -> loadGeneral (Right offset) TInt
+    TChar -> loadGeneral (Right offset) TChar
 
 
 -- stores whatever is in r into the memory location of variable i
@@ -83,8 +88,7 @@ storeLocal r i = do
   let offset = offsets M.! i
   case ls M.! i of
     TInt  -> storeGeneral r (Right offset) TInt
-    TInt  -> storeGeneral r (Right offset) TInt
-    TChar -> return [StoreByte r (Right offset)]
+    TChar -> storeGeneral r (Right offset) TChar
 
 threeAddrToMips :: ThreeAddress -> MIPSGen [Instruction]
 
