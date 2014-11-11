@@ -18,6 +18,7 @@ cabal-version:       >=1.10
 library
   exposed-modules:
     Language.CMM.MIPS.Generate
+    Language.CMM.MIPS.Memory
     Language.CMM.MIPS.Instructions
     Language.CMM.MIPS.Instructions.PrettyPrint
     Language.CMM.Intermediate.Instructions

@@ -9,11 +9,11 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 import Data.Monoid
 import Data.List (elemIndex)
-import Data.Char (ord)
 
 import Language.CMM.AST
 import Language.CMM.Intermediate.Instructions
 import Language.CMM.MIPS.Instructions
+import Language.CMM.MIPS.Memory
 
 generateLocal :: ([ThreeAddress], Symbols) -> MIPS
 generateLocal (tas, s) = evalState mips gentable
@@ -32,58 +32,6 @@ globalVars s = foldMapWithKey mkData $ s ^. globs
 
 foldMapWithKey f = M.foldlWithKey (\a k b -> a `mappend` f k b) mempty
 
-
--- memory access
-
-loadIdentifier :: Identifier -> MIPSGen (Register, [Instruction])
-loadIdentifier i = locationAndType i >>= uncurry loadGeneral
-
-loadGeneral :: Location -> TType -> MIPSGen (Register, [Instruction])
-loadGeneral l t = do
-  r <- getRegister
-  return (r, [Comment $ "loading item at " ++ show l ++ "into regstr " ++ show r
-             , (loadInstr t) r l])
- where loadInstr TChar = LoadByte
-       loadInstr TInt  = LoadWord
-       loadInstr (TArray _ _) = LoadAddr
-
--- stores whatever is in r into the memory location of variable i
-store :: Register -> Identifier -> MIPSGen [Instruction]
-store r i = locationAndType i >>= uncurry (storeGeneral r)
-
-storeOffset :: Register -> Identifier -> Value -> MIPSGen [Instruction]
-storeOffset r i offset = do
-  (l,t) <- locationAndType i
-  (offsetR,offsetIs) <- getVal offset
-  newLocReg <- getRegister
-  let adjustment = if t == TInt then [Comment $ i ++ " is type int, so its offset (in register " ++ show offsetR ++ " needs to be multiplied by 4",ShiftLeft offsetR offsetR 2] else []
-  -- at this point we have converted the index into the byte offset
-  let newLoc = [ LoadAddr newLocReg l
-               , Add newLocReg newLocReg offsetR]
-              --    Right (n,base) -> [ Comment $ "adding to the offset registser, the global offset of the start of the array on the stack", AddImmed offsetR offsetR n
-                --                   , Comment $ "adding the offset to the location in the stack frame", Add newLocReg base offsetR]
-  -- at this point, newLocReg contains the address of the indexed array
-  str <- storeGeneral r (Right (0, newLocReg)) t
-  freeRegisters [offsetR, newLocReg]
-  return $ offsetIs <> adjustment <> newLoc <> str
-
-storeGeneral :: Register -> Location -> TType -> MIPSGen [Instruction]
-storeGeneral r l t = return [(storeInstr t) r l]
- where storeInstr TInt = StoreWord
-       storeInstr TChar = StoreByte
-       storeInstr (TArray TChar _) = StoreByte
-       storeInstr (TArray TInt _) = StoreWord
-
-locationAndType :: Identifier -> MIPSGen (Location, TType)
-locationAndType i = do
-  ls <- use locs
-  offsets <- use locOffsets
-  glos <- use globs
-  let (location, sTable) = if i `M.member` ls
-                             then (Right (offsets M.! i), ls)
-                             else (Left i, glos)
-  let t = sTable M.! i
-  return (location, t)
 
 -- Conversion functions
 
@@ -186,15 +134,6 @@ sizeOf TChar = 1
 sizeOf (TArray TInt (Just x)) = 4 * x
 sizeOf (TArray TChar (Just x)) = x
 sizeOf x = error $ "cannot take the size of " ++ show x
-
-getVal :: Value -> MIPSGen (Register, [Instruction])
-getVal (IConst x) = do
-  r <- getRegister
-  return (r, [ Comment ("putting " ++ show x ++ " int register " ++ show r)
-             , LoadImmed r x])
-getVal (CConst c) = getVal (IConst . toInteger . ord $ c)
-getVal (IVar i) = loadIdentifier i
-
 
 -- "extern" functions
 
