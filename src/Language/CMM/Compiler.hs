@@ -26,7 +26,11 @@ compileCMM srcTxt = case parseCMM srcTxt of
 generateCMM :: (Program, Tables) -> [MIPS]
 generateCMM pt = case genP pt of
   []     -> []
-  (f:fs) -> externs : generateGlobal f : generateLocal f : map generateLocal fs
+  (f:fs) -> externs
+          : generateStrings f
+          : generateGlobal f
+          : generateLocal f
+          : map generateLocal fs
 
 parseCMM = makeMessages . runWriter . runParserT p initialTables "compile"
  where p = do

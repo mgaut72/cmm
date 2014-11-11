@@ -20,17 +20,24 @@ generateLocal (tas, s) = evalState mips gentable
         gentable = symbolsToGenTable s
 
 generateGlobal :: ([ThreeAddress], Symbols) -> MIPS
-generateGlobal (_,s) = Data . globalVars . symbolsToGenTable $ s
+generateGlobal (_,s) = Data . globalVars $ s
 
-globalVars :: GenTable -> [DataDeclaration]
-globalVars s = foldMapWithKey mkData $ s ^. globs
- where mkData i t = if i `S.member` (s ^. fNames)
-                      then []
-                      else [DataItem i (sizeOf t), Align 2]
+globalVars :: Symbols -> [DataDeclaration]
+globalVars g = foldMapWithKey mkData $ s ^. globs
+ where mkData i t = if i `S.notMember` fs && i `M.notMember` ss
+                      then [DataItem i (sizeOf t), Align 2]
+                      else []
+       s = symbolsToGenTable g
+       fs = s ^. fNames
+       ss = g ^. litStrings
  -- align 2 might be overkill, but I think it doesn't hurt anything
 
-foldMapWithKey f = M.foldlWithKey (\a k b -> a `mappend` f k b) mempty
+generateStrings :: ([ThreeAddress], Symbols) -> MIPS
+generateStrings (_,s) = Data . litStrs $ s
+ where litStrs s = foldMapWithKey mkData $ s ^. litStrings
+       mkData i t = [StringLiteral i t]
 
+foldMapWithKey f = M.foldlWithKey (\a k b -> a `mappend` f k b) mempty
 
 -- Conversion functions
 

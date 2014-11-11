@@ -41,6 +41,7 @@ data ThreeAddress = Global Identifier TType
 
 data Symbols = Symbols { _globals      :: SymbolTable
                        , _locals       :: SymbolTable
+                       , _litStrings   :: M.Map Identifier String
                        , _parameters   :: [Identifier]
                        , _externs      :: S.Set Identifier
                        , _functionArgs :: FunctionArgumentTable
@@ -48,7 +49,7 @@ data Symbols = Symbols { _globals      :: SymbolTable
                        , _currFcn      :: Identifier
                        } deriving (Show, Eq)
 
-initialSymbols = Symbols M.empty M.empty [] S.empty M.empty 0 ""
+initialSymbols = Symbols M.empty M.empty M.empty [] S.empty M.empty 0 ""
 
 type TACGen = State Symbols
 
@@ -56,6 +57,7 @@ tablesToSymbols :: Tables -> Identifier -> Symbols
 tablesToSymbols t i = Symbols
   { _globals = t ^. globalSymbols
   , _locals = snd $ (t ^. localSymbols) M.! i
+  , _litStrings = M.empty
   , _parameters = getPs $ (t ^. localParameters) M.! i
   , _externs = t ^. externFunctions
   , _functionArgs = t ^. functions
@@ -121,6 +123,13 @@ lookupSymb i = do
 
 recordIdentifier :: TType -> Identifier -> TACGen Identifier
 recordIdentifier t i = locals %= M.insert i t >> return i
+
+recordLitString s = do
+  int <- tempNum <+= 1
+  let i = "_str_" ++ show int
+  litStrings %= M.insert i s
+  globals %= M.insert i (TArray TChar (Just . toInteger . length $ s))
+  return (i,[])
 
 convertTo :: TType -> (Identifier, [ThreeAddress]) -> TACGen (Identifier, [ThreeAddress])
 convertTo t (i, code) = do

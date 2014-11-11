@@ -14,8 +14,9 @@ data MIPS = Data [DataDeclaration]
           | Instr [Instruction]
           deriving (Show, Eq)
 
-data DataDeclaration = DataItem String Integer -- location, size
+data DataDeclaration = DataItem Identifier Integer -- location, size
                      | Align Integer
+                     | StringLiteral Identifier String
                      deriving (Show, Eq)
 
 data Instruction = LoadWord    Register Location

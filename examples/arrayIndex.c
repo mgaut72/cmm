@@ -1,7 +1,10 @@
 extern void print_string(char c[]);
+void change_first_to_q(char c[]);
+
 char c[5];
 
 void main(void){
+
 
     c[0] = 'h';
     c[1] = 'e';
@@ -11,5 +14,10 @@ void main(void){
 
     print_string("hey hey ");
     print_string(c);
+
+    change_first_to_q(c);
 }
 
+void change_first_to_q(char c[]){
+    print_string(c);
+}

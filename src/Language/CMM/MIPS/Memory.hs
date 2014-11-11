@@ -45,7 +45,7 @@ storeGeneral :: Register -> Location -> TType -> MIPSGen [Instruction]
 storeGeneral r l t = return [(storeInstr t) r l]
  where storeInstr TInt = StoreWord
        storeInstr TChar = StoreByte
-       storeInstr (TArray TChar _) = StoreByte
+       storeInstr (TArray TChar _) = StoreWord
        storeInstr (TArray TInt _) = StoreWord
        storeInstr t = error $ "can't determine store command for " ++ show t ++
                              "in storeGeneral"

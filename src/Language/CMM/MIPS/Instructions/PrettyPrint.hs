@@ -6,11 +6,14 @@ import Data.Char (toLower)
 import Language.CMM.MIPS.Instructions
 
 pretty :: MIPS -> String
+pretty (Data []) = ""
 pretty (Data ds) = ".data\n" ++ (unlines . map (fmt . pData) $ ds) ++ "\n"
+pretty (Instr []) = ""
 pretty (Instr is) = ".text\n" ++ (unlines . map (fmt . pInstr) $ is) ++ "\n"
 
 pData :: DataDeclaration -> String
 pData (DataItem name size) = name ++ ": .space " ++ show size
+pData (StringLiteral name literal) = name ++ ": .asciiz " ++ show literal
 pData (Align x) = ".align " ++ show x
 
 pInstr (LoadWord r o) = "lw " ++ pReg r ++ ", " ++ pOffset o
