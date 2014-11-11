@@ -148,7 +148,7 @@ varExpressionP b = liftM Var (varP b)
 varP b = arrayP b <|> scalarP b
 
 scalarP :: TypeChecked -> MyParser Variable
-scalarP b = liftM Scalar identifier
+scalarP _ = liftM Scalar identifier
 
 arrayP :: TypeChecked -> MyParser Variable
 arrayP b = do
@@ -269,7 +269,7 @@ baseVarDeclP g b = do
   return $ VarDecl t vars
 
 arrayDeclP :: TypeChecked -> MyParser Variable
-arrayDeclP b = do
+arrayDeclP _ = do
   ident <- try $ identifierFollowedBy '['
   size <- litIntP
   symbol "]"
@@ -317,7 +317,7 @@ baseFunctionDefP b = do
   return $ FunctionDef t i p varDecls ss
 
 funcStubP :: TypeChecked -> MyParser FuncStub
-funcStubP b = liftM2 FuncStub identifier (parens parametersP)
+funcStubP _ = liftM2 FuncStub identifier (parens parametersP)
 
 --
 -- Declaration
@@ -373,7 +373,7 @@ ifErrorP b = do
   ifOrIfElse b e
 
 returnErrorP :: TypeChecked -> MyParser Statement
-returnErrorP b = do
+returnErrorP _ = do
   reserved "return"
   recordError "bad return value expression"
   e <- errorUntil ErrorE $ char ';'
@@ -423,7 +423,7 @@ assignErrorP b = do
   semi
   return $ Assign $ Assignment var e
 
-procedureCallErrorP b = do
+procedureCallErrorP _ = do
   ident <- try $ identifierFollowedBy '('
   recordError "bad parameters to procedure call"
   params <- errorUntil [ErrorE] $ char ')'

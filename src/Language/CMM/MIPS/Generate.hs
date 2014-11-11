@@ -3,7 +3,6 @@ module Language.CMM.MIPS.Generate where
 import Control.Lens
 import Control.Monad
 import Control.Monad.State
-import Control.Applicative
 
 import qualified Data.Map as M
 import qualified Data.Set as S
@@ -91,7 +90,7 @@ threeAddrToMips (Param i) = do
 threeAddrToMips (Call f n) = return code
  where code = [JumpLink f, LoadAddr SP (Right (4 * n, SP))]
 
-threeAddrToMips (Leave f) = threeAddrToMips (Ret Nothing)
+threeAddrToMips (Leave _) = threeAddrToMips (Ret Nothing)
 
 threeAddrToMips (Ret Nothing) = return [resStack, resRet, resFrame, ret]
  where resStack = LoadAddr SP (Right (0, FP))

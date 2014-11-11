@@ -1,11 +1,6 @@
 module Language.CMM.Intermediate.Expression where
 
-import Control.Lens
-import Control.Monad
-
 import Data.Monoid
-import Data.Maybe
-import qualified Data.Map as M
 
 import Language.CMM.AST
 import Language.CMM.Intermediate.Instructions
@@ -37,10 +32,9 @@ genE (LitChar c) = do
 
 genE (LitString s) = do
   tmp <- getTmp >>= recordIdentifier (TArray TChar (Just size))
-  tmpIdx <- getTmp >>= recordIdentifier TInt
-  return (tmp, zipWith (assign tmpIdx tmp) [0..] (s++"\0"))
+  return (tmp, zipWith (assign tmp) [0..] (s++"\0"))
  where size = toInteger . (+1) . length $ s -- plus 1 for null termination
-       assign idx t n c = AssignToArr t (IConst n) (CConst c)
+       assign t n c = AssignToArr t (IConst n) (CConst c)
 
 genE (Binary op e1 e2) = do
   (iE1, tacE1) <- genE e1 >>= convertTo TInt
@@ -48,7 +42,7 @@ genE (Binary op e1 e2) = do
   tmp <- getTmp >>= recordIdentifier TInt
   return (tmp, tacE1 <> tacE2 <> [AssignBinary tmp op iE1 iE2])
 
-genE (FunctionCall f@(Function i es)) = do
+genE (FunctionCall f@(Function i _)) = do
   fCode <- genFCall f
   retType <- lookupSymb i
   tmp <- getTmp >>= recordIdentifier retType
@@ -100,3 +94,5 @@ genBooleanE (Not e) = do
   trueL <- getLabel
   falseL <- getLabel
   return (trueL, falseL, tacE <> [Label tL, GoTo falseL, Label fL, GoTo trueL])
+
+genBooleanE e = error $ "genBooleanE called on non-boolean :" ++ show e

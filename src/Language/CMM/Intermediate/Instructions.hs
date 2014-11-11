@@ -2,7 +2,6 @@
 module Language.CMM.Intermediate.Instructions where
 
 import Control.Monad.State
-import Control.Applicative
 import Control.Lens
 
 import qualified Data.Map as M
@@ -103,11 +102,11 @@ typeOf Relative{} = return TBool
 
 typeOf Logical{} = return TBool
 
-typeOf (FunctionCall (Function i es)) = lookupSymb i
+typeOf (FunctionCall (Function i _)) = lookupSymb i
 
 typeOf (Var (Scalar i)) = lookupSymb i
 
-typeOf (Var (Array i e)) = lookupSymb i >>= (\(TArray t _) -> return t)
+typeOf (Var (Array i _)) = lookupSymb i >>= (\(TArray t _) -> return t)
 
 lookupSymb :: Identifier -> TACGen TType
 lookupSymb i = do

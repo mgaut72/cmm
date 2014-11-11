@@ -47,10 +47,8 @@ genS (Assign (Assignment (Array i idx) e)) = do
   (iIdx, tacIdx) <- genE idx >>= convertTo TInt
   return $ tacE <> tacIdx <> pure (AssignToArr i (IVar iIdx) (IVar iE))
 
-
-
-
-
 genS (Bracketed ss) = error "bracketed statements not supported"
+
+genS e = error $ show e ++ " is not supported"
 
 leave = liftM (pure . Leave) (use currFcn)

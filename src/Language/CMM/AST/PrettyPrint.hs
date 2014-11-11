@@ -15,11 +15,11 @@ instance Pretty ProgData where
   pretty (Func f) = pretty f
 
 instance Pretty Declaration where
-  pretty (VariableDecl v) = pretty v
   pretty (FunctionDecl b t fs)
-    | b     = "extern " ++ fd
-    | not b = fd
+    | b         = "extern " ++ fd
+    | otherwise = fd
    where fd = pretty t ++ " " ++ (intercalate ", " . map pretty $ fs) ++ ";\n"
+  pretty (VariableDecl v) = pretty v
 
 instance Pretty FuncStub where
   pretty (FuncStub i p) = i ++ "(" ++ pretty p ++ ")"

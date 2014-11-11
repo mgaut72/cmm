@@ -2,7 +2,6 @@ module Language.CMM.MIPS.Memory where
 
 import Control.Lens
 
-import qualified Data.Set as S
 import qualified Data.Map as M
 import Data.Char (ord)
 import Data.Monoid
@@ -22,6 +21,8 @@ loadGeneral l t = do
  where loadInstr TChar = LoadByte
        loadInstr TInt  = LoadWord
        loadInstr (TArray _ _) = LoadAddr
+       loadInstr t = error $ "can't determine load command for " ++ show t ++
+                             "in loadGeneral"
 
 -- stores whatever is in r into the memory location of variable i
 store :: Register -> Identifier -> MIPSGen [Instruction]
@@ -46,6 +47,8 @@ storeGeneral r l t = return [(storeInstr t) r l]
        storeInstr TChar = StoreByte
        storeInstr (TArray TChar _) = StoreByte
        storeInstr (TArray TInt _) = StoreWord
+       storeInstr t = error $ "can't determine store command for " ++ show t ++
+                             "in storeGeneral"
 
 locationAndType :: Identifier -> MIPSGen (Location, TType)
 locationAndType i = do

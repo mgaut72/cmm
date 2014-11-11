@@ -46,6 +46,7 @@ addVarIdentifier isGlobal t v = do
        getI (Array i _) = i
        getI (Scalar i) = i
        getT (Array _ (LitInt x)) t = TArray t (Just x)
+       getT (Array _ _) _ = error "array declared with non-int index"
        getT (Scalar _) t = t
 
 checkStub (FuncStub i params) = checkIdentifier True i >> checkParams params
@@ -62,6 +63,8 @@ checkVariable isGlobal (Array i (LitInt s)) = validateSize >> validateId
  where validateId = checkIdentifier isGlobal i
        validateSize = unless (s > 0) $
                       recordError "declaration : array index must be greater than 0"
+
+checkVariable _ (Array _ _) = error "array declared with non-int size expr"
 
 checkVariable isGlobal (Scalar i) = checkIdentifier isGlobal i
 
