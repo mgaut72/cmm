@@ -67,7 +67,7 @@ storeOffset r i offset = do
   return $ offsetIs <> adjustment <> newLoc <> str
 
 storeGeneral :: Register -> Location -> TType -> MIPSGen [Instruction]
-storeGeneral r l t = freeRegister r >> return [(storeInstr t) r l]
+storeGeneral r l t = return [(storeInstr t) r l]
  where storeInstr TInt = StoreWord
        storeInstr TChar = StoreByte
 
@@ -94,7 +94,7 @@ threeAddrToMips (AssignBinary i op v1 v2) = do
   (r2, i2) <- loadIdentifier v2
   r <- getRegister
   s <- store r i
-  mapM_ freeRegister [r,r1,r2]
+  freeRegisters [r,r1,r2]
   return $ i1 <> i2 <> [getOp op r r1 r2] <> s
  where getOp Plus = Add
        getOp Minus = Sub
@@ -113,6 +113,12 @@ threeAddrToMips (Copy i val) = do
   s <- store r i
   freeRegister r
   return $ is <> s
+
+threeAddrToMips (AssignToArr arr offset val) = do
+  (valReg, valCode) <- getVal val
+  str <- storeOffset valReg arr offset
+  freeRegister valReg
+  return $ valCode <> str
 
 threeAddrToMips (GoTo l) = return [Jump l]
 

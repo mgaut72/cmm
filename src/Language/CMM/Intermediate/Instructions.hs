@@ -26,7 +26,7 @@ data ThreeAddress = Global Identifier TType
                   | IIf Identifier RelativeOp Identifier LabelName LabelName
                   | Label LabelName
                   | AssignFromArr Identifier Identifier Integer -- should the second identifier be Value
-                  | AssignToArr Identifier Identifier Value
+                  | AssignToArr Identifier Value Value -- arr, offset, storage
                   | AssignAddress Identifier Identifier
                   | AssignPointer Identifier Identifier
                   | AssignToPointer Identifier Identifier

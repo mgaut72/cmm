@@ -38,9 +38,9 @@ genE (LitChar c) = do
 genE (LitString s) = do
   tmp <- getTmp >>= recordIdentifier (TArray TChar (Just size))
   tmpIdx <- getTmp >>= recordIdentifier TInt
-  return (tmp, concat $ zipWith (assign tmpIdx tmp) [0..] (s++"\0"))
+  return (tmp, zipWith (assign tmpIdx tmp) [0..] (s++"\0"))
  where size = toInteger . (+1) . length $ s -- plus 1 for null termination
-       assign idx t n c = [Copy idx (IConst n), AssignToArr t idx (CConst c)]
+       assign idx t n c = AssignToArr t (IConst n) (CConst c)
 
 genE (Binary op e1 e2) = do
   (iE1, tacE1) <- genE e1 >>= convertTo TInt
