@@ -32,12 +32,11 @@ globalVars s = foldMapWithKey mkData $ s ^. globs
 
 foldMapWithKey f = M.foldlWithKey (\a k b -> a `mappend` f k b) mempty
 
+
+-- memory access
+
 loadIdentifier :: Identifier -> MIPSGen (Register, [Instruction])
-loadIdentifier i = do
-  ls <- use locs
-  if i `M.member` ls
-    then loadLocal i
-    else loadGlobal i
+loadIdentifier i = locationAndType i >>= uncurry loadGeneral
 
 loadGeneral :: Location -> TType -> MIPSGen (Register, [Instruction])
 loadGeneral l t = do
@@ -46,49 +45,30 @@ loadGeneral l t = do
  where loadInstr TChar = LoadByte
        loadInstr TInt  = LoadWord
 
-loadGlobal :: Identifier -> MIPSGen (Register, [Instruction])
-loadGlobal i = do
-  glos <- use globs
-  case glos M.! i of
-    TInt  -> loadGeneral (Left i) TInt
-    TChar -> loadGeneral (Left i) TChar
-
-loadLocal :: Identifier -> MIPSGen (Register, [Instruction])
-loadLocal i = do
-  offsets <- use locOffsets
-  ls <- use locs
-  let offset = offsets M.! i
-  case ls M.! i of
-    TInt  -> loadGeneral (Right offset) TInt
-    TChar -> loadGeneral (Right offset) TChar
-
-
 -- stores whatever is in r into the memory location of variable i
 store :: Register -> Identifier -> MIPSGen [Instruction]
-store r i = do
-  ls <- use locs
-  if i `M.member` ls
-    then storeLocal r i
-    else storeGlobal r i
+store r i = locationAndType >>= uncurry (storeGeneral r)
 
 storeGeneral :: Register -> Location -> TType -> MIPSGen [Instruction]
 storeGeneral r l t = return [(storeInstr t) r l]
  where storeInstr TInt = StoreWord
        storeInstr TChar = StoreByte
 
-storeGlobal r i = do
-  glos <- use globs
-  case glos M.! i of
-    TInt  -> storeGeneral r (Left i) TInt
-    TChar -> storeGeneral r (Left i) TChar
-
-storeLocal r i = do
-  offsets <- use locOffsets
+locationAndType :: Identifier -> MIPSGen (TType, Location)
+locationAndType i = do
   ls <- use locs
-  let offset = offsets M.! i
-  case ls M.! i of
-    TInt  -> storeGeneral r (Right offset) TInt
-    TChar -> storeGeneral r (Right offset) TChar
+  offsets <- use locOffsets
+  glos <- use globs
+  let (location, sTable) = if i `M.member` ls
+    then (Left i, ls)
+    else (Right (offsets M.! i), glos)
+  let t = case sTable M.! i of
+    TInt  -> TInt
+    TChar -> TChar
+    x     -> error $ "type of " ++ show x ++ " in locationAndType"
+  return (t,location)
+
+-- Conversion functions
 
 threeAddrToMips :: ThreeAddress -> MIPSGen [Instruction]
 
@@ -127,8 +107,7 @@ threeAddrToMips (Enter i) = do
   return [ Comment $ "Start allocating stack for" ++ i
          , saveStack, saveReturn
          , newFrame, newStack localSize
-         , Comment $ "End allocating stack for " ++ i
-         ]
+         , Comment $ "End allocating stack for " ++ i]
   where saveStack  = StoreWord FP (Right (-4, SP))
         saveReturn = StoreWord RA (Right (-8, SP))
         newFrame   = LoadAddr  FP (Right (0, SP))
