@@ -66,18 +66,24 @@ store r i = do
     then storeLocal r i
     else storeGlobal r i
 
+storeGeneral :: Register -> Location -> TType -> MIPSGen [Instruction]
+storeGeneral r l t = return [(storeInstr t) r l]
+ where storeInstr TInt = StoreWord
+       storeInstr TChar = StoreByte
+
 storeGlobal r i = do
   glos <- use globs
   case glos M.! i of
-    TInt  -> return [StoreWord r (Left i)]
-    TChar -> return [StoreByte r (Left i)]
+    TInt  -> storeGeneral r (Left i) TInt
+    TChar -> storeGeneral r (Left i) TChar
 
 storeLocal r i = do
   offsets <- use locOffsets
   ls <- use locs
   let offset = offsets M.! i
   case ls M.! i of
-    TInt  -> return [StoreWord r (Right offset)]
+    TInt  -> storeGeneral r (Right offset) TInt
+    TInt  -> storeGeneral r (Right offset) TInt
     TChar -> return [StoreByte r (Right offset)]
 
 threeAddrToMips :: ThreeAddress -> MIPSGen [Instruction]
