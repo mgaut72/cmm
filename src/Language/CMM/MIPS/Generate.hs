@@ -77,11 +77,13 @@ locationAndType i = do
   offsets <- use locOffsets
   glos <- use globs
   let (location, sTable) = if i `M.member` ls
-                             then (Left i, ls)
-                             else (Right (offsets M.! i), glos)
+                             then (Right (offsets M.! i), ls)
+                             else (Left i, glos)
   let t = case sTable M.! i of
             TInt  -> TInt
             TChar -> TChar
+            TArray TChar _ -> TChar
+            TArray TInt  _ -> TInt
             x     -> error $ "type of " ++ show x ++ " in locationAndType"
   return (location, t)
 
@@ -105,7 +107,7 @@ threeAddrToMips (AssignMinus i v) = do
   (srcR, srcCode) <- loadIdentifier v
   r <- getRegister
   s <- store r i
-  mapM_ freeRegister [r,srcR]
+  freeRegisters [r,srcR]
   return $ srcCode <> [Neg r srcR] <> s
 
 threeAddrToMips (Copy i val) = do
@@ -137,6 +139,7 @@ threeAddrToMips (Enter i) = do
 
 threeAddrToMips (Param i) = do
   (r,code) <- loadIdentifier i
+  freeRegister r
   return $ code <> [StoreWord r (Right (-4, SP)), LoadAddr SP (Right (-4, SP))]
 
 threeAddrToMips (Call f n) = return code
@@ -152,6 +155,7 @@ threeAddrToMips (Ret Nothing) = return [resStack, resRet, resFrame, ret]
 
 threeAddrToMips (Ret (Just i)) = do
   (r,code) <- loadIdentifier i
+  freeRegister r
   ret <- threeAddrToMips (Ret Nothing)
   return $ code <> [Move V0 r] <> ret
 
