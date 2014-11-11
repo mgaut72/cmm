@@ -57,11 +57,10 @@ storeOffset r i offset = do
   newLocReg <- getRegister
   let adjustment = if t == TInt then [Comment $ i ++ " is type int, so its offset (in register " ++ show offsetR ++ " needs to be multiplied by 4",ShiftLeft offsetR offsetR 2] else []
   -- at this point we have converted the index into the byte offset
-  let newLoc = case l of
-                 Left i -> [ LoadAddr newLocReg (Left i)
-                           , Add newLocReg newLocReg offsetR]
-                 Right (n,base) -> [ Comment $ "adding to the offset registser, the global offset of the start of the array on the stack", AddImmed offsetR offsetR n
-                                   , Comment $ "adding the offset to the location in the stack frame", Add newLocReg base offsetR]
+  let newLoc = [ LoadAddr newLocReg l
+               , Add newLocReg newLocReg offsetR]
+              --    Right (n,base) -> [ Comment $ "adding to the offset registser, the global offset of the start of the array on the stack", AddImmed offsetR offsetR n
+                --                   , Comment $ "adding the offset to the location in the stack frame", Add newLocReg base offsetR]
   -- at this point, newLocReg contains the address of the indexed array
   str <- storeGeneral r (Right (0, newLocReg)) t
   freeRegisters [offsetR, newLocReg]
