@@ -149,6 +149,8 @@ threeAddrToMips (Ret (Just i)) = do
 
 threeAddrToMips (Retrieve i) = store V0 i
 
+threeAddrToMips a = error $ "dont have " ++ show a ++ " implemented"
+
 localVars :: MIPSGen Integer
 localVars = use locs >>= \l -> sizeAndOffset 0 $ M.toList l
  where sizeAndOffset x [] = return x
