@@ -63,10 +63,11 @@ storeOffset r i offset = do
                                    , Add newLocReg base offsetR]
   -- at this point, newLocReg contains the address of the indexed array
   str <- storeGeneral r (Right (0, newLocReg)) t
+  freeRegisters [offsetR, newLocReg]
   return $ offsetIs <> adjustment <> newLoc <> str
 
 storeGeneral :: Register -> Location -> TType -> MIPSGen [Instruction]
-storeGeneral r l t = return [(storeInstr t) r l]
+storeGeneral r l t = freeRegister r >> return [(storeInstr t) r l]
  where storeInstr TInt = StoreWord
        storeInstr TChar = StoreByte
 

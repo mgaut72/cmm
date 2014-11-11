@@ -87,3 +87,8 @@ freeRegister :: Register -> MIPSGen ()
 freeRegister r = do
   regs <- use registers
   registers .= (r:regs)
+
+freeRegisters :: [Register] -> MIPSGen ()
+freeRegisters rs = do
+  regs <- use registers
+  registers .= rs ++ regs
