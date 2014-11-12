@@ -20,7 +20,8 @@ loadGeneral l t = do
              , (loadInstr t) r l])
  where loadInstr TChar = LoadByte
        loadInstr TInt  = LoadWord
-       loadInstr (TArray _ _) = LoadAddr
+       loadInstr (TArray TChar _) = LoadAddr
+       loadInstr (TPointer _) = LoadWord
        loadInstr t = error $ "can't determine load command for " ++ show t ++
                              "in loadGeneral"
 
@@ -30,7 +31,7 @@ store r i = locationAndType i >>= uncurry (storeGeneral r)
 
 storeOffset :: Register -> Identifier -> Value -> MIPSGen [Instruction]
 storeOffset r i offset = do
-  (l,t) <- locationAndType i
+  (l,TArray t _) <- locationAndType i
   (offsetR,offsetIs) <- getVal offset
   newLocReg <- getRegister
   let adjustment = if t == TInt then [Comment $ i ++ " is type int, so its offset (in register " ++ show offsetR ++ " needs to be multiplied by 4",ShiftLeft offsetR offsetR 2] else []

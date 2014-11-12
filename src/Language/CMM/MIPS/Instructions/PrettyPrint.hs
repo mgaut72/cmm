@@ -34,7 +34,7 @@ pInstr (JumpLink l) = "jal " ++ l
 pInstr (JumpReturn r) = "jr " ++ pReg r
 pInstr (Lab l) = l ++ ":"
 pInstr (Move r1 r2) = "move " ++ pRegs [r1,r2]
-pInstr (Comment s) = "# " ++ s ++ "\n"
+pInstr (Comment s) = "\n# " ++ s
 pInstr SysCall = "syscall"
 
 pOffset :: Either String (Integer, Register) -> String

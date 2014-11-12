@@ -1,23 +1,22 @@
 extern void print_string(char c[]);
-void change_first_to_q(char c[]);
-
-char c[5];
+void indirect(char c[]);
 
 void main(void){
 
+    char c[3];
 
     c[0] = 'h';
-    c[1] = 'e';
-    c[2] = 'y';
-    c[3] = '\n';
-    c[4] = '\0';
+    c[1] = 'i';
+    c[2] = '\0';
 
-    print_string("hey hey ");
     print_string(c);
-
-    change_first_to_q(c);
+    print_string("\n");
+    indirect(c);
+    print_string("\n");
+    print_string(c);
+    print_string("\n");
 }
 
-void change_first_to_q(char c[]){
+void indirect(char c[]){
     print_string(c);
 }

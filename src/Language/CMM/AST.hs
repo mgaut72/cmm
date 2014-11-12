@@ -103,6 +103,7 @@ data TType = TBool
            | TInt
            | TVoid
            | TArray TType (Maybe Integer) -- declared size
+           | TPointer TType -- for pass by reference stuff
            | TError
            deriving (Show, Eq)
 
