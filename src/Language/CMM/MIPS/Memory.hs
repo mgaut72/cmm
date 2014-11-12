@@ -31,16 +31,25 @@ store r i = locationAndType i >>= uncurry (storeGeneral r)
 
 storeOffset :: Register -> Identifier -> Value -> MIPSGen [Instruction]
 storeOffset r i offset = do
-  (l,TArray t _) <- locationAndType i
+  (l,t) <- locationAndType i
+  baseT <- return $ case t of
+    TPointer (TArray TInt _) -> TInt
+    TPointer (TArray TChar _) -> TChar
+    TArray TInt _ -> TInt
+    TArray TChar _ -> TChar
   (offsetR,offsetIs) <- getVal offset
   newLocReg <- getRegister
-  let adjustment = if t == TInt then [Comment $ i ++ " is type int, so its offset (in register " ++ show offsetR ++ " needs to be multiplied by 4",ShiftLeft offsetR offsetR 2] else []
-  -- at this point we have converted the index into the byte offset
-  let newLoc = [ LoadAddr newLocReg l
+  let adjustment = byteOffset offsetR baseT
+  let newLoc = [ (loadInstr t) newLocReg l
                , Add newLocReg newLocReg offsetR]
-  str <- storeGeneral r (Right (0, newLocReg)) t
+  str <- storeGeneral r (Right (0, newLocReg)) baseT
   freeRegisters [offsetR, newLocReg]
   return $ offsetIs <> adjustment <> newLoc <> str
+ where byteOffset reg t = if t == TInt then [ShiftLeft reg reg 2] else []
+       loadInstr (TPointer _) = LoadWord
+       loadInstr (TArray _ _) = LoadAddr
+
+
 
 storeGeneral :: Register -> Location -> TType -> MIPSGen [Instruction]
 storeGeneral r l t = return [(storeInstr t) r l]

@@ -1,5 +1,6 @@
 extern void print_string(char c[]);
 void indirect(char c[]);
+void indirect2(char c[]);
 
 void main(void){
 
@@ -18,5 +19,12 @@ void main(void){
 }
 
 void indirect(char c[]){
+    c[0] = 'f';
+    print_string(c);
+    indirect2(c);
+}
+
+void indirect2(char c[]){
+    c[0] = 'p';
     print_string(c);
 }
