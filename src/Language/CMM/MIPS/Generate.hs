@@ -14,8 +14,8 @@ import Language.CMM.Intermediate.Instructions
 import Language.CMM.MIPS.Instructions
 import Language.CMM.MIPS.Memory
 
-generateLocal :: ([ThreeAddress], Symbols) -> MIPS
-generateLocal (tas, s) = evalState mips gentable
+generateLocal :: ([ThreeAddress], Symbols) -> [MIPS]
+generateLocal (tas, s) = [evalState mips gentable, generateStrings (tas, s)]
   where mips = liftM (Instr . concat) . mapM threeAddrToMips $ tas
         gentable = symbolsToGenTable s
 
