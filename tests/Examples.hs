@@ -16,16 +16,19 @@ import Language.CMM.Compiler
 
 -- this gets every examples/*.cmm file and compiles it
 main = do
-  cmmFiles <- getDirectoryContents dir >>= filterCMM >>= prependDir dir
+  cmmFiles1 <- getDirectoryContents dir1 >>= filterCMM >>= prependDir dir1
+  cmmFiles2 <- getDirectoryContents dir2 >>= filterCMM >>= prependDir dir2
+  let cmmFiles = cmmFiles1 ++ cmmFiles2
   cmmContents <- mapM readFile cmmFiles
   cmmTests <- mapM makeTest $ zip cmmFiles cmmContents
   cs <- runTestTT $ test cmmTests
   if failures cs /= 0 || errors cs /= 0
      then exitFailure
      else exitSuccess
- where dir = "./examples/"
+ where dir1 = "./cmm-examples/milestone1/"
+       dir2 = "./cmm-examples/milestone1/"
        prependDir d fs = return $ map (d ++) fs
-       filterCMM fs = return $ filter (isSuffixOf ".cmm") fs
+       filterCMM fs = return $ filter (isSuffixOf ".c") fs
        makeTest (fname, cs) = return $ fname ~: good cs
 
 readS a = runWriter . runParserT p initialTables "" $ a
