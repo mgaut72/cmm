@@ -31,24 +31,10 @@ store r i = locationAndType i >>= uncurry (storeGeneral r)
 
 storeOffset :: Register -> Identifier -> Value -> MIPSGen [Instruction]
 storeOffset r i offset = do
-  (l,t) <- locationAndType i
-  baseT <- return $ case t of
-    TPointer (TArray TInt _) -> TInt
-    TPointer (TArray TChar _) -> TChar
-    TArray TInt _ -> TInt
-    TArray TChar _ -> TChar
-  (offsetR,offsetIs) <- getVal offset
-  newLocReg <- getRegister
-  let adjustment = byteOffset offsetR baseT
-  let newLoc = [ (loadInstr t) newLocReg l
-               , Add newLocReg newLocReg offsetR]
+  (newLocReg, baseT, offsetIs) <- generalOffset i offset
   str <- storeGeneral r (Right (0, newLocReg)) baseT
-  freeRegisters [offsetR, newLocReg]
-  return $ offsetIs <> adjustment <> newLoc <> str
- where byteOffset reg t = if t == TInt then [ShiftLeft reg reg 2] else []
-       loadInstr (TPointer _) = LoadWord
-       loadInstr (TArray _ _) = LoadAddr
-
+  freeRegisters [newLocReg]
+  return $ offsetIs <> str
 
 
 storeGeneral :: Register -> Location -> TType -> MIPSGen [Instruction]
@@ -80,3 +66,25 @@ getVal (IConst x) = do
              , LoadImmed r x])
 getVal (CConst c) = getVal (IConst . toInteger . ord $ c)
 getVal (IVar i) = loadIdentifier i
+
+-- generalized array location
+generalOffset :: Identifier -> Value -> MIPSGen (Register, TType, [Instruction])
+generalOffset i off = do
+  (l,t) <- locationAndType i
+  baseT <- return $ baseType t
+  (offsetR,offsetIs) <- getVal off
+  adjustmentIs <- return $ byteOffset offsetR baseT
+  newLocReg <- getRegister
+  let offsetLoc = [ (loadInstr t) newLocReg l
+                  , Add newLocReg newLocReg offsetR]
+  freeRegister offsetR
+  return (newLocReg, baseT, offsetIs <> adjustmentIs <> offsetLoc)
+ where baseType t = case t of
+         TPointer (TArray TInt _) -> TInt
+         TPointer (TArray TChar _) -> TChar
+         TArray TInt _ -> TInt
+         TArray TChar _ -> TChar
+         _ -> error $ "should not get basetype for type : " ++ show t
+       byteOffset reg t = if t == TInt then [ShiftLeft reg reg 2] else []
+       loadInstr (TPointer _) = LoadWord
+       loadInstr (TArray _ _) = LoadAddr
