@@ -1,4 +1,4 @@
-extern void printInt(int a);
+extern void print_int(int a);
 
 int list[10];
 int main(void){
@@ -6,7 +6,7 @@ int main(void){
 
     for(i = 0; i<10; i=i+1){
         list[i] = i;
-        printInt(list[i]);
+        print_int(list[i]);
     }
 
     i = 0;
