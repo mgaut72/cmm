@@ -1,0 +1,3 @@
+[submodule "cmm-examples"]
+	path = cmm-examples
+	url = git@github.com:mgaut72/cmm-examples.git
