@@ -17,7 +17,7 @@ loadGeneral :: Location -> TType -> MIPSGen (Register, [Instruction])
 loadGeneral l t = do
   r <- getRegister
   return (r, [Comment $ "loading item at " ++ show l ++ "into regstr " ++ show r
-             , (loadInstr t) r l])
+             , loadInstr t r l])
  where loadInstr TChar = LoadByte
        loadInstr TInt  = LoadWord
        loadInstr (TArray TChar _) = LoadAddr
@@ -38,7 +38,7 @@ storeOffset r i offset = do
 
 
 storeGeneral :: Register -> Location -> TType -> MIPSGen [Instruction]
-storeGeneral r l t = return [(storeInstr t) r l]
+storeGeneral r l t = return [storeInstr t r l]
  where storeInstr TInt = StoreWord
        storeInstr TChar = StoreByte
        storeInstr (TArray TChar _) = StoreWord
@@ -71,11 +71,11 @@ getVal (IVar i) = loadIdentifier i
 generalOffset :: Identifier -> Value -> MIPSGen (Register, TType, [Instruction])
 generalOffset i off = do
   (l,t) <- locationAndType i
-  baseT <- return $ baseType t
+  let baseT = baseType t
   (offsetR,offsetIs) <- getVal off
-  adjustmentIs <- return $ byteOffset offsetR baseT
+  let adjustmentIs = byteOffset offsetR baseT
   newLocReg <- getRegister
-  let offsetLoc = [ (loadInstr t) newLocReg l
+  let offsetLoc = [ loadInstr t newLocReg l
                   , Add newLocReg newLocReg offsetR]
   freeRegister offsetR
   return (newLocReg, baseT, offsetIs <> adjustmentIs <> offsetLoc)
@@ -85,6 +85,6 @@ generalOffset i off = do
          TArray TInt _ -> TInt
          TArray TChar _ -> TChar
          _ -> error $ "should not get basetype for type : " ++ show t
-       byteOffset reg t = if t == TInt then [ShiftLeft reg reg 2] else []
+       byteOffset reg t = [ShiftLeft reg reg 2 | t == TInt]
        loadInstr (TPointer _) = LoadWord
        loadInstr (TArray _ _) = LoadAddr

@@ -146,15 +146,15 @@ sizeOf x = error $ "cannot take the size of " ++ show x
 -- "extern" functions
 
 externs :: MIPS
-externs = Instr $ [ Lab "print_int"
-                  , LoadImmed V0 1
-                  , LoadWord A0 (Right (0, SP))
-                  , SysCall
-                  , JumpReturn RA
-                  , Comment "\n"
-                  , Lab "print_string"
-                  , LoadImmed V0 4
-                  , LoadWord A0 (Right (0, SP))
-                  , SysCall
-                  , JumpReturn RA
-                  ]
+externs = Instr [ Lab "print_int"
+                , LoadImmed V0 1
+                , LoadWord A0 (Right (0, SP))
+                , SysCall
+                , JumpReturn RA
+                , Comment "\n"
+                , Lab "print_string"
+                , LoadImmed V0 4
+                , LoadWord A0 (Right (0, SP))
+                , SysCall
+                , JumpReturn RA
+                ]
