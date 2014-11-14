@@ -128,6 +128,7 @@ localVars = use locs >>= \l -> sizeAndOffset 0 $ M.toList l
            Just x -> do
              case t of
                TArray _ _ -> locs %= M.insert i (TPointer t)
+               _          -> return ()
              locOffsets %= M.insert i (toInteger $ x * 4, FP)
              (s,is) <- sizeAndOffset currOffset rest
              return (s, is ++ [Comment $ i ++ " is at " ++ show (x*4, FP)])
