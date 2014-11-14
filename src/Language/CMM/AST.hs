@@ -113,7 +113,7 @@ compatible TInt  TInt  = True
 compatible TVoid TVoid = True
 compatible TChar TInt  = True
 compatible TInt  TChar = True
-compatible (TArray t1 _) (TArray t2 _) = compatible t1 t2
+compatible (TArray t1 _) (TArray t2 _) = t1 == t2
 compatible _ _ = False
 
 --
