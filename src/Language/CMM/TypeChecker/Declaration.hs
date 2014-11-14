@@ -24,10 +24,8 @@ addExtern :: FuncStub -> MyParser ()
 addExtern (FuncStub ident _) = modifyState $ externFunctions %~ S.insert ident
 
 addFcnIdentifier :: TType -> FuncStub -> MyParser ()
-addFcnIdentifier t f = checkStub f
-                    >> modifyState (globalSymbols %~ M.insert i t)
- where i = getI f
-       getI (FuncStub ident _) = ident
+addFcnIdentifier t f@(FuncStub i _) = checkStub f >> addIdent
+ where addIdent = modifyState (globalSymbols %~ M.insert i t)
 
 addFcnPrototype :: FuncStub -> MyParser ()
 addFcnPrototype (FuncStub i p) = modifyState $ functions %~ M.insert i pTypes
