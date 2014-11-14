@@ -40,7 +40,7 @@ tcs x@(Return Nothing) = do
 tcs x@(Return (Just e)) = do
   (expectedT,currF) <- getExpectedType
   t <- typeOf e
-  unless (expectedT == t) $ err currF expectedT t
+  unless (expectedT `compatible` t) $ err currF expectedT t
   return x
  where err i t1 t2 = recordError $ "function '" ++ i ++ "' has type '" ++
                                    show t1 ++
