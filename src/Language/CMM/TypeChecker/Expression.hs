@@ -74,6 +74,10 @@ lookUpSymb i = do
   let tloc = M.lookup i locTab
   let tglo = M.lookup i $ s ^. globalSymbols
   case (tloc, tglo) of
-      (Just t, _)  -> return t
-      (_, Just t)  -> return t
-      _            -> err $ "Identifier '" ++ i ++ "' not found in scope"
+      (Just t, _) -> return t
+      (_, Just t)
+        | M.member i (s ^. functions) -> err m1
+        | otherwise                   -> return t
+      _ -> err m2
+ where m1 = "Identifier '" ++ i ++ "' is a function, not a variable"
+       m2 = "Identifier '" ++ i ++ "' not found in scope"

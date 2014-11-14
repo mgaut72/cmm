@@ -84,4 +84,7 @@ tests = test
 
   -- function called from withinn an expression must not have void return type
   , "tFcn" ~: bad $ FunctionCall (Function "voidF" [])
+
+  -- function name cannot be a variable
+  , "tVar" ~: bad $ Var (Scalar "none")
   ]
