@@ -28,7 +28,7 @@ generateCMM pt = case genP pt of
   []     -> []
   (f:fs) -> externs
           : generateGlobal f
-          : (generateLocal f ++  concatMap generateLocal fs)
+          : (generateLocal f ++ concatMap generateLocal fs)
 
 parseCMM = makeMessages . runWriter . runParserT p initialTables "compile"
  where p = do

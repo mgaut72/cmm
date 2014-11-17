@@ -15,7 +15,8 @@ import Language.CMM.MIPS.Instructions
 import Language.CMM.MIPS.Memory
 
 generateLocal :: ([ThreeAddress], Symbols) -> [MIPS]
-generateLocal (tas, s) = [evalState mips gentable, generateStrings (tas, s)]
+generateLocal ([], _) = []
+generateLocal (tas, s) = [generateStrings (tas, s), evalState mips gentable]
   where mips = liftM (Instr . concat) . mapM threeAddrToMips $ tas
         gentable = symbolsToGenTable s
 
@@ -80,7 +81,7 @@ threeAddrToMips (Label l) = return [Lab l]
 
 threeAddrToMips (Enter i) = do
   (localSize, is) <- localVars
-  return $ [ Comment $ "Start allocating stack for" ++ i
+  return $ [ Comment $ "Start allocating stack for " ++ i
            , saveStack, saveReturn
            , newFrame, newStack localSize
            , Comment $ "End allocating stack for " ++ i] ++ is

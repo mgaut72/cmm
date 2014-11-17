@@ -62,7 +62,7 @@ tablesToSymbols t i = Symbols
   , _externs = t ^. externFunctions
   , _functionArgs = t ^. functions
   , _tempNum = 0
-  , _currFcn = t ^. currFunction
+  , _currFcn = i
   }
 
 
@@ -126,7 +126,8 @@ recordIdentifier t i = locals %= M.insert i t >> return i
 
 recordLitString s = do
   int <- tempNum <+= 1
-  let i = "_str_" ++ show int
+  f <- use currFcn
+  let i = "_" ++ f ++ "_str_" ++ show int
   litStrings %= M.insert i s
   globals %= M.insert i (TArray TChar (Just . toInteger . length $ s))
   return (i,[])
@@ -148,7 +149,7 @@ convertTo t (i, code) = do
            (t1, TArray t2 _)
               | t1 == t2  -> return (i,code)
               | otherwise -> error $ "no coversion for " ++ show t1 ++ " to " ++ show t2
-           _              ->error $ "no coversion for " ++ show currT ++ " to " ++ show t
+           _              -> error $ "no coversion for " ++ show currT ++ " to " ++ show t
 -- TODO
 convertCharToInt :: (Identifier, [ThreeAddress]) -> TACGen (Identifier, [ThreeAddress])
 convertCharToInt = return
