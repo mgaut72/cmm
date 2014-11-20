@@ -20,7 +20,7 @@ loadGeneral l t = do
              , loadInstr t r l])
  where loadInstr TChar = LoadByte
        loadInstr TInt  = LoadWord
-       loadInstr (TArray TChar _) = LoadAddr
+       loadInstr (TArray _ _) = LoadAddr
        loadInstr (TPointer _) = LoadWord
        loadInstr t = error $ "can't determine load command for " ++ show t ++
                              "in loadGeneral"
@@ -33,7 +33,7 @@ storeOffset :: Register -> Identifier -> Value -> MIPSGen [Instruction]
 storeOffset r i offset = do
   (newLocReg, baseT, offsetIs) <- generalOffset i offset
   str <- storeGeneral r (Right (0, newLocReg)) baseT
-  freeRegisters [newLocReg]
+  freeRegister newLocReg
   return $ offsetIs <> str
 
 
@@ -41,8 +41,6 @@ storeGeneral :: Register -> Location -> TType -> MIPSGen [Instruction]
 storeGeneral r l t = return [storeInstr t r l]
  where storeInstr TInt = StoreWord
        storeInstr TChar = StoreByte
-       storeInstr (TArray TChar _) = StoreWord
-       storeInstr (TArray TInt _) = StoreWord
        storeInstr t = error $ "can't determine store command for " ++ show t ++
                              "in storeGeneral"
 
@@ -79,6 +77,6 @@ generalOffset i off = do
                   , Add newLocReg newLocReg offsetR]
   freeRegister offsetR
   return (newLocReg, baseT, offsetIs <> adjustmentIs <> offsetLoc)
-       byteOffset reg t = [ShiftLeft reg reg 2 | t == TInt]
+ where byteOffset reg t = [ShiftLeft reg reg 2 | t == TInt]
        loadInstr (TPointer _) = LoadWord
        loadInstr (TArray _ _) = LoadAddr
