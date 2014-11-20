@@ -16,7 +16,7 @@ genFCall (Function  i es) = do
   paramCodes <- mapM genE es -- :: [(Identifier, [ThreeAddress])]
   argTypes <- liftM (fromJust . M.lookup i) (use functionArgs)
   convertedParams <- zipWithM convertTo argTypes paramCodes
-  let allParams = foldl combine [] convertedParams
+  let allParams = foldl combine [] $ reverse convertedParams
   return $ allParams <> [Call i (toInteger . length $ es)]
  where combine codes (ident,code) = codes <> code <> [Param ident]
 

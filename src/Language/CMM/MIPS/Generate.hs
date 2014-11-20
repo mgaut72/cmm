@@ -99,9 +99,10 @@ threeAddrToMips (Enter i) = do
 threeAddrToMips (Param i) = do
   (r,code) <- loadIdentifier i
   freeRegister r
+  stackAdjust += 4
   return $ code <> [StoreWord r (Right (-4, SP)), LoadAddr SP (Right (-4, SP))]
 
-threeAddrToMips (Call f n) = return code
+threeAddrToMips (Call f n) = stackAdjust .= 0 >> return code
  where code = [JumpLink f, LoadAddr SP (Right (4 * n, SP))]
 
 threeAddrToMips (Leave _) = threeAddrToMips (Ret Nothing)

@@ -56,11 +56,14 @@ locationAndType i = do
   ls <- use locs
   offsets <- use locOffsets
   glos <- use globs
+  paramAdjust <- use stackAdjust
   let (location, sTable) = if i `M.member` ls
-                             then (Right (offsets M.! i), ls)
+                             then (Right (adjust paramAdjust $ offsets M.! i), ls)
                              else (Left i, glos)
   let t = sTable M.! i
   return (location, t)
+ where adjust _ (y,FP) = (y,FP)
+       adjust x (y,SP) = (x+y, SP)
 
 -- Either loads the const into a register or loads the variable based
 -- on location

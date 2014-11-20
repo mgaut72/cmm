@@ -65,6 +65,7 @@ data GenTable = GenTable { _globs      :: SymbolTable
                          , _locOffsets :: M.Map Identifier (Integer, Register)
                          , _fNames     :: S.Set Identifier
                          , _registers  :: [Register]
+                         , _stackAdjust :: Integer
                          } deriving (Show, Eq)
 
 symbolsToGenTable :: Symbols -> GenTable
@@ -74,6 +75,7 @@ symbolsToGenTable s = GenTable { _globs = s ^. globals
                                , _locOffsets = M.empty
                                , _fNames = S.union (s ^. externs) (S.fromList $ M.keys (s ^. functionArgs))
                                , _registers = [T0 .. T7] ++ [T8,T9]
+                               , _stackAdjust = 0
                                }
 
 makeLenses ''GenTable
