@@ -133,27 +133,4 @@ recordLitString s = do
   return (i,[])
 
 convertTo :: TType -> (Identifier, [ThreeAddress]) -> TACGen (Identifier, [ThreeAddress])
-convertTo t (i, code) = do
-  currT <- lookupSymb i
-  if currT == t
-    then return (i, code)
-    else case (currT, t) of
-           (TInt, TChar) -> convertIntToChar (i,code)
-           (TChar, TInt) -> convertCharToInt (i,code)
-           (TArray t1 _, TArray t2 _)
-              | t1 == t2  -> return (i,code)
-              | otherwise -> error $ "no coversion for " ++ show t1 ++ " to " ++ show t2
-           (TArray t1 _, t2)
-              | t1 == t2  -> return (i,code)
-              | otherwise -> error $ "no coversion for " ++ show t1 ++ " to " ++ show t2
-           (t1, TArray t2 _)
-              | t1 == t2  -> return (i,code)
-              | otherwise -> error $ "no coversion for " ++ show t1 ++ " to " ++ show t2
-           _              -> error $ "no coversion for " ++ show currT ++ " to " ++ show t
--- TODO
-convertCharToInt :: (Identifier, [ThreeAddress]) -> TACGen (Identifier, [ThreeAddress])
-convertCharToInt = return
-
--- TODO
-convertIntToChar :: (Identifier, [ThreeAddress]) -> TACGen (Identifier, [ThreeAddress])
-convertIntToChar = return
+convertTo _ = return
