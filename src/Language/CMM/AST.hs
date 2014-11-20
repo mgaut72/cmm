@@ -116,6 +116,11 @@ compatible TInt  TChar = True
 compatible (TArray t1 _) (TArray t2 _) = t1 == t2
 compatible _ _ = False
 
+baseType t = case t of
+  TPointer (TArray t' _) -> t'
+  TArray t' _ -> t'
+  _ -> error $ "should not get basetype for type : " ++ show t
+
 --
 -- Symbol Table
 --

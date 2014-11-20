@@ -79,12 +79,6 @@ generalOffset i off = do
                   , Add newLocReg newLocReg offsetR]
   freeRegister offsetR
   return (newLocReg, baseT, offsetIs <> adjustmentIs <> offsetLoc)
- where baseType t = case t of
-         TPointer (TArray TInt _) -> TInt
-         TPointer (TArray TChar _) -> TChar
-         TArray TInt _ -> TInt
-         TArray TChar _ -> TChar
-         _ -> error $ "should not get basetype for type : " ++ show t
        byteOffset reg t = [ShiftLeft reg reg 2 | t == TInt]
        loadInstr (TPointer _) = LoadWord
        loadInstr (TArray _ _) = LoadAddr
