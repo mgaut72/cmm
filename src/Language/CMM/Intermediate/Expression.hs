@@ -46,6 +46,12 @@ genE (FunctionCall f@(Function i _)) = do
 
 genE (Var (Scalar i)) = return (i, [])
 
+genE (Var (Array i idxE)) = do
+  (iE, tacE) <- genE idxE >>= convertTo TInt
+  retType <- lookupSymb i
+  tmp <- getTmp >>= recordIdentifier (baseType retType)
+  return (tmp, tacE <> [AssignFromArr tmp i (IVar iE)])
+
 genE e = error $ "expression: " ++ show e
 
 -- Booleans are special cases where we jump all over the place, so they get

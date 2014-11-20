@@ -13,6 +13,13 @@ import Language.CMM.MIPS.Instructions
 loadIdentifier :: Identifier -> MIPSGen (Register, [Instruction])
 loadIdentifier i = locationAndType i >>= uncurry loadGeneral
 
+loadOffset :: Identifier -> Value -> MIPSGen (Register, [Instruction])
+loadOffset i offset = do
+  (newLocReg, baseT, offsetIs) <- generalOffset i offset
+  (reg, loadIs) <- loadGeneral (Right (0, newLocReg)) baseT
+  freeRegister newLocReg
+  return (reg, offsetIs <> loadIs)
+
 loadGeneral :: Location -> TType -> MIPSGen (Register, [Instruction])
 loadGeneral l t = do
   r <- getRegister

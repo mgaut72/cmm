@@ -75,6 +75,12 @@ threeAddrToMips (AssignToArr arr offset val) = do
   freeRegister valReg
   return $ valCode <> str
 
+threeAddrToMips (AssignFromArr dest arr offset) = do
+  (reg, loadCode) <- loadOffset arr offset
+  str <- store reg dest
+  freeRegister reg
+  return $ loadCode <> str
+
 threeAddrToMips (GoTo l) = return [Jump l]
 
 threeAddrToMips (Label l) = return [Lab l]
