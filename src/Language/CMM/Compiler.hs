@@ -19,7 +19,7 @@ import Language.CMM.MIPS.Instructions.PrettyPrint
 
 compileCMM :: String -> Either String String -- error or output
 compileCMM srcTxt = case parseCMM srcTxt of
-       (Right a, []) -> Right $ concatMap pretty ( generateCMM a)
+       (Right a, []) -> Right $ concatMap pretty (generateCMM a)
        (Right _, es) -> Left es
        (Left  a, es) -> Left $ es ++ show a
 

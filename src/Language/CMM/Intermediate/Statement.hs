@@ -32,8 +32,7 @@ genS (Return (Just e)) = do
   f <- use currFcn
   retType <- lookupSymb f
   (tE, codeE) <- genE e >>= convertTo retType
-  l <- leave
-  return $ codeE <> l <> pure (Ret (Just tE))
+  return $ codeE <> pure (Ret (Just tE))
 
 genS (ProcedureCall f) = genFCall f
 
