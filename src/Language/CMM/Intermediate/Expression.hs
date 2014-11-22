@@ -13,10 +13,14 @@ import {-# SOURCE #-} Language.CMM.Intermediate.FunctionCall
 --             )
 genE :: Expression -> TACGen (Identifier, [ThreeAddress])
 
+-- hack to avoid arithematic overflow
+genE (Negative (LitInt 2147483648)) = genE (LitInt (-2147483648))
+
 genE (Negative e) = do
   (iE, tacE) <- genE e >>= convertTo TInt
   tmp <- getTmp >>= recordIdentifier TInt
   return (tmp, tacE <> [AssignMinus tmp iE])
+
 
 -- I feel bad about this, storing a literal into a variable, but it
 -- generalizes better.
