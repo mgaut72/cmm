@@ -127,8 +127,8 @@ recordIdentifier t i = locals %= M.insert i t >> return i
 recordLitString s = do
   int <- tempNum <+= 1
   f <- use currFcn
-  let i = "_" ++ f ++ "_str_" ++ show int
-  litStrings %= M.insert i s
+  let i = f ++ "_str_" ++ show int
+  litStrings %= M.insert ('_':i) s
   globals %= M.insert i (TArray TChar (Just . toInteger . length $ s))
   return (i,[])
 

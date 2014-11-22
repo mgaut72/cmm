@@ -70,14 +70,19 @@ data GenTable = GenTable { _globs      :: SymbolTable
                          } deriving (Show, Eq)
 
 symbolsToGenTable :: Symbols -> GenTable
-symbolsToGenTable s = GenTable { _globs = s ^. globals
+symbolsToGenTable s = GenTable { _globs = M.mapKeys underGlobVars (s ^. globals)
                                , _locs  = s ^. locals
                                , _params = s ^. parameters
                                , _locOffsets = M.empty
-                               , _fNames = S.union (s ^. externs) (S.fromList $ M.keys (s ^. functionArgs))
+                               , _fNames = fNames'
                                , _registers = [T0 .. T7] ++ [T8,T9]
                                , _stackAdjust = 0
                                }
+ where fNames' = S.union (s ^. externs) (S.fromList $ M.keys (s ^. functionArgs))
+       nonGlobalVars = fNames' -- S.union fNames' $ M.keysSet (s ^. litStrings)
+       underGlobVars i = if S.member i nonGlobalVars
+                                then i
+                                else '_':i
 
 makeLenses ''GenTable
 

@@ -57,11 +57,10 @@ locationAndType i = do
   offsets <- use locOffsets
   glos <- use globs
   paramAdjust <- use stackAdjust
-  let (location, sTable) = if i `M.member` ls
-                             then (Right (adjust paramAdjust $ offsets M.! i), ls)
-                             else (Left i, glos)
-  let t = sTable M.! i
-  return (location, t)
+  let (loc, t) = if i `M.member` ls
+                   then (Right (adjust paramAdjust $ offsets M.! i), ls M.! i)
+                   else (Left ('_':i), glos M.! ('_':i))
+  return (loc, t)
  where adjust _ (y,FP) = (y,FP)
        adjust x (y,SP) = (x+y, SP)
 
