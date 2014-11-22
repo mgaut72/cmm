@@ -37,6 +37,7 @@ data Instruction = LoadWord    Register Location
                  | JumpReturn  Register
                  | Lab         LabelName
                  | Move        Register Register
+                 | Branch      RelativeOp Register Register LabelName
                  | Comment     String
                  | SysCall
                  deriving (Show, Eq)

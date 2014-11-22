@@ -121,6 +121,13 @@ threeAddrToMips (Ret (Just i)) = do
 
 threeAddrToMips (Retrieve i) = store V0 i
 
+threeAddrToMips (IIf i1 op i2 trueL falseL) = do
+  (r1, c1) <- loadIdentifier i1
+  (r2, c2) <- loadIdentifier i2
+  freeRegisters [r1,r2]
+  return $ c1 <> c2 <> [Branch op r1 r2 trueL, Jump falseL]
+
+
 threeAddrToMips a = error $ "dont have " ++ show a ++ " implemented"
 
 localVars :: MIPSGen (Integer, [Instruction])

@@ -13,7 +13,10 @@ import Language.CMM.Intermediate.Expression
 
 genS :: Statement -> TACGen [ThreeAddress]
 
-genS (If e s) = error "if not yet supported"
+genS (If e s) = do
+  (t,f,code) <- genBooleanE e
+  sCode <- genS s
+  return $ code <> [Label t] <> sCode <> [Label f]
 
 genS (IfElse e s1 s2) = error "ifelse not yet supported"
 

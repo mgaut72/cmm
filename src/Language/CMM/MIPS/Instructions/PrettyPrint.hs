@@ -4,6 +4,7 @@ import Data.List
 import Data.Char (toLower)
 
 import Language.CMM.MIPS.Instructions
+import Language.CMM.AST
 
 pretty :: MIPS -> String
 pretty (Data []) = ""
@@ -34,6 +35,12 @@ pInstr (JumpLink l) = "jal " ++ l
 pInstr (JumpReturn r) = "jr " ++ pReg r
 pInstr (Lab l) = l ++ ":"
 pInstr (Move r1 r2) = "move " ++ pRegs [r1,r2]
+pInstr (Branch Eq r1 r2 l) = "beq " ++ pRegs [r1,r2] ++ ", " ++ l
+pInstr (Branch Neq r1 r2 l) = "bne " ++ pRegs [r1,r2] ++ ", " ++ l
+pInstr (Branch Leq r1 r2 l) = "ble " ++ pRegs [r1,r2] ++ ", " ++ l
+pInstr (Branch Less r1 r2 l) = "blt " ++ pRegs [r1,r2] ++ ", " ++ l
+pInstr (Branch Geq r1 r2 l) = "bge " ++ pRegs [r1,r2] ++ ", " ++ l
+pInstr (Branch Greater r1 r2 l) = "bgt " ++ pRegs [r1,r2] ++ ", " ++ l
 pInstr (Comment s) = "\n# " ++ s
 pInstr SysCall = "syscall"
 
