@@ -18,11 +18,37 @@ genS (If e s) = do
   sCode <- genS s
   return $ code <> [Label t] <> sCode <> [Label f]
 
-genS (IfElse e s1 s2) = error "ifelse not yet supported"
+genS (IfElse e s1 s2) = do
+  (t,f,eCode) <- genBooleanE e
+  s1Code <- genS s1
+  s2Code <- genS s2
+  end <- getLabel
+  return $ eCode <> [Label t] <> s1Code <> [GoTo end] <> [Label f] <> s2Code <> [Label end]
 
-genS (While e s) = error "while not yet supported"
 
-genS (For ma1 me ma2 s) = error "for not yet supported"
+genS (While e s) = do
+  (t,f,eCode) <- genBooleanE e
+  sCode <- genS s
+  start <- getLabel
+  return $ [Label start] <> eCode <> [Label t] <> sCode <> [GoTo start] <> [Label f]
+
+
+genS (For ma1 me ma2 s) = do
+  asgn1 <- genS $ maybeAssign ma1
+  let asgn2 = maybeAssign ma2
+  let newS = case s of
+               Bracketed ss -> Bracketed (ss <> [asgn2])
+               _            -> Bracketed [s, asgn2]
+  while <- genS (While e newS)
+  return $ asgn1 <> while
+ where maybeAssign ma = case ma of
+         Just a  -> Assign a
+         Nothing -> None
+       e = case me of
+         Just e  -> e
+         Nothing -> Relative Eq (LitInt 1) (LitInt 1) -- some default true value
+
+
 
 genS (Return Nothing) = do
   l <- leave
@@ -49,7 +75,7 @@ genS (Assign (Assignment (Array i idx) e)) = do
   (iIdx, tacIdx) <- genE idx >>= convertTo TInt
   return $ tacE <> tacIdx <> pure (AssignToArr i (IVar iIdx) (IVar iE))
 
-genS (Bracketed ss) = error "bracketed statements not supported"
+genS (Bracketed ss) = liftM concat . mapM genS $ ss
 
 genS e = error $ show e ++ " is not supported"
 
