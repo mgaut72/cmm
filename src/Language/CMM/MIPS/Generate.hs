@@ -107,8 +107,9 @@ threeAddrToMips (Param i) = do
   stackAdjust += 4
   return $ code <> [StoreWord r (Right (-4, SP)), LoadAddr SP (Right (-4, SP))]
 
-threeAddrToMips (Call f n) = stackAdjust .= 0 >> return code
- where code = [JumpLink ('_':f), LoadAddr SP (Right (4 * n, SP))]
+threeAddrToMips (Call f n) = stackAdjust .= 0 >> return code f
+ where code "main" = [JumpLink "main", LoadAddr SP (Right (4 * n, SP))]
+       code f      = [JumpLink ('_':f), LoadAddr SP (Right (4 * n, SP))]
 
 threeAddrToMips (Leave _) = threeAddrToMips (Ret Nothing)
 
