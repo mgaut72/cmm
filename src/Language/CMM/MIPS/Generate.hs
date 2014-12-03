@@ -83,7 +83,12 @@ threeAddrToMips (AssignFromArr dest arr offset) = do
 
 threeAddrToMips (GoTo l) = return [Jump l]
 
-threeAddrToMips (Label l) = return [Lab l]
+threeAddrToMips (Label l) = do
+  fnames <- use fNames
+  if l `S.member` fnames && l /= "main"
+    then return [Lab ('_':l)]
+    else return [Lab l]
+
 
 threeAddrToMips (Enter i) = do
   (localSize, is) <- localVars
@@ -103,7 +108,7 @@ threeAddrToMips (Param i) = do
   return $ code <> [StoreWord r (Right (-4, SP)), LoadAddr SP (Right (-4, SP))]
 
 threeAddrToMips (Call f n) = stackAdjust .= 0 >> return code
- where code = [JumpLink f, LoadAddr SP (Right (4 * n, SP))]
+ where code = [JumpLink ('_':f), LoadAddr SP (Right (4 * n, SP))]
 
 threeAddrToMips (Leave _) = threeAddrToMips (Ret Nothing)
 
@@ -162,13 +167,13 @@ sizeOf x = error $ "cannot take the size of " ++ show x
 -- "extern" functions
 
 externs :: MIPS
-externs = Instr [ Lab "print_int"
+externs = Instr [ Lab "_print_int"
                 , LoadImmed V0 1
                 , LoadWord A0 (Right (0, SP))
                 , SysCall
                 , JumpReturn RA
                 , Comment "\n"
-                , Lab "print_string"
+                , Lab "_print_string"
                 , LoadImmed V0 4
                 , LoadWord A0 (Right (0, SP))
                 , SysCall
